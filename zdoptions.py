@@ -288,7 +288,7 @@ class RunnerOptions(ZDOptions):
                  list_of_ints, default=[0, 2])
         self.add("user", "runner.user", "u:", "user=")
         self.add("directory", "runner.directory", "z:", "directory=",
-                 ZConfig.datatypes.existing_directory, default="/")
+                 ZConfig.datatypes.existing_directory)
         self.add("hang_around", "runner.hang_around")
 
 

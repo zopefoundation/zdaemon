@@ -25,7 +25,7 @@ Options:
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
--z/--directory DIRECTORY -- directory to chdir to when using -d (default "/")
+-z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 program [program-arguments] -- an arbitrary application to run
 
 This daemon manager has two purposes: it restarts the application when

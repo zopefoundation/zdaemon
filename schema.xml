@@ -17,7 +17,7 @@
     <key name="exit-codes" datatype="zdaemon.zdoptions.list_of_ints"
 	       default="0,2" />
     <key name="user" datatype="string" />
-    <key name="directory" datatype="existing-directory" default="/" />
+    <key name="directory" datatype="existing-directory" required="no" />
     <key name="default-to-interactive" datatype="boolean" default="true" />
     <key name="hang-around" datatype="boolean" default="false" />
     <key name="logfile" datatype="existing-dirpath" />
