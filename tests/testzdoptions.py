@@ -79,6 +79,22 @@ class TestZDOptions(unittest.TestCase):
         # Check that we get an error for an unrecognized option
         self.check_exit_code(self.OptionsClass(), ["-/"])
 
+    def check_exit_code(self, options, args):
+        save_sys_stderr = sys.stderr
+        try:
+            sys.stderr = StringIO()
+            try:
+                options.realize(args)
+            except SystemExit, err:
+                self.assertEqual(err.code, 2)
+            else:
+                self.fail("SystemExit expected")
+        finally:
+            sys.stderr = save_sys_stderr
+
+
+class TestBasicFunctionality(TestZDOptions):
+
     def test_no_positional_args(self):
         # Check that we get an error for positional args when they
         # haven't been enabled.
@@ -132,22 +148,9 @@ class TestZDOptions(unittest.TestCase):
         options.add("setting", None, "a:", handler=int)
         self.check_exit_code(options, ["-afoo"])
 
-    def check_exit_code(self, options, args):
-        save_sys_stderr = sys.stderr
-        try:
-            sys.stderr = StringIO()
-            try:
-                options.realize(args)
-            except SystemExit, err:
-                self.assertEqual(err.code, 2)
-            else:
-                self.fail("SystemExit expected")
-        finally:
-            sys.stderr = save_sys_stderr
-
 def test_suite():
     suite = unittest.TestSuite()
-    for cls in [TestZDOptions]:
+    for cls in [TestBasicFunctionality]:
         suite.addTest(unittest.makeSuite(cls))
     return suite
 
