@@ -9,7 +9,6 @@ import unittest
 from StringIO import StringIO
 
 from zdaemon import zdrun
-from zdaemon import zdoptions
 
 class ZDaemonTests(unittest.TestCase):
 
@@ -102,9 +101,7 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsSysArgv(self):
         # Check that options are parsed from sys.argv by default
-        options = zdoptions.ZDOptions()
-        options.positional_args_allowed = 1
-        options.add("isclient", None, "c", flag=1)
+        options = zdrun.ZDRunOptions()
         save_sys_argv = sys.argv
         try:
             sys.argv = ["A", "-c", "B", "C"]
@@ -117,9 +114,7 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsBasic(self):
         # Check basic option parsing
-        options = zdoptions.ZDOptions()
-        options.positional_args_allowed = 1
-        options.add("isclient", None, "c", flag=1)
+        options = zdrun.ZDRunOptions()
         options.realize(["-c", "B", "C"], "foo")
         self.assertEqual(options.options, [("-c", "")])
         self.assertEqual(options.isclient, 1)
@@ -128,50 +123,18 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsHelp(self):
         # Check that -h behaves properly
-        options = zdoptions.ZDOptions()
+        options = zdrun.ZDRunOptions()
         try:
-            options.realize(["-h"])
+            options.realize(["-h"], doc=zdrun.__doc__)
         except SystemExit, err:
             self.failIf(err.code)
         else:
             self.fail("SystemExit expected")
-        import __main__
-        self.expect = __main__.__doc__
-
-    def testOptionsError(self):
-        # Check that we get an error for an unrecognized option
-        save_sys_stderr = sys.stderr
-        options = zdoptions.ZDOptions()
-        try:
-            sys.stderr = StringIO()
-            try:
-                options.realize(["-/"])
-            except SystemExit, err:
-                self.assertEqual(err.code, 2)
-            else:
-                self.fail("SystemExit expected")
-        finally:
-            sys.stderr = save_sys_stderr
-
-    def testOptionsNoPositionalArgs(self):
-        # Check that we get an error for positional args when they
-        # haven't been enabled.
-        save_sys_stderr = sys.stderr
-        options = zdoptions.ZDOptions()
-        try:
-            sys.stderr = StringIO()
-            try:
-                options.realize(["A"])
-            except SystemExit, err:
-                self.assertEqual(err.code, 2)
-            else:
-                self.fail("SystemExit expected")
-        finally:
-            sys.stderr = save_sys_stderr
+        self.expect = zdrun.__doc__
 
     def testSubprocessBasic(self):
         # Check basic subprocess management: spawn, kill, wait
-        options = zdoptions.ZDOptions()
+        options = zdrun.ZDRunOptions()
         options.realize([])
         proc = zdrun.Subprocess(options, ["sleep", "100"])
         self.assertEqual(proc.pid, 0)
