@@ -62,8 +62,6 @@ XXX TO DO
 
 - Do the governor without actual sleeps, using event scheduling etc.
 
-- Change directory (where?) before starting the application
-
 - Add docstrings
 
 """
@@ -256,9 +254,10 @@ class Daemonizer:
         if pid != 0:
             # Parent
             self.blather("daemon manager forked; parent exiting")
-            self.exit()
+            os._exit(0)
         # Child
         self.info("daemonizing the process")
+        os.chdir("/")
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
