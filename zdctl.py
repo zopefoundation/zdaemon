@@ -396,6 +396,10 @@ def main(args=None):
     if options.args:
         c.onecmd(" ".join(options.args))
     if options.interactive:
+        try:
+            import readline
+        except ImportError:
+            pass
         print "program:", " ".join(options.program)
         c.do_status()
         c.cmdloop()
