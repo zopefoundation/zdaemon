@@ -57,16 +57,12 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- The "stop" command should first send a SIGTERM, then sleep
-  backofflimit seconds, then send SIGKILL, and keep repeating SIGKILL
-  until it actually dies.
-
 - True OO design -- use multiple classes rather than folding
   everything into one class.
 
 - Add unit tests.
 
-- Add docstrings.
+- Add doc strings.
 
 """
 
@@ -311,8 +307,9 @@ class Daemonizer:
         os.setsid()
 
     mood = 1 # 1: up, 0: down, -1: suicidal
-    delay = 0 # If nonzero, delay starting until this time
+    delay = 0 # If nonzero, delay starting or killing until this time
     appid = 0 # Application pid; indicates status (0 == not running)
+    killing = 0 # If true, send SIGKILL when delay expires
 
     def runforever(self):
         self.info("daemon manager started")
@@ -329,6 +326,9 @@ class Daemonizer:
                 timeout = max(0, min(timeout, self.delay - time.time()))
                 if timeout <= 0:
                     self.delay = 0
+                    if self.killing and self.appid:
+                        self.killapp(signal.SIGKILL)
+                        self.delay = time.time() + self.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
             except select.error, err:
@@ -397,6 +397,7 @@ class Daemonizer:
         self.mood = 1 # Up
         self.backoff = 0
         self.delay = 0
+        self.killing = 0
         if not self.appid:
             self.forkandexec()
             self.sendreply("Application started")
@@ -407,9 +408,12 @@ class Daemonizer:
         self.mood = 0 # Down
         self.backoff = 0
         self.delay = 0
+        self.killing = 0
         if self.appid:
-            os.kill(self.appid, signal.SIGTERM)
+            self.killapp(signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
+            self.killing = 1
+            self.delay = time.time() + self.backofflimit
         else:
             self.sendreply("Application already stopped")
 
@@ -417,9 +421,12 @@ class Daemonizer:
         self.mood = 1 # Up
         self.backoff = 0
         self.delay = 0
+        self.killing = 0
         if self.appid:
-            os.kill(self.appid, signal.SIGTERM)
+            self.killapp(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
+            self.killing = 1
+            self.delay = time.time() + self.backofflimit
         else:
             self.forkandexec()
             self.sendreply("Application started")
@@ -428,9 +435,12 @@ class Daemonizer:
         self.mood = -1 # Suicidal
         self.backoff = 0
         self.delay = 0
+        self.killing = 0
         if self.appid:
-            os.kill(self.appid, signal.SIGTERM)
+            self.killapp(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will exit later")
+            self.killing = 1
+            self.delay = time.time() + self.backofflimit
         else:
             self.sendreply("Exiting now")
             self.info("Exiting")
@@ -448,9 +458,8 @@ class Daemonizer:
         if not self.appid:
             self.sendreply("Application not running")
         else:
-            try:
-                os.kill(self.appid, sig)
-            except os.error, msg:
+            msg = self.killapp(sig)
+            if msg:
                 self.sendreply("Kill %d failed: %s" % (sig, msg))
             else:
                 self.sendreply("Signal %d sent" % sig)
@@ -499,6 +508,17 @@ class Daemonizer:
                     msg = msg[sent:]
         except socket.error, msg:
             self.problem("Error sending reply: %s" % str(msg))
+
+    def killapp(self, sig):
+        if self.appid:
+            try:
+                os.kill(self.appid, sig)
+            except os.error, msg:
+                self.problem("Couldn't send signal %d to pid %d: %s" %
+                             (sig, self.appid, msg))
+                return msg
+            self.info("Sent signal %d to pid %d" % (sig, self.appid))
+        return None
 
     backoff = 0
     lasttime = None
@@ -554,6 +574,8 @@ class Daemonizer:
         self.waitstatus = None
         if pid == self.appid:
             self.appid = 0
+            self.killing = 0
+            self.delay = 0
             self.governor()
         if os.WIFEXITED(sts):
             es = os.WEXITSTATUS(sts)
