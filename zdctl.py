@@ -26,6 +26,11 @@ actions typed interactively is started.
 Use the action "help" to find out about available actions.
 """
 
+# XXX Related code lives in lib/python/Controller/ZctlLib.py on the
+# 'chrism-install-branch' branch.
+# The code there knows more about Zope and about Windows, but doesn't
+# use zdaemon.py or ZConfig.
+
 import os
 import re
 import cmd
