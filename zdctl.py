@@ -192,18 +192,22 @@ class ZDCmd(cmd.Cmd):
             args = [
                 self.options.python,
                 self.options.zdrun,
-                "-b", str(self.options.backofflimit),
-                "-d",
-                "-s", self.options.sockname,
-                "-x", ",".join(map(str, self.options.exitcodes)),
-                "-z", self.options.directory,
                 ]
-            if self.options.forever:
-                args.append("-f")
-            if self.options.user:
-                argss.extend(["-u", str(self.options.user)])
+            args += self._get_override("-C", "configfile")
+            args += self._get_override("-b", "backofflimit")
+            args += self._get_override("-d", "daemon", flag=1)
+            args += self._get_override("-f", "forever", flag=1)
+            args += self._get_override("-s", "sockname")
+            args += self._get_override("-u", "user")
+            args += self._get_override("-x", "exitcodes",
+                                       ",".join(map(str, self.options.exitcodes)))
+            args += self._get_override("-z", "directory")
             args.extend(self.options.program)
-            os.spawnvp(os.P_WAIT, args[0], args)
+            if self.options.daemon:
+                flag = os.P_WAIT
+            else:
+                flag = os.P_NOWAIT
+            os.spawnvp(flag, args[0], args)
         elif not self.zd_pid:
             self.send_action("start")
         else:
@@ -211,6 +215,30 @@ class ZDCmd(cmd.Cmd):
             return
         self.awhile(lambda: self.zd_pid,
                     "daemon process started, pid=%(zd_pid)d")
+
+    def _get_override(self, opt, name, svalue=None, flag=0):
+        value = getattr(self.options, name)
+        if value is None:
+            return []
+        configroot = self.options.configroot
+        if configroot is not None:
+            for n, cn in self.options.names_list:
+                if n == name and cn:
+                    v = configroot
+                    for p in cn.split("."):
+                        v = getattr(v, p, None)
+                        if v is None:
+                            break
+                    if v == value: # We didn't override anything
+                        return []
+                    break
+        args = [opt]
+        if not flag:
+            if svalue is None:
+                svalue = str(value)
+            args.append(svalue)
+        return args
+                        
 
     def help_start(self):
         print "start -- Start the daemon process."
