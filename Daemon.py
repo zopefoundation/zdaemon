@@ -55,7 +55,7 @@ def run(argv, pidfile=''):
                 # ie. HUP, INT, QUIT, USR1, USR2, TERM
                 for sig in interesting:
                     signal.signal(sig, SignalPasser(pid))
-                pstamp('Houston, we have forked: pid %s' % pid, zLOG.INFO)
+                pstamp('Started subprocess: pid %s' % pid, zLOG.INFO)
                 write_pidfile(pidfile)
                 p,s = wait(pid) # waitpid will block until child exit
                 if s:
@@ -113,8 +113,7 @@ def log_pid(p, s):
     elif os.WIFSIGNALED(s):
         signum = os.WTERMSIG(s)
         signame = get_signal_name(signum)
-        msg = "terminated by signal %s(%s)" % (signame,
-                                              signum)
+        msg = "terminated by signal %s(%s)" % (signame, signum)
         # We'd like to report whether a core file
         # was produced, but there isn't a standard
         # way to check.  It seems that some
@@ -131,9 +130,8 @@ def log_pid(p, s):
         # XXX what should we do here?
         signum = os.WSTOPSIG(s)
         signame = get_signal_name(signum)
-        msg = "stopped by signal %s(%s)" % (signame,
-                                            signum)
-    pstamp('Aieeee!  Process %s %s' % (p, msg), zLOG.ERROR)
+        msg = "stopped by signal %s(%s)" % (signame, signum)
+    pstamp('Process %s %s' % (p, msg), zLOG.ERROR)
 
 _signals = None
 

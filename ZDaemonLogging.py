@@ -17,5 +17,4 @@ from time import time, ctime
 from zLOG import LOG
 
 def pstamp(message, sev):
-    LOG("zdaemon", sev,
-        ("zdaemon: %s: %s" % (ctime(time()), message)))
+    LOG("zdaemon", sev, message)
