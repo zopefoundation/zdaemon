@@ -20,10 +20,11 @@ import tempfile
 import unittest
 from StringIO import StringIO
 
+import ZConfig
 import zdaemon
 from zdaemon.zdoptions import ZDOptions
 
-class TestZDOptions(unittest.TestCase):
+class ZDOptionsTestBase(unittest.TestCase):
 
     OptionsClass = ZDOptions
 
@@ -36,6 +37,9 @@ class TestZDOptions(unittest.TestCase):
     def restore_streams(self):
         sys.stdout = self.save_stdout
         sys.stderr = self.save_stderr
+
+
+class TestZDOptions(ZDOptionsTestBase):
 
     input_args = ["arg1", "arg2"]
     output_opts = []
@@ -148,25 +152,98 @@ class TestBasicFunctionality(TestZDOptions):
         options.add("setting", None, "a:", handler=int)
         self.check_exit_code(options, ["-afoo"])
 
+
+class TestZDOptionsEnvironment(ZDOptionsTestBase):
+
+    class OptionsClass(ZDOptions):
+        def __init__(self):
+            ZDOptions.__init__(self)
+            self.add("opt", "opt", "o:", "opt=",
+                     default=42, handler=int, env="OPT")
+
+        def load_schema(self):
+            # Doing this here avoids needing a separate file for the schema:
+            if self.schema is None:
+                self.schema = ZConfig.loadSchemaFile(StringIO("""\
+                   <schema>
+                     <key name='opt' datatype='integer' default='12'/>
+                   </schema>
+                   """))
+
+        def load_configfile(self):
+            if getattr(self, "configtext", None):
+                self.configroot, xxx = ZConfig.loadConfigFile(
+                    self.schema, StringIO("opt 3"))
+
+    # Save and restore the environment around each test:
+
+    def setUp(self):
+        self._oldenv = os.environ
+        env = {}
+        env.update(os.environ)
+        os.environ = env
+
+    def tearDown(self):
+        os.environ = self._oldenv
+
     def test_with_environment(self):
         os.environ["OPT"] = "2"
-        def create():
-            options = self.OptionsClass()
-            options.add("opt", None, "o:", "opt=",
-                        default=42, handler=int, env="OPT")
-            return options
-        for args in (["-o1"], ["--opt", "1"]):
-            options = create()
-            options.realize(args)
-            self.assertEqual(options.opt, 1)
-        options = create()
+        self.check_from_command_line()
+        options = self.OptionsClass()
         options.realize([])
         self.assertEqual(options.opt, 2)
-        
+
+    def test_without_environment(self):
+        self.check_from_command_line()
+        options = self.OptionsClass()
+        options.realize([])
+        self.assertEqual(options.opt, 42)
+
+    def check_from_command_line(self):
+        for args in (["-o1"], ["--opt", "1"]):
+            options = self.OptionsClass()
+            options.realize(args)
+            self.assertEqual(options.opt, 1)
+
+    def test_with_bad_environment(self):
+        os.environ["OPT"] = "Spooge!"
+        # make sure the bad value is ignored if the command-line is used:
+        self.check_from_command_line()
+        options = self.OptionsClass()
+        try:
+            self.save_streams()
+            try:
+                options.realize([])
+            finally:
+                self.restore_streams()
+        except SystemExit, e:
+            self.assertEqual(e.code, 2)
+        else:
+            self.fail("expected SystemExit")
+
+    def test_environment_overrides_configfile(self):
+        options = self.create_with_config()
+        options.realize([])
+        self.assertEqual(options.opt, 3)
+
+        os.environ["OPT"] = "2"
+        options = self.create_with_config()
+        options.realize([])
+        self.assertEqual(options.opt, 2)
+
+    def create_with_config(self):
+        options = self.OptionsClass()
+        zdpkgdir = os.path.dirname(os.path.abspath(zdaemon.__file__))
+        options.schemadir = os.path.join(zdpkgdir, 'tests')
+        options.schemafile = "envtest.xml"
+        # configfile must be set for ZDOptions to use ZConfig:
+        options.configfile = "not used"
+        options.configtext = "opt 3"
+        return options
 
 def test_suite():
     suite = unittest.TestSuite()
-    for cls in [TestBasicFunctionality]:
+    for cls in [TestBasicFunctionality, TestZDOptionsEnvironment]:
         suite.addTest(unittest.makeSuite(cls))
     return suite
 
