@@ -149,6 +149,7 @@ class ZDCmd(cmd.Cmd):
         print "help <action> -- Print help for <action>."
 
     def do_start(self, arg):
+        self.get_status()
         if not self.zd_up:
             args = [
                 self.options.python,
@@ -165,9 +166,13 @@ class ZDCmd(cmd.Cmd):
                 argss.extend(["-u", str(self.options.user)])
             args.extend(self.options.program)
             os.spawnvp(os.P_WAIT, args[0], args)
-        else:
+        elif not self.zd_pid:
             self.send_action("start")
-        self.awhile(lambda: self.zd_pid, "started, pid=%(zd_pid)d")
+        else:
+            print "daemon process already running; pid=%d" % self.zd_pid
+            return
+        self.awhile(lambda: self.zd_pid,
+                    "daemon process started, pid=%(zd_pid)d")
 
     def help_start(self):
         print "start -- Start the daemon process."
