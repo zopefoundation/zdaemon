@@ -24,6 +24,7 @@ Options:
 -h/--help -- print this usage message and exit
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
+-m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 program [program-arguments] -- an arbitrary application to run
@@ -382,7 +383,7 @@ class Daemonizer:
         os.close(2)
         sys.stderr = sys.__stderr__ = open("/dev/null", "w")
         os.setsid()
-        os.umask(022) # Create no group/other writable files/directories
+        os.umask(self.options.umask)
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page
         # 417) recommends calling umask(0) and closing unused
         # file descriptors.  In his Network Programming book, he

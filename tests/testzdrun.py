@@ -1,6 +1,7 @@
 """Test suite for zdrun.py."""
 
 import os
+import stat
 import sys
 import time
 import signal
@@ -227,6 +228,21 @@ class ZDaemonTests(unittest.TestCase):
         self.assert_(len(params) > 1, repr(response))
         # kill the process
         send_action('exit\n', zdrun_socket)
+
+    def testUmask(self):
+        path = tempfile.mktemp()
+        # With umask 666, we should create a file that we aren't able
+        # to write.  If access says no, assume that umask works.
+        try:
+            self.rundaemon(["-m", "666", "/bin/touch", path])
+            for i in range(5):
+                if not os.path.exists(path):
+                    time.sleep(0.1)
+            self.assert_(os.path.exists(path))
+            self.assert_(not os.access(path, os.W_OK))
+        finally:
+            if os.path.exists(path):
+                os.remove(path)
 
 def send_action(action, sockname):
     """Send an action to the zdrun server and return the response.

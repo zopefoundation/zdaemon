@@ -111,7 +111,7 @@
 
         - call setsid() so it becomes a session leader
 
-        - call umask(022)
+        - call umask() with specified value
       </description>
     </key>
 
@@ -203,6 +203,17 @@
 
         XXX The zdrun.py event log file may be opened *before*
         setuid() is called.  Is this good or bad?
+      </description>
+    </key>
+
+    <key name="umask" datatype="zdaemon.zdoptions.octal_type"
+         required="no"
+         default="022">
+      <description>
+        Command-line option: -m or --umask.
+
+        When daemon mode is used, this option specifies the octal umask
+        of the subprocess.
       </description>
     </key>
 

@@ -29,6 +29,7 @@ Options:
 -p/--program PROGRAM -- the program to run
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
+-m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 action [arguments] -- see below
@@ -201,6 +202,7 @@ class ZDCmd(cmd.Cmd):
             args += self._get_override("-f", "forever", flag=1)
             args += self._get_override("-s", "sockname")
             args += self._get_override("-u", "user")
+            args += self._get_override("-m", "umask")
             args += self._get_override(
                 "-x", "exitcodes", ",".join(map(str, self.options.exitcodes)))
             args += self._get_override("-z", "directory")
@@ -353,6 +355,7 @@ class ZDCmd(cmd.Cmd):
         print "sockname:    ", repr(self.options.sockname)
         print "exitcodes:   ", repr(self.options.exitcodes)
         print "user:        ", repr(self.options.user)
+        print "umask:       ", oct(self.options.umask)
         print "directory:   ", repr(self.options.directory)
         print "logfile:     ", repr(self.options.logfile)
         print "hang_around: ", repr(self.options.hang_around)

@@ -335,6 +335,8 @@ class RunnerOptions(ZDOptions):
         self.add("exitcodes", "runner.exit_codes", "x:", "exit-codes=",
                  list_of_ints, default=[0, 2])
         self.add("user", "runner.user", "u:", "user=")
+        self.add("umask", "runner.umask", "m:", "umask=", octal_type,
+                 default=022)
         self.add("directory", "runner.directory", "z:", "directory=",
                  ZConfig.datatypes.existing_directory)
         self.add("hang_around", "runner.hang_around", default=0)
@@ -370,6 +372,9 @@ def list_of_ints(arg):
         return []
     else:
         return map(int, arg.split(","))
+
+def octal_type(arg):
+    return int(arg, 8)
 
 
 def _test():
