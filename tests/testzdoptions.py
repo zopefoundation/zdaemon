@@ -58,7 +58,7 @@ class TestZDOptions(unittest.TestCase):
                                   "sample.conf")
         for arg in "-C", "--c", "--configure":
             options = self.OptionsClass()
-            options.realize(["-C", configfile])
+            options.realize([arg, configfile])
             self.assertEqual(options.configfile, configfile)
 
     def test_help(self):
@@ -147,6 +147,22 @@ class TestBasicFunctionality(TestZDOptions):
         options = self.OptionsClass()
         options.add("setting", None, "a:", handler=int)
         self.check_exit_code(options, ["-afoo"])
+
+    def test_with_environment(self):
+        os.environ["OPT"] = "2"
+        def create():
+            options = self.OptionsClass()
+            options.add("opt", None, "o:", "opt=",
+                        default=42, handler=int, env="OPT")
+            return options
+        for args in (["-o1"], ["--opt", "1"]):
+            options = create()
+            options.realize(args)
+            self.assertEqual(options.opt, 1)
+        options = create()
+        options.realize([])
+        self.assertEqual(options.opt, 2)
+        
 
 def test_suite():
     suite = unittest.TestSuite()

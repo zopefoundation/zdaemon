@@ -33,6 +33,7 @@ class ZDOptions:
         self.options_map = {}
         self.default_map = {}
         self.required_map = {}
+        self.environ_map = {}
         self.add(None, None, "h", "help", self.help)
         self.add("configfile", None, "C:", "configure=")
 
@@ -92,6 +93,7 @@ class ZDOptions:
             default=None,               # default value
             required=None,              # message if not provided
             flag=None,                  # if not None, flag value
+            env=None,                   # if not None, environment variable
             ):
         """Add information about a configuration option.
 
@@ -111,6 +113,8 @@ class ZDOptions:
         default=...  -- if not None, the default value
         required=... -- if nonempty, an error message if no value provided
         flag=...     -- if not None, flag value for command line option
+        env=...      -- if not None, name of environment variable that
+                        overrides the configuration file or default
         """
 
         if flag is not None:
@@ -152,6 +156,9 @@ class ZDOptions:
                 raise ValueError, "duplicate long option key '%s'" % key
             self.options_map[key] = (name, handler)
             self.long_options.append(long)
+
+        if env:
+            self.environ_map[env] = (name, handler)
 
         if name:
             if not hasattr(self, name):
@@ -209,6 +216,20 @@ class ZDOptions:
                 if getattr(self, name) is not None:
                     self.usage("conflicting command line option %r" % opt)
                 setattr(self, name, arg)
+
+        # Process environment variables
+        for envvar in self.environ_map.keys():
+            name, handler = self.environ_map[envvar]
+            if os.environ.has_key(envvar) and getattr(self, name) is None:
+                value = os.environ[envvar]
+                if handler is not None:
+                    try:
+                        value = handler(value)
+                    except ValueError, msg:
+                        self.usage("invalid environment value for %s %r: %s"
+                                   % (envvar, value, msg))
+                if name and value is not None:
+                    setattr(self, name, value)
 
         if self.configfile is not None:
             # Process config file
