@@ -272,7 +272,7 @@ class ZDCmd(cmd.Cmd):
 
     def do_show(self, arg):
         if not arg:
-            args = ["config"]
+            args = ["options"]
         else:
             args = arg.split()
         methods = []
@@ -286,26 +286,34 @@ class ZDCmd(cmd.Cmd):
         for method in methods:
             method()
 
-    def show_config(self):
-        print "Show config"
+    def show_options(self):
+        print "zdaemon:     ", repr(self.options.zdaemon)
+        print "program:     ", repr(self.options.program)
+        print "backofflimit:", repr(self.options.backofflimit)
+        print "forever:     ", repr(self.options.forever)
+        print "sockname:    ", repr(self.options.sockname)
+        print "exitcodes:   ", repr(self.options.exitcodes)
+        print "user:        ", repr(self.options.user)
+        print "zdirectory:  ", repr(self.options.zdirectory)
+
+    def show_python(self):
+        version = sys.version.replace("\n", "\n              ")
+        print "Version:     ", version
+        print "Platform:    ", sys.platform
+        print "Executable:  ", repr(sys.executable)
+        print "Arguments:   ", repr(sys.argv)
+        print "Directory:   ", repr(os.getcwd())
+        print "Path:"
+        for dir in sys.path:
+            print "    " + repr(dir)
 
     def help_show(self):
-        print "show config -- show general configuration info"
+        print "show options -- show zdctl options"
         print "show python -- show Python version and details"
 
     def complete_show(self, text, *ignored):
-        options = ["config", "python"]
+        options = ["options", "python"]
         return [x for x in options if x.startswith(text)]
-
-    def show_python(self):
-        print "Version:   ", sys.version
-        print "Platform:  ", sys.platform
-        print "Executable:", sys.executable
-        print "Arguments: ", sys.argv
-        print "Directory: ", os.getcwd()
-        print "Path:"
-        for dir in sys.path:
-            print "    " + str(dir)
 
     def do_logreopen(self, arg):
         self.do_kill(str(signal.SIGUSR2))
