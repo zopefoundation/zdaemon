@@ -12,10 +12,10 @@
 # FOR A PARTICULAR PURPOSE
 #
 ##############################################################################
-"""zdaemon -- run an application as a daemon.
+"""zrdun -- run an application as a daemon.
 
-Usage: python zdaemon.py [zdaemon-options] program [program-arguments]
-Or:    python zdaemon.py -c [command]
+Usage: python zrdun.py [zrdun-options] program [program-arguments]
+Or:    python zrdun.py -c [command]
 
 Options:
   -b SECONDS -- set backoff limit to SECONDS (default 10; see below)
@@ -106,7 +106,7 @@ class Options:
     errors related to the command line.
     """
 
-    progname = "zdaemon.py"             # Program name for usage message
+    progname = "zrdun.py"             # Program name for usage message
 
     # Options we know of, and their defaults
     backofflimit = 10                   # -b SECONDS
@@ -128,7 +128,7 @@ class Options:
         args     -- the command line arguments, less the program name
                     (default is sys.argv[1:] at the time of call)
 
-        progname -- the program name (default "zdaemon.py")
+        progname -- the program name (default "zrdun.py")
         """
 
         if args is None:
@@ -414,7 +414,7 @@ class Daemonizer:
         else:
             if not data.endswith("\n"):
                 data += "\n"
-            msg = ("Another zdaemon is already up using socket %r:\n%s" %
+            msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg)
             critical(msg)
