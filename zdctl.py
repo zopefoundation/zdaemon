@@ -49,9 +49,9 @@ class ZDOptions(Options):
 
     # Where's zdaemon?
     if __name__ == "__main__":
-        _file = __file__
-    else:
         _file = sys.argv[0]
+    else:
+        _file = __file__
     _file = os.path.normpath(os.path.abspath(_file))
     _dir = os.path.dirname(_file)
     zdaemon = os.path.join(_dir, "zdaemon.py")
