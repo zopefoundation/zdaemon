@@ -16,10 +16,11 @@ class ZDOptions:
     schema = None
     configroot = None
 
-    # Class variable to control automatic processing of a <logger>
+    # Class variable to control automatic processing of an <eventlog>
     # section.  This should be the (possibly dotted) name of something
-    # accessible from configroot, typically "logger".
+    # accessible from configroot, typically "eventlog".
     logsectionname = None
+    config_logger = None # The configured event logger, if any
 
     # Class variable deciding whether positional arguments are allowed.
     # If you want positional arguments, set this to 1 in your subclass.
