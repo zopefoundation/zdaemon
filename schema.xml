@@ -25,13 +25,19 @@
       no default value specified in the schema; in some cases, the
       program calculates a dynamic default, in others, the feature
       associated with the option is disabled.
+
+      For those options that also have corresponding command-line
+      options, the command line option (short and long form) are given
+      here too.
     </description>
 
     <key name="program" datatype="string-list"
 	 required="yes">
       <description>
-        The command line used to start the subprocess managed by
-        zdrun.py.  This is currently a simple list of
+        Command-line option: -p or --program (zdctl.py only).
+
+        This option gives the command used to start the subprocess
+        managed by zdrun.py.  This is currently a simple list of
         whitespace-delimited words. The first word is the program
         file, subsequent words are its command line arguments.  If the
         program file contains no slashes, it is searched using $PATH.
@@ -68,6 +74,8 @@
 	 required="no"
 	 default="zdsock">
       <description>
+        Command-line option: -s or --socket-name.
+
         The pathname of the Unix domain socket used for communication
         between zdctl.py and zdrun.py.  The default is relative to the
         current directory in which zdctl.py and zdrun.py are started.
@@ -79,6 +87,8 @@
 	 required="no"
 	 default="false">
       <description>
+        Command-line option: -d or --daemon.
+
         If this option is true, zdrun.py runs in the background as a
         true daemon.  It forks an child process which becomes the
         subprocess manager, while the parent exits (making the shell
@@ -98,6 +108,8 @@
     <key name="directory" datatype="existing-directory"
 	 required="no">
       <description>
+        Command-line option: -z or --directory.
+
         If the daemon option is true, this option can specify a
         directory into which zdrun.py changes as part of the
         "daemonizing".  If the daemon option is false, this option is
@@ -109,6 +121,8 @@
 	 required="no"
 	 default="10">
       <description>
+        Command-line option: -b or --backoff-limit.
+
         When the subprocess crashes, zdrun.py inserts a one-second
         delay before it restarts it.  When the subprocess crashes
         again right away, the delay is incremented by one second, and
@@ -129,6 +143,8 @@
 	 required="no"
 	 default="false">
       <description>
+        Command-line option: -f or --forever.
+
         If this option is true, zdrun.py will keep restarting a
         crashing subprocess forever.  If it is false, it will give up
         after backoff-limit crashes in a row.  See the description of
@@ -140,6 +156,8 @@
 	 required="no"
 	 default="0,2">
       <description>
+        Command-line option: -x or --exit-codes.
+
         If the subprocess exits with an exit status that is equal to
         one of the integers in this list, zdrun.py will not restart
         it.  The default list requires some explanation.  Exit status
@@ -160,6 +178,8 @@
     <key name="user" datatype="string"
 	 required="no">
       <description>
+        Command-line option: -u or --user.
+
         When zdrun.py is started by root, this option specifies the
         user as who the the zdrun.py process (and hence the daemon
         subprocess) will run.  This can be a user name or a numeric
