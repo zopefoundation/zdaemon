@@ -81,8 +81,6 @@ if __name__ == "__main__":
     if basename(scriptdir).lower() == "zdaemon":
         sys.path.append(dirname(scriptdir))
 
-import ZConfig.datatypes
-import zLOG
 from zdaemon.zdoptions import RunnerOptions
 
 
@@ -109,6 +107,13 @@ class ZDRunOptions(RunnerOptions):
         if self.sockname:
             # Convert socket name to absolute path
             self.sockname = os.path.abspath(self.sockname)
+        if self.config_logger is None:
+            import zdaemon.logger
+            import zLOG
+            zLOG.initialize()
+            self.logger = zdaemon.logger.Logger()
+        else:
+            self.logger = self.config_logger()
 
     def load_logconf(self, sectname):
         """Load alternate eventlog if the specified section isn't present."""
@@ -179,7 +184,7 @@ class Subprocess:
         if pid != 0:
             # Parent
             self.pid = pid
-            info("spawned process pid=%d" % pid)
+            self.options.logger.info("spawned process pid=%d" % pid)
             return pid
         else:
             # Child
@@ -228,6 +233,7 @@ class Daemonizer:
     def main(self, args=None):
         self.options = ZDRunOptions()
         self.options.realize(args)
+        self.logger = self.options.logger
         self.set_uid()
         self.run()
 
@@ -275,7 +281,7 @@ class Daemonizer:
                     # Stale socket -- delete, sleep, and try again.
                     msg = "Unlinking stale socket %s; sleep 1" % sockname
                     sys.stderr.write(msg + "\n")
-                    warn(msg)
+                    self.logger.warn(msg)
                     self.unlink_quietly(sockname)
                     sock.close()
                     time.sleep(1)
@@ -307,7 +313,7 @@ class Daemonizer:
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg + "\n")
-            critical(msg)
+            self.logger.critical(msg)
             sys.exit(1)
 
     def setsignals(self):
@@ -317,7 +323,7 @@ class Daemonizer:
         signal.signal(signal.SIGCHLD, self.sigchild)
 
     def sigexit(self, sig, frame):
-        critical("daemon manager killed by %s" % signame(sig))
+        self.logger.critical("daemon manager killed by %s" % signame(sig))
         sys.exit(1)
 
     waitstatus = None
@@ -356,18 +362,19 @@ class Daemonizer:
         pid = os.fork()
         if pid != 0:
             # Parent
-            debug("daemon manager forked; parent exiting")
+            self.logger.debug("daemon manager forked; parent exiting")
             os._exit(0)
         # Child
-        info("daemonizing the process")
+        self.logger.info("daemonizing the process")
         if self.options.directory:
             try:
                 os.chdir(self.options.directory)
             except os.error, err:
-                warn("can't chdir into %r: %s" %
-                     (self.options.directory, err))
+                self.logger.warn("can't chdir into %r: %s"
+                                 % (self.options.directory, err))
             else:
-                info("set current directory: %r" % self.options.directory)
+                self.logger.info("set current directory: %r"
+                                 % self.options.directory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
@@ -388,7 +395,7 @@ class Daemonizer:
     proc = None # Subprocess instance
 
     def runforever(self):
-        info("daemon manager started")
+        self.logger.info("daemon manager started")
         min_mood = not self.options.hang_around
         while self.mood >= min_mood or self.proc.pid:
             if self.mood > 0 and not self.proc.pid and not self.delay:
@@ -421,15 +428,17 @@ class Daemonizer:
                 try:
                     self.dorecv()
                 except socket.error, msg:
-                    exception("socket.error in dorecv(): %s" % str(msg))
+                    self.logger.exception("socket.error in dorecv(): %s"
+                                          % str(msg))
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
                 except socket.error, msg:
-                    exception("socket.error in doaccept(): %s" % str(msg))
+                    self.logger.exception("socket.error in doaccept(): %s"
+                                          % str(msg))
                     self.commandsocket = None
-        info("Exiting")
+        self.logger.info("Exiting")
         sys.exit(0)
 
     def reportstatus(self):
@@ -439,7 +448,7 @@ class Daemonizer:
         msg = "pid %d: " % pid + msg
         if pid != self.proc.pid:
             msg = "unknown " + msg
-            warn(msg)
+            self.logger.warn(msg)
         else:
             killing = self.killing
             if killing:
@@ -450,9 +459,9 @@ class Daemonizer:
             self.proc.setstatus(sts)
             if es in self.options.exitcodes and not killing:
                 msg = msg + "; exiting now"
-                info(msg)
+                self.logger.info(msg)
                 sys.exit(es)
-            info(msg)
+            self.logger.info(msg)
 
     backoff = 0
 
@@ -468,9 +477,9 @@ class Daemonizer:
                 if self.options.forever:
                     self.backoff = self.options.backofflimit
                 else:
-                    critical("restarting too frequently; quit")
+                    self.logger.critical("restarting too frequently; quit")
                     sys.exit(1)
-            info("sleep %s to avoid rapid restarts" % self.backoff)
+            self.logger.info("sleep %s to avoid rapid restarts" % self.backoff)
             self.delay = now + self.backoff
         else:
             # Reset the backoff timer
@@ -566,7 +575,7 @@ class Daemonizer:
             self.delay = time.time() + self.options.backofflimit
         else:
             self.sendreply("Exiting now")
-            info("Exiting")
+            self.logger.info("Exiting")
             sys.exit(0)
 
     def cmd_kill(self, args):
@@ -630,38 +639,8 @@ class Daemonizer:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
         except socket.error, msg:
-            warn("Error sending reply: %s" % str(msg))
+            self.logger.warn("Error sending reply: %s" % str(msg))
 
-# Log messages with various severities.
-# This uses zLOG, but the API is a simplified version of PEP 282
-
-def critical(msg):
-    """Log a critical message."""
-    _log(msg, zLOG.PANIC)
-
-def error(msg):
-    """Log an error message."""
-    _log(msg, zLOG.ERROR)
-
-def exception(msg):
-    """Log an exception (an error message with a traceback attached)."""
-    _log(msg, zLOG.ERROR, error=sys.exc_info())
-
-def warn(msg):
-    """Log a warning message."""
-    _log(msg, zLOG.PROBLEM)
-
-def info(msg):
-    """Log an informational message."""
-    _log(msg, zLOG.INFO)
-
-def debug(msg):
-    """Log a debugging message."""
-    _log(msg, zLOG.DEBUG)
-
-def _log(msg, severity=zLOG.INFO, error=None):
-    """Internal: generic logging function."""
-    zLOG.LOG("ZD:%d" % os.getpid(), severity, msg, "", error)
 
 # Helpers for dealing with signals and exit status
 
@@ -728,7 +707,6 @@ def get_path():
 def main(args=None):
     assert os.name == "posix", "This code makes many Unix-specific assumptions"
 
-    zLOG.initialize()
     d = Daemonizer()
     d.main(args)
 

@@ -316,17 +316,7 @@ class ZDOptions:
             obj = getattr(obj, p)
         self.config_logger = obj
         if obj is not None:
-            import zLOG
-            zLOG.set_initializer(self.log_initializer)
-            zLOG.initialize()
-
-    def log_initializer(self):
-        from zLOG import EventLogger
-        logger = self.config_logger()
-        for handler in logger.handlers:
-            if hasattr(handler, "reopen"):
-                handler.reopen()
-        EventLogger.event_logger.logger = logger
+            obj.startup()
 
 
 class RunnerOptions(ZDOptions):

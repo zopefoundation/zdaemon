@@ -1,6 +1,16 @@
 <component>
 
-  <import package="zLOG"/>
+  <!-- Note on logging configuration:
+
+       This schema component expects to use a section type named
+       "eventlog"; this type needs to be provided by some other
+       component that the top-level schema needs to import.
+
+       The import is not performed here to allow applications to
+       load the type from different components.  The zLOG component
+       provides a suitable definition, but other components may do so
+       as well.
+    -->
 
   <sectiontype name="runner">
 
