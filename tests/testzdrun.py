@@ -141,11 +141,27 @@ class ZDaemonTests(unittest.TestCase):
     def testOptionsError(self):
         # Check that we get an error for an unrecognized option
         save_sys_stderr = sys.stderr
+        options = zdoptions.ZDOptions()
         try:
             sys.stderr = StringIO()
-            options = zdoptions.ZDOptions()
             try:
                 options.realize(["-/"])
+            except SystemExit, err:
+                self.assertEqual(err.code, 2)
+            else:
+                self.fail("SystemExit expected")
+        finally:
+            sys.stderr = save_sys_stderr
+
+    def testOptionsNoPositionalArgs(self):
+        # Check that we get an error for positional args when they
+        # haven't been enabled.
+        save_sys_stderr = sys.stderr
+        options = zdoptions.ZDOptions()
+        try:
+            sys.stderr = StringIO()
+            try:
+                options.realize(["A"])
             except SystemExit, err:
                 self.assertEqual(err.code, 2)
             else:
