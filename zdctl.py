@@ -376,7 +376,7 @@ class ZDCmd(cmd.Cmd):
         print "show all -- show all of the above"
 
     def complete_show(self, text, *ignored):
-        options = ["options", "python"]
+        options = ["options", "python", "all"]
         return [x for x in options if x.startswith(text)]
 
     def do_logreopen(self, arg):
