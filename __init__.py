@@ -13,3 +13,7 @@
 #
 ##############################################################################
 """zdaemon -- a package to manage a daemon application."""
+
+def run(*args):
+    import zdaemon.Daemon
+    zdaemon.Daemon.run(*args)
