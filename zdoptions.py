@@ -26,7 +26,7 @@ class ZDOptions:
         self.add(None, None, "h", "help", self.help)
         self.add("configfile", None, "C:", "configure=")
 
-    def help(self):
+    def help(self, dummy):
         """Print a long help message (self.doc) to stdout and exit(0).
 
         Occurrences of "%s" in self.doc are replaced by self.progname.
