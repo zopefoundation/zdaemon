@@ -7,9 +7,7 @@
        component that the top-level schema needs to import.
 
        The import is not performed here to allow applications to
-       load the type from different components.  The zLOG component
-       provides a suitable definition, but other components may do so
-       as well.
+       load the type from different components.
     -->
 
   <sectiontype name="runner">
