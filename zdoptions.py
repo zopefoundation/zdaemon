@@ -11,26 +11,36 @@ class ZDOptions:
     doc = None
     progname = None
     configfile = None
+    schemadir = None
     schemafile = "schema.xml"
+    schema = None
+    configroot = None
 
     def __init__(self):
         self.names_list = []
         self.short_options = []
         self.long_options = []
         self.options_map = {}
+        self.default_map = {}
+        self.required_map = {}
         self.add(None, None, "h", "help", self.help)
         self.add("configfile", None, "C:", "configure=")
 
-    def help(self, value):
-        print self.doc.strip()
+    def help(self):
+        """Print a long help message (self.doc) to stdout and exit(0).
+
+        Occurrences of "%s" in self.doc are replaced by self.progname.
+        """
+        doc = self.doc
+        if doc.find("%s") > 0:
+            doc = doc.replace("%s", self.progname)
+        print doc,
         sys.exit(0)
 
     def usage(self, msg):
-        sys.stderr.write(str(msg) + "\n")
-        progname = self.progname
-        if progname is None:
-            progname = sys.argv[0]
-        sys.stderr.write("for more help, use %s --help\n" % progname)
+        """Print a brief error message to stderr and exit(2)."""
+        sys.stderr.write("Error: %s\n" % str(msg))
+        sys.stderr.write("For help, use %s -h\n" % self.progname)
         sys.exit(2)
 
     def add(self,
@@ -39,6 +49,8 @@ class ZDOptions:
             short=None,                 # short option name
             long=None,                  # long option name
             handler=None,               # handler (defaults to string)
+            default=None,               # default value
+            required=None,              # message if not provided
             ):
         """Add information about a configuration option.
 
@@ -52,6 +64,11 @@ class ZDOptions:
             Command line option calls handler
         add(name, None, short, long, handler)
             Assign handler return value to attribute 'name'
+
+        In addition, one of the following keyword arguments may be given:
+
+        default=...  -- if not None, the default value
+        required=... -- if nonempty, an error message if no value provided
        """
 
         if short and long:
@@ -78,6 +95,8 @@ class ZDOptions:
             if key[-1] == "=":
                 key = key[:-1]
             key = "--" + key
+            if self.options_map.has_key(key):
+                raise ValueError, "duplicate long option key '%s'" % key
             self.options_map[key] = (name, handler)
             self.long_options.append(long)
 
@@ -85,15 +104,29 @@ class ZDOptions:
             if not hasattr(self, name):
                 setattr(self, name, None)
             self.names_list.append((name, confname))
+            if default is not None:
+                self.default_map[name] = default
+            if required:
+                self.required_map[name] = required
 
     def realize(self, args=None, progname=None, doc=None):
-        """Realize a configuration."""
+        """Realize a configuration.
+
+        Optional arguments:
+
+        args     -- the command line arguments, less the program name
+                    (default is sys.argv[1:])
+
+        progname -- the program name (default is sys.argv[0])
+
+        doc      -- usage message (default is __main__.__doc__)
+        """
 
          # Provide dynamic default method arguments
         if args is None:
             args = sys.argv[1:]
         if progname is None:
-            self.progname = sys.argv[0]
+            progname = sys.argv[0]
         if doc is None:
             import __main__
             doc = __main__.__doc__
@@ -114,16 +147,18 @@ class ZDOptions:
                 try:
                     arg = handler(arg)
                 except ValueError, msg:
-                    self.usage("invalid value for %s %s: %s" % (opt, arg, msg))
+                    self.usage("invalid value for %s %r: %s" % (opt, arg, msg))
             if name and arg is not None:
                 setattr(self, name, arg)
 
-        # Process config file
         if self.configfile is not None:
-            # Load schema
-            here = os.path.dirname(__file__)
-            self.schemafile = os.path.join(here, self.schemafile)
-            self.schema = ZConfig.loadSchema(self.schemafile)
+            # Process config file
+            if self.schema is None:
+                # Load schema
+                if self.schemadir is None:
+                    self.schemadir = os.path.dirname(__file__)
+                self.schemafile = os.path.join(self.schemadir, self.schemafile)
+                self.schema = ZConfig.loadSchema(self.schemafile)
 
             # Load configuration
             try:
@@ -144,6 +179,16 @@ class ZDOptions:
                     # Here AttributeError is not a user error!
                     obj = getattr(obj, part)
                 setattr(self, name, obj)
+
+        # Process defaults
+        for name, value in self.default_map.items():
+            if getattr(self, name) is None:
+                setattr(self, name, value)
+
+        # Process required options
+        for name, message in self.required_map.items():
+            if getattr(self, name) is None:
+                self.usage(message)
 
 
 def _test():
