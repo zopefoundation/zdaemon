@@ -159,7 +159,7 @@ class TestBasicFunctionality(TestZDOptions):
         options.realize(["-afoo"], raise_getopt_errs=False)
         # check_exit_code realizes the options with raise_getopt_errs=True
         self.check_exit_code(options, ['-afoo'])
-                                       
+
 
 class EnvironmentOptions(ZDOptionsTestBase):
 
