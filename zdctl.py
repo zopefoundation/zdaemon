@@ -442,6 +442,27 @@ class ZDCmd(cmd.Cmd):
         print "    command line, except that if no -C option is given,"
         print "    the last configuration file is used."
 
+    def do_foreground(self, arg):
+        self.get_status()
+        pid = self.zd_pid
+        if pid:
+            print "To run the program in the foreground, please stop it first."
+            return
+        program = " ".join(self.options.program)
+        print program
+        try:
+            os.system(program)
+        except KeyboardInterrupt:
+            print
+
+    do_fg = do_foreground
+
+    def help_foreground(self):
+        print "foreground -- Run the program in the forground."
+        print "fg -- an alias for foreground."
+
+    help_fg = help_foreground
+
     def do_quit(self, arg):
         self.get_status()
         if not self.zd_up:
