@@ -54,6 +54,7 @@ import sys
 import time
 import signal
 import socket
+import stat
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
@@ -399,9 +400,12 @@ class ZDCmd(cmd.Cmd):
                 print "No default log file specified; use logtail <logfile>"
                 return
         try:
-            os.system("tail -f %s" % arg)
+            helper = TailHelper(arg)
+            helper.tailf()
         except KeyboardInterrupt:
             print
+        except IOError, msg:
+            print msg
 
     def help_logtail(self):
         print "logtail [logfile] -- Run tail -f on the given logfile."
@@ -490,6 +494,62 @@ class ZDCmd(cmd.Cmd):
         print "        stop the daemon manager."
 
 
+class TailHelper:
+
+    MAX_BUFFSIZE = 1024
+
+    def __init__(self, fname):
+        self.fname = fname
+
+    def tailf(self):
+        f = open(self.fname, 'r')
+        sz, lines = self.tail(10)
+        for line in lines:
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        while 1:
+            newsz = self.fsize()
+            bytes_added = newsz - sz
+            if bytes_added > 0:
+                f.seek(-bytes_added, 2)
+                bytes = f.read(bytes_added)
+                sys.stdout.write(bytes)
+                sys.stdout.flush()
+                sz = newsz
+            time.sleep(1)
+
+    def tail(self, max=10):
+        f = open(self.fname, 'r')
+        f.seek(0, 2)
+        pos = sz = f.tell()
+
+        lines = []
+        bytes = []
+        num_bytes = 0
+
+        while 1:
+            if pos == 0:
+                break
+            f.seek(pos)
+            byte = f.read(1)
+            if byte == '\n':
+                if len(lines) == max:
+                    break
+                bytes.reverse()
+                line = ''.join(bytes)
+                line and lines.append(line)
+                bytes = []
+            bytes.append(byte)
+            num_bytes = num_bytes + 1
+            if num_bytes > self.MAX_BUFFSIZE:
+                break
+            pos = pos - 1
+        lines.reverse()
+        return sz, lines
+
+    def fsize(self):
+        return os.stat(self.fname)[stat.ST_SIZE]
+    
 def main(args=None):
     options = ZDCtlOptions()
     options.realize(args)
