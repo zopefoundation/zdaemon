@@ -68,6 +68,7 @@ import os
 import sys
 import time
 import errno
+import logging
 import socket
 import select
 import signal
@@ -108,10 +109,9 @@ class ZDRunOptions(RunnerOptions):
             # Convert socket name to absolute path
             self.sockname = os.path.abspath(self.sockname)
         if self.config_logger is None:
-            import zdaemon.logger
-            import zLOG
-            zLOG.initialize()
-            self.logger = zdaemon.logger.Logger()
+            # This doesn't perform any configuration of the logging
+            # package, but that's reasonable in this case.
+            self.logger = logging.getLogger()
         else:
             self.logger = self.config_logger()
 
