@@ -13,6 +13,7 @@ Options:
   -f -- run forever (by default, exit when the backoff limit is exceeded)
   -h -- print usage message and exit
   -s SOCKET -- Unix socket name for client communication (default "zdsock")
+  -u USER -- run as this user (or numeric uid)
   -x LIST -- list of fatal exit codes (default "0,2"; use "" to disable)
   -z DIRECTORY -- directory to chdir into when using -d; default "/"
   program [program-arguments] -- an arbitrary application to run
@@ -77,6 +78,11 @@ import getopt
 import signal
 from stat import ST_MODE
 
+if __name__ == "__main__":
+    # Add the parent of the script directory to the module search path
+    from os.path import dirname, abspath, normpath
+    sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
+
 import zLOG
 
 class Options:
@@ -99,6 +105,7 @@ class Options:
     forever = 0                         # -f
     sockname = "zdsock"                 # -s SOCKET
     exitcodes = [0, 2]                  # -x LIST
+    user = None                         # -u USER
     zdirectory = "/"                    # -z DIRECTORY
 
     args = []                           # Positional arguments
@@ -119,7 +126,7 @@ class Options:
         if progname:
             self.progname = progname
         try:
-            self.opts, self.args = getopt.getopt(args, "b:cdfhs:x:z:")
+            self.opts, self.args = getopt.getopt(args, "b:cdfhs:u:x:z:")
         except getopt.error, msg:
             self.usage(str(msg))
         self._interpret_options()
@@ -149,6 +156,8 @@ class Options:
                 sys.exit(0)
             if o == "-s":
                 self.sockname = a
+            if o == "-u":
+                self.user = a
             if o == "-x":
                 if a == "":
                     self.exitcodes = []
@@ -317,11 +326,37 @@ class Daemonizer:
 
     def main(self, args=None):
         self.opts = Options(args)
+        self.set_uid()
         if self.opts.isclient:
             clt = Client(self.opts)
             clt.doit()
         else:
             self.run()
+
+    def set_uid(self):
+        if self.opts.user is None:
+            return
+        if os.name != "posix":
+            self.opts.usage("-u USER only supported on Unix")
+        if os.geteuid() != 0:
+            self.opts.usage("only root can use -u USER")
+        import pwd
+        try:
+            uid = int(self.opts.user)
+        except: # int() can raise all sorts of errors
+            try:
+                pwrec = pwd.getpwnam(self.opts.user)
+            except KeyError:
+                self.opts.usage("username %r not found" % self.opts.user)
+            uid = pwrec[2]
+        else:
+            try:
+                pwrec = pwd.getpwuid(uid)
+            except KeyError:
+                self.opts.usage("uid %r not found" % self.opts.user)
+        gid = pwrec[3]
+        os.setgid(gid)
+        os.setuid(uid)
 
     def run(self):
         self.proc = Subprocess(self.opts)
