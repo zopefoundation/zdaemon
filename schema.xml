@@ -5,7 +5,7 @@
   </description>
 
   <sectiontype name="zdctl">
-    <key name="program" datatype="string" required="yes" />
+    <key name="program" datatype="string-list" required="yes" />
   </sectiontype>
 
   <section name="*" type="zdctl" attribute="zdctl" required="yes" />
