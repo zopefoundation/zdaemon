@@ -251,9 +251,10 @@
     </key>
 
     <key name="prompt" datatype="string"
-         required="no" default="zdctl>">
+         required="no">
        <description>
-         The prompt shown by the controller program.
+         The prompt shown by the controller program.  The default must
+         be provided by the application.
        </description>
     </key>
 

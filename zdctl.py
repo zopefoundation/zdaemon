@@ -84,7 +84,11 @@ class ZDCtlOptions(RunnerOptions):
         self.add("logfile", "runner.logfile", "l:", "logfile=")
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
-        self.add("prompt", "runner.prompt", default="zdctl>")
+        programname = sys.argv[0]
+        base, ext = os.path.splitext(programname)
+        if ext == ".py":
+            programname = base
+        self.add("prompt", "runner.prompt", default=(programname + ">"))
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
