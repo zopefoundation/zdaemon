@@ -17,7 +17,7 @@ if __name__ == "__main__":
         os.kill(os.getpid(), signal.SIGKILL)
     elif arg == "exit":
         os._exit(2)
-    os._exit(0)    
+    os._exit(0)
 
 # The rest is unittest stuff that can be run by testrunner.py.
 
@@ -78,5 +78,3 @@ def test_suite():
         return unittest.makeSuite(DaemonTest)
     else:
         return None
-
-

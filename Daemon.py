@@ -2,14 +2,14 @@
 #
 # Copyright (c) 2001, 2002 Zope Corporation and Contributors.
 # All Rights Reserved.
-# 
+#
 # This software is subject to the provisions of the Zope Public License,
 # Version 2.0 (ZPL).  A copy of the ZPL should accompany this distribution.
 # THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
 # WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 # FOR A PARTICULAR PURPOSE
-# 
+#
 ##############################################################################
 
 import os, sys, time, signal
@@ -31,7 +31,7 @@ def run(argv, pidfile=''):
 
     if not os.environ.has_key('Z_DEBUG_MODE'):
         detach() # detach from the controlling terminal
-    
+
     while 1:
         try:
             pid = os.fork()
@@ -68,7 +68,7 @@ def run(argv, pidfile=''):
             sys.exit()
 
 def detach():
-    # do the funky chicken dance to detach from the terminal 
+    # do the funky chicken dance to detach from the terminal
     pid = os.fork()
     if pid: sys.exit(0)
     os.close(0); sys.stdin  = open('/dev/null')
