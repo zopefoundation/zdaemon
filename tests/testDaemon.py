@@ -52,7 +52,7 @@ class DaemonTest(unittest.TestCase):
 
     def run(self, arg):
         try:
-            zdaemon.run((self.script, arg))
+            zdaemon.Daemon.run((self.script, arg))
         except SystemExit:
             pass
 
