@@ -401,13 +401,14 @@ class Daemonizer:
             msg = "unknown " + msg
             warn(msg)
         else:
-            if self.killing:
+            killing = self.killing
+            if killing:
                 self.killing = 0
                 self.delay = 0
             else:
                 self.governor()
             self.proc.setstatus(sts)
-            if es in self.options.exitcodes:
+            if es in self.options.exitcodes and not killing:
                 msg = msg + "; exiting now"
                 info(msg)
                 sys.exit(es)
