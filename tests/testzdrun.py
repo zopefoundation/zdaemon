@@ -1,7 +1,6 @@
 """Test suite for zdrun.py."""
 
 import os
-import stat
 import sys
 import time
 import signal

@@ -1,7 +1,6 @@
 import time
 import os
 import sys
-import signal
 
 def main():
     # dummy zdctl startup of zdrun

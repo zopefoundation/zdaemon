@@ -70,7 +70,6 @@ import time
 import errno
 import socket
 import select
-import getopt
 import signal
 from stat import ST_MODE
 

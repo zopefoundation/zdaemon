@@ -58,7 +58,6 @@ if __name__ == "__main__":
     if basename(scriptdir).lower() == "zdaemon":
         sys.path.append(dirname(scriptdir))
 
-import ZConfig
 from zdaemon.zdoptions import RunnerOptions
 
 
