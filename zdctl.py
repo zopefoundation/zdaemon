@@ -78,7 +78,7 @@ class ZDOptions(zdoptions.ZDOptions):
 
     def __init__(self):
         zdoptions.ZDOptions.__init__(self)
-        self.add("program", "p:", "program=", "zdctl.program", string_list)
+        self.add("program", "zdctl.program", "p:", "program=", string_list)
 
 
 class ZDCmd(cmd.Cmd):

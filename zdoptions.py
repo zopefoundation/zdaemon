@@ -14,11 +14,12 @@ class ZDOptions:
     schemafile = "schema.xml"
 
     def __init__(self):
-        self.table = {}
-        self.short_options = {}
-        self.long_options = {}
-        self.add("help", "h", "help", handler=self.help)
-        self.add("configfile", "C:", "configure=")
+        self.names_list = []
+        self.short_options = []
+        self.long_options = []
+        self.options_map = {}
+        self.add(None, None, "h", "help", self.help)
+        self.add("configfile", None, "C:", "configure=")
 
     def help(self, value):
         print self.doc.strip()
@@ -33,47 +34,62 @@ class ZDOptions:
         sys.exit(2)
 
     def add(self,
-            name,                       # attribute name on self
+            name=None,                  # attribute name on self
+            confname=None,              # name in ZConfig (may be dotted)
             short=None,                 # short option name
             long=None,                  # long option name
-            confname=None,              # name in ZConfig (may be dotted)
             handler=None,               # handler (defaults to string)
-            required=None,              # message issed if missing
             ):
-        if self.table.has_key(name):
-            raise ValueError, "duplicate option name: " + repr(name)
+        """Add information about a configuration option.
+
+        This can take several forms:
+
+        add(name, confname)
+            Configuration option 'confname' maps to attribute 'name'
+        add(name, None, short, long)
+            Command line option '-short' or '--long' maps to 'name' 
+        add(None, None, short, long, handler)
+            Command line option calls handler
+        add(name, None, short, long, handler)
+            Assign handler return value to attribute 'name'
+       """
+
+        if short and long:
+            if short.endswith(":") != long.endswith("="):
+                raise ValueError, "inconsistent short/long options: %r %r" % (
+                    short, long)
+
         if short:
             if short[0] == "-":
                 raise ValueError, "short option should not start with '-'"
             key, rest = short[:1], short[1:]
-            if rest and rest != ":":
+            if rest not in ("", ":"):
                 raise ValueError, "short option should be 'x' or 'x:'"
-            if self.short_options.has_key(key):
-                raise ValueError, "duplicate short option: " + repr(short)
+            key = "-" + key
+            if self.options_map.has_key(key):
+                raise ValueError, "duplicate short option key '%s'" % key
+            self.options_map[key] = (name, handler)
+            self.short_options.append(short)
+
         if long:
             if long[0] == "-":
                 raise ValueError, "long option should not start with '-'"
             key = long
             if key[-1] == "=":
                 key = key[:-1]
-            if self.long_options.has_key(key):
-                raise ValueError, "duplicate long option: " + repr(long)
-        if short and long:
-            if short.endswith(":") != long.endswith("="):
-                raise ValueError, "inconsistent short/long options: %r %r" % (
-                    short, long)
-        self.table[name] = (short, long, confname, handler, required)
-        if short:
-            self.short_options[short[0]] = name
-        if long:
-            key = long
-            if key[-1] == "=":
-                key = key[:-1]
-            self.long_options[key] = name
+            key = "--" + key
+            self.options_map[key] = (name, handler)
+            self.long_options.append(long)
+
+        if name:
+            if not hasattr(self, name):
+                setattr(self, name, None)
+            self.names_list.append((name, confname))
 
     def realize(self, args=None, progname=None, doc=None):
         """Realize a configuration."""
 
+         # Provide dynamic default method arguments
         if args is None:
             args = sys.argv[1:]
         if progname is None:
@@ -84,39 +100,25 @@ class ZDOptions:
         self.progname = progname
         self.doc = doc
 
-        # Construct short and long option tables for getopt
-        shorts = ""
-        longs = []
-        for name, (short, long, xxx, xxx, xxx) in self.table.items():
-            if short:
-                shorts += short
-            if long:
-                longs.append(long)
-
         # Call getopt
         try:
-            self.options, self.args = getopt.getopt(args, shorts, longs)
+            self.options, self.args = getopt.getopt(
+                args, "".join(self.short_options), self.long_options)
         except getopt.error, msg:
             self.usage(msg)
 
         # Process options returned by getopt
-        for o, a in self.options:
-            if o.startswith("--"):
-                name = self.long_options[o[2:]]
-            elif o.startswith("-"):
-                name = self.short_options[o[1:]]
-            else:
-                self.usage("unrecognized option " + repr(o))
-            handler = self.table[name][3]
-            if handler is None:
-                value = a
-            else:
+        for opt, arg in self.options:
+            name, handler = self.options_map[opt]
+            if handler is not None:
                 try:
-                    value = handler(a)
+                    arg = handler(arg)
                 except ValueError, msg:
-                    self.usage("invalid value for %s %s: %s" % (o, a, msg))
-            setattr(self, name, value)
+                    self.usage("invalid value for %s %s: %s" % (opt, arg, msg))
+            if name and arg is not None:
+                setattr(self, name, arg)
 
+        # Process config file
         if self.configfile is not None:
             # Load schema
             here = os.path.dirname(__file__)
@@ -132,15 +134,14 @@ class ZDOptions:
 
         # Copy config options to attributes of self.  This only fills
         # in options that aren't already set from the command line.
-        for name in self.table.keys():
-            if not hasattr(self, name) or getattr(self, name) is None:
-                confname = self.table[name][2]
+        for name, confname in self.names_list:
+            if confname and getattr(self, name) is None:
                 parts = confname.split(".")
                 obj = self.configroot
                 for part in parts:
                     if obj is None:
                         break
-                    # If this raises AttributeError, that's not a user error!
+                    # Here AttributeError is not a user error!
                     obj = getattr(obj, part)
                 setattr(self, name, obj)
 
@@ -148,11 +149,12 @@ class ZDOptions:
 def _test():
     # Stupid test program
     z = ZDOptions()
-    z.add("program", "p:", "program=", "zdctl.program")
+    z.add("program", "zdctl.program", "p:", "program=")
+    print z.names_list
     z.realize()
-    names = z.table.keys()
+    names = z.names_list[:]
     names.sort()
-    for name in names:
+    for name, confname in names:
         print "%-20s = %.56r" % (name, getattr(z, name))
 
 if __name__ == "__main__":
