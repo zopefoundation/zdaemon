@@ -76,8 +76,8 @@ class ZDOptions(Options):
     program = None
 
     def load_schema(self):
-        schemafile = os.path.join(self._dir, "schema.xml")
-        self.schema = ZConfig.loadSchema(schemafile)
+        self.schemafile = os.path.join(self._dir, "schema.xml")
+        self.schema = ZConfig.loadSchema(self.schemafile)
 
     def load_configuration(self):
         Options.load_configuration(self) # Sets self.rootconf
@@ -287,6 +287,8 @@ class ZDCmd(cmd.Cmd):
             method()
 
     def show_options(self):
+        print "schemafile:  ", repr(self.options.schemafile)
+        print "configuration:", repr(self.options.configuration)
         print "zdaemon:     ", repr(self.options.zdaemon)
         print "program:     ", repr(self.options.program)
         print "backofflimit:", repr(self.options.backofflimit)
