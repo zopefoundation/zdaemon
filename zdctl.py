@@ -14,17 +14,18 @@
 ##############################################################################
 """zdctl -- control an application run by zdaemon.
 
-Usage: python zdctl.py [-C URL] [-p PROGRAM] [action [arguments]]
+Usage: python zdctl.py [-C URL] [-h] [-p PROGRAM] [action [arguments]]
 
 Options:
 -C/--configuration URL -- configuration file or URL
+-h/--help -- print usage message and exit
 -p/--program PROGRAM -- the program to run
 action [arguments] -- see below
 
-If no action is specified on the command line, a "shell" interpreting
-actions typed interactively is started.
-
-Use the action "help" to find out about available actions.
+Actions are commands like "start", "stop" and "status".  If no action
+is specified on the command line, a "shell" interpreting actions typed
+interactively is started.  Use the action "help" to find out about
+available actions.
 """
 
 from __future__ import nested_scopes

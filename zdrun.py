@@ -18,16 +18,17 @@ Usage: python zrdun.py [zrdun-options] program [program-arguments]
 Or:    python zrdun.py -c [command]
 
 Options:
-  -b SECONDS -- set backoff limit to SECONDS (default 10; see below)
-  -c -- client mode, to sends a command to the daemon manager; see below
-  -d -- run as a proper daemon; fork a background process, close files etc.
-  -f -- run forever (by default, exit when the backoff limit is exceeded)
-  -h -- print usage message and exit
-  -s SOCKET -- Unix socket name for client communication (default "zdsock")
-  -u USER -- run as this user (or numeric uid)
-  -x LIST -- list of fatal exit codes (default "0,2"; use "" to disable)
-  -z DIRECTORY -- directory to chdir into when using -d; default "/"
-  program [program-arguments] -- an arbitrary application to run
+-C/--configuration URL -- configuration file or URL
+-b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
+-c/--client -- client mode, to sends a command to the daemon manager
+-d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
+-f/--forever -- run forever (by default, exit when backoff limit is exceeded)
+-h/--help -- print this usage message and exit
+-s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
+-u/--user USER -- run as this user (or numeric uid)
+-x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
+-z/--directory DIRECTORY -- directory to chdir to when using -d (default "/")
+program [program-arguments] -- an arbitrary application to run
 
 Client mode options:
   -s SOCKET -- socket name (a Unix pathname) for client communication
@@ -48,7 +49,7 @@ it dies, and (when requested to do so with the -d option) it runs the
 application in the background, detached from the foreground tty
 session that started it (if any).
 
-Important: if at any point the application exits with an exit status
+Exit codes: if at any point the application exits with an exit status
 listed by the -x option, it is not restarted.  Any other form of
 termination (either being killed by a signal or exiting with an exit
 status not listed in the -x option) causes it to be restarted.
@@ -69,7 +70,7 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- True OO design -- use multiple classes rather than folding
+- Finish OO design -- use multiple classes rather than folding
   everything into one class.
 
 - Add unit tests.
@@ -93,97 +94,30 @@ if __name__ == "__main__":
     from os.path import dirname, abspath, normpath
     sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
 
+import ZConfig.datatypes
 import zLOG
+from zdaemon.zdoptions import ZDOptions, list_of_ints
 
-class Options:
+class ZDRunOptions(ZDOptions):
 
-    """A class to parse and hold the command line options.
+    positional_args_allowed = 1
 
-    Options are represented by various attributes (backofflimit etc.).
-    Positional arguments are represented by the args attribute.
+    def __init__(self):
+        ZDOptions.__init__(self)
+        self.add("backofflimit", "zdrun.backoff_limit",
+                 "b:", "backoff-limit=", int, default=10)
+        self.add("isclient", None, "c", "client", flag=1, default=0)
+        self.add("daemon", "zdrun.daemon", "d", "daemon", flag=1, default=0)
+        self.add("forever", "zdrun.forever", "f", "forever",
+                 flag=1, default=0)
+        self.add("sockname", "zdrun.socket_name", "s:", "socket-name=",
+                 ZConfig.datatypes.existing_dirpath, default="zdsock")
+        self.add("exitcodes", "zdrun.exit_codes", "x:", "exit-codes=",
+                 list_of_ints, default=[0, 2])
+        self.add("user", "zdrun.user", "u:", "user=")
+        self.add("zdirectory", "zdrun.directory", "z:", "directory=",
+                 ZConfig.datatypes.existing_directory, default="/")
 
-    This also has a public usage() method that can be used to report
-    errors related to the command line.
-    """
-
-    progname = "zrdun.py"             # Program name for usage message
-
-    # Options we know of, and their defaults
-    backofflimit = 10                   # -b SECONDS
-    isclient = 0                        # -c
-    daemon = 0                          # -d
-    forever = 0                         # -f
-    sockname = "zdsock"                 # -s SOCKET
-    exitcodes = [0, 2]                  # -x LIST
-    user = None                         # -u USER
-    zdirectory = "/"                    # -z DIRECTORY
-
-    args = []                           # Positional arguments
-
-    def __init__(self, args=None, progname=None):
-        """Constructor.
-
-        Optional arguments:
-
-        args     -- the command line arguments, less the program name
-                    (default is sys.argv[1:] at the time of call)
-
-        progname -- the program name (default "zrdun.py")
-        """
-
-        if args is None:
-            args = sys.argv[1:]
-        if progname:
-            self.progname = progname
-        try:
-            self.options, self.args = getopt.getopt(args, "b:cdfhs:u:x:z:")
-        except getopt.error, msg:
-            self.usage(str(msg))
-        self._interpret_options()
-
-    def _interpret_options(self):
-        """Internal: interpret the options parsed by getopt.getopt().
-
-        This sets the various instance variables overriding the defaults.
-
-        When -h is detected, print the module docstring to stdout and exit(0).
-        """
-        for o, a in self.options:
-            # Keep these in alphabetical order please!
-            if o == "-b":
-                try:
-                    self.backofflimit = float(a)
-                except:
-                    self.usage("invalid number: %r" % a)
-            if o == "-c":
-                self.isclient += 1
-            if o == "-d":
-                self.daemon += 1
-            if o == "-f":
-                self.forever += 1
-            if o == "-h":
-                print __doc__,
-                sys.exit(0)
-            if o == "-s":
-                self.sockname = os.path.abspath(a)
-            if o == "-u":
-                self.user = a
-            if o == "-x":
-                if a == "":
-                    self.exitcodes = []
-                else:
-                    try:
-                        self.exitcodes = map(int, a.split(","))
-                    except:
-                        self.usage("list of ints required: %r" % a)
-            if o == "-z":
-                self.zdirectory = a
-
-    def usage(self, msg):
-        """Write an error message to stderr and exit(2)."""
-        sys.stderr.write("Error: %s\n" % str(msg))
-        sys.stderr.write("For help, use %s -h\n" % self.progname)
-        sys.exit(2)
 
 class Subprocess:
 
@@ -196,7 +130,7 @@ class Subprocess:
     def __init__(self, options, args=None):
         """Constructor.
 
-        Arguments are an Options instance and a list of program
+        Arguments are a ZDRunOptions instance and a list of program
         arguments; the latter's first item must be the program name.
         """
         if args is None:
@@ -297,7 +231,7 @@ class Client:
     def __init__(self, options, args=None):
         """Constructor.
 
-        Arguments are an Options instance and a list of program
+        Arguments are an ZDRunOptions instance and a list of program
         arguments representing the command to send to the server.
         """
         self.options = options
@@ -335,7 +269,8 @@ class Client:
 class Daemonizer:
 
     def main(self, args=None):
-        self.options = Options(args)
+        self.options = ZDRunOptions()
+        self.options.realize(args)
         self.set_uid()
         if self.options.isclient:
             clt = Client(self.options)

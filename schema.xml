@@ -1,13 +1,25 @@
 <schema>
 
   <description>
-    Schema for zdctl.
+    Schema for zdctl.py and zdrun.py.
   </description>
 
   <sectiontype name="zdctl">
     <key name="program" datatype="string-list" required="yes" />
   </sectiontype>
 
+  <sectiontype name="zdrun">
+    <key name="backoff-limit" datatype="integer" default="10" />
+    <key name="daemon" datatype="boolean" default="False" />
+    <key name="forever" datatype="boolean" default="False" />
+    <key name="socket-name" datatype="existing-dirpath" default="zdsock" />
+    <key name="exit-codes" datatype="zdaemon.zdoptions.list_of_ints"
+	       default="0,2" />
+    <key name="user" datatype="string" />
+    <key name="directory" datatype="existing-directory" default="/" />
+  </sectiontype>
+
   <section name="*" type="zdctl" attribute="zdctl" required="yes" />
+  <section name="*" type="zdrun" attribute="zdrun" required="yes" />
 
 </schema>

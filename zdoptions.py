@@ -273,6 +273,15 @@ class ZDOptions:
         EventLogger.event_logger.logger = logger
 
 
+# ZConfig datatype
+
+def list_of_ints(arg):
+    if not arg:
+        return []
+    else:
+        return map(int, arg.split(","))
+
+
 def _test():
     # Stupid test program
     z = ZDOptions()
