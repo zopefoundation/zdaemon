@@ -24,6 +24,10 @@ Client commands are:
   status -- report application status (this is the default command)
   kill [signal] -- send a signal to the application
                    (default signal is SIGTERM)
+  start -- start the application if not already running
+  stop -- stop the application if running; daemon manager keeps running
+  restart -- stop followed by start
+  exit -- stop the application and exit
 
 This daemon manager has two purposes: it restarts the application when
 it dies, and (when requested to do so with the -d option) it runs the
@@ -285,19 +289,20 @@ class Daemonizer:
         sys.stderr = sys.__stderr__ = open("/dev/null", "w")
         os.setsid()
 
+    mood = 1 # 1: up, 0: down, -1: suicidal
     appid = 0 # Application pid; indicates status (0 == not running)
 
     def runforever(self):
         self.info("daemon manager started")
-        while 1:
-            if not self.appid:
+        while self.mood >= 0 or self.appid:
+            if self.mood > 0 and not self.appid:
                 self.forkandexec()
             if self.waitstatus:
                 self.reportstatus()
             r, w, x = [self.mastersocket], [], []
             if self.commandsocket:
                 r.append(self.commandsocket)
-            timeout = 30
+            timeout = self.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
             except select.error, err:
@@ -320,6 +325,8 @@ class Daemonizer:
                     self.problem("socket.error in doaccept(): %s" % str(msg),
                                  error=sys.exc_info())
                     self.commandsocket = None
+        self.info("Exiting")
+        self.exit(0)
 
     def doaccept(self):
         if self.commandsocket:
@@ -360,6 +367,41 @@ class Daemonizer:
         else:
             self.sendreply("Unknown command %r; 'help' for a list" % args[0])
 
+    def cmd_start(self, args):
+        self.mood = 1 # Up
+        if not self.appid:
+            self.forkandexec()
+            self.sendreply("Application started")
+        else:
+            self.sendreply("Application already started")
+
+    def cmd_stop(self, args):
+        self.mood = 0 # Down
+        if self.appid:
+            os.kill(self.appid, signal.SIGTERM)
+            self.sendreply("Sent SIGTERM")
+        else:
+            self.sendreply("Application already stopped")
+
+    def cmd_restart(self, args):
+        self.mood = 1 # Up
+        if self.appid:
+            os.kill(self.appid, signal.SIGTERM)
+            self.sendreply("Sent SIGTERM; will restart later")
+        else:
+            self.forkandexec()
+            self.sendreply("Application started")
+
+    def cmd_exit(self, args):
+        self.mood = -1 # Suicidal
+        if self.appid:
+            os.kill(self.appid, signal.SIGTERM)
+            self.sendreply("Sent SIGTERM; will exit later")
+        else:
+            self.sendreply("Exiting now")
+            self.info("Exiting")
+            self.exit(0)
+
     def cmd_kill(self, args):
         if args[1:]:
             try:
@@ -397,6 +439,11 @@ class Daemonizer:
             "  status -- report application status (default command)\n"
             "  kill [signal] -- send a signal to the application\n"
             "                   (default signal is SIGTERM)\n"
+            "start -- start the application if not already running\n"
+            "stop -- stop the application if running\n"
+            "        (the daemon manager keeps running)\n"
+            "restart -- stop followed by start\n"
+            "exit -- stop the application and exit\n"
             )
 
     def sendreply(self, msg):
@@ -449,6 +496,10 @@ class Daemonizer:
 
     def startprogram(self):
         try:
+            if self.commandsocket:
+                self.commandsocket.close()
+            if self.mastersocket:
+                self.mastersocket.close()
             self.blather("about to exec %s" % self.filename)
             try:
                 os.execv(self.filename, self.args)
