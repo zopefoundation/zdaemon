@@ -25,6 +25,7 @@ Options:
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
 -i/--interactive -- start an interactive shell after executing commands
+-l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
@@ -82,6 +83,7 @@ class ZDCtlOptions(RunnerOptions):
         self.add("program", "runner.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
+        self.add("logfile", "runner.logfile", "l:", "logfile=")
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
 
@@ -304,6 +306,9 @@ class ZDCmd(cmd.Cmd):
         print "wait -- Wait for the daemon process to exit."
 
     def do_status(self, arg=""):
+        if arg not in ["", "-l"]:
+            print "status argument must be absent or -l"
+            return
         self.get_status()
         if not self.zd_up:
             print "daemon manager not running"
@@ -320,24 +325,24 @@ class ZDCmd(cmd.Cmd):
 
     def do_show(self, arg):
         if not arg:
-            args = ["options"]
-        else:
-            args = arg.split()
-        methods = []
-        for arg in args:
-            try:
-                method = getattr(self, "show_" + arg)
-            except AttributeError:
-                self.help_show()
-                return
-            methods.append(method)
-        for method in methods:
-            method()
+            arg = "options"
+        try:
+            method = getattr(self, "show_" + arg)
+        except AttributeError, err:
+            print err
+            self.help_show()
+            return
+        method()
 
     def show_options(self):
+        print "zdctl/zdrun options:"
         print "schemafile:  ", repr(self.options.schemafile)
         print "configfile:  ", repr(self.options.configfile)
+        print "interactive: ", repr(self.options.interactive)
+        print "default_to_interactive:",
+        print                  repr(self.options.default_to_interactive)
         print "zdrun:       ", repr(self.options.zdrun)
+        print "python:      ", repr(self.options.python)
         print "program:     ", repr(self.options.program)
         print "backofflimit:", repr(self.options.backofflimit)
         print "forever:     ", repr(self.options.forever)
@@ -345,8 +350,11 @@ class ZDCmd(cmd.Cmd):
         print "exitcodes:   ", repr(self.options.exitcodes)
         print "user:        ", repr(self.options.user)
         print "directory:   ", repr(self.options.directory)
+        print "logfile:     ", repr(self.options.logfile)
+        print "hang_around: ", repr(self.options.hang_around)
 
     def show_python(self):
+        print "Python info:"
         version = sys.version.replace("\n", "\n              ")
         print "Version:     ", version
         print "Platform:    ", sys.platform
@@ -357,9 +365,15 @@ class ZDCmd(cmd.Cmd):
         for dir in sys.path:
             print "    " + repr(dir)
 
+    def show_all(self):
+        self.show_options()
+        print
+        self.show_python()
+
     def help_show(self):
         print "show options -- show zdctl options"
         print "show python -- show Python version and details"
+        print "show all -- show all of the above"
 
     def complete_show(self, text, *ignored):
         options = ["options", "python"]
@@ -371,6 +385,22 @@ class ZDCmd(cmd.Cmd):
     def help_logreopen(self):
         print "logreopen -- Send a SIGUSR2 signal to the daemon process."
         print "             This is designed to reopen the log file."
+
+    def do_logtail(self, arg):
+        if not arg:
+            arg = self.options.logfile
+            if not arg:
+                print "No default log file specified; use -l or -C"
+                return
+        try:
+            os.system("tail -f %s" % arg)
+        except KeyboardInterrupt:
+            print
+
+    def help_logtail(self):
+        print "logtail [logfile] -- Run tail -f on the given logfile."
+        print "                     A default file may exist."
+        print "                     Hit ^C to exit this mode."
 
     def do_quit(self, arg):
         self.get_status()
