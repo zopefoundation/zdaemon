@@ -553,7 +553,7 @@ class TailHelper:
 
     def fsize(self):
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
-    
+
 def main(args=None):
     options = ZDCtlOptions()
     options.realize(args)
