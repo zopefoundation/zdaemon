@@ -143,6 +143,6 @@ def get_signal_name(n):
             startswith = getattr(k, 'startswith', None)
             if startswith is None:
                 continue
-            if startswith('SIG'):
+            if startswith('SIG') and not startswith('SIG_'):
                 _signals[v] = k
     return _signals.get(n, 'unknown')
