@@ -57,10 +57,14 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- Do the governor without actual sleeps, using event scheduling etc.
+- The "stop" command should first send a SIGTERM, then sleep
+  backofflimit seconds, then send SIGKILL, and keep repeating SIGKILL
+  until it actually dies.
 
 - True OO design -- use multiple classes rather than folding
   everything into one class.
+
+- Add unit tests.
 
 - Add docstrings.
 
@@ -307,12 +311,13 @@ class Daemonizer:
         os.setsid()
 
     mood = 1 # 1: up, 0: down, -1: suicidal
+    delay = 0 # If nonzero, delay starting until this time
     appid = 0 # Application pid; indicates status (0 == not running)
 
     def runforever(self):
         self.info("daemon manager started")
         while self.mood >= 0 or self.appid:
-            if self.mood > 0 and not self.appid:
+            if self.mood > 0 and not self.appid and not self.delay:
                 self.forkandexec()
             if self.waitstatus:
                 self.reportstatus()
@@ -320,6 +325,10 @@ class Daemonizer:
             if self.commandsocket:
                 r.append(self.commandsocket)
             timeout = self.backofflimit
+            if self.delay:
+                timeout = max(0, min(timeout, self.delay - time.time()))
+                if timeout <= 0:
+                    self.delay = 0
             try:
                 r, w, x = select.select(r, w, x, timeout)
             except select.error, err:
@@ -386,6 +395,8 @@ class Daemonizer:
 
     def cmd_start(self, args):
         self.mood = 1 # Up
+        self.backoff = 0
+        self.delay = 0
         if not self.appid:
             self.forkandexec()
             self.sendreply("Application started")
@@ -394,6 +405,8 @@ class Daemonizer:
 
     def cmd_stop(self, args):
         self.mood = 0 # Down
+        self.backoff = 0
+        self.delay = 0
         if self.appid:
             os.kill(self.appid, signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
@@ -402,6 +415,8 @@ class Daemonizer:
 
     def cmd_restart(self, args):
         self.mood = 1 # Up
+        self.backoff = 0
+        self.delay = 0
         if self.appid:
             os.kill(self.appid, signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
@@ -411,6 +426,8 @@ class Daemonizer:
 
     def cmd_exit(self, args):
         self.mood = -1 # Suicidal
+        self.backoff = 0
+        self.delay = 0
         if self.appid:
             os.kill(self.appid, signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will exit later")
@@ -444,8 +461,14 @@ class Daemonizer:
         else:
             status = "running"
         self.sendreply("status=%s\n" % status +
-                       "manager=%d\n" % os.getpid() + 
-                       "application=%d\n" % self.appid +
+                       "now=%r\n" % time.time() +
+                       "mood=%d\n" % self.mood +
+                       "delay=%r\n" % self.delay +
+                       "backoff=%r\n" % self.backoff +
+                       "lasttime=%r\n" % self.lasttime +
+                       "application=%r\n" % self.appid +
+                       "manager=%r\n" % os.getpid() + 
+                       "backofflimit=%r\n" % self.backofflimit +
                        "filename=%r\n" % self.filename +
                        "args=%r\n" % self.args)
 
@@ -456,11 +479,11 @@ class Daemonizer:
             "  status -- report application status (default command)\n"
             "  kill [signal] -- send a signal to the application\n"
             "                   (default signal is SIGTERM)\n"
-            "start -- start the application if not already running\n"
-            "stop -- stop the application if running\n"
-            "        (the daemon manager keeps running)\n"
-            "restart -- stop followed by start\n"
-            "exit -- stop the application and exit\n"
+            "  start -- start the application if not already running\n"
+            "  stop -- stop the application if running\n"
+            "          (the daemon manager keeps running)\n"
+            "  restart -- stop followed by start\n"
+            "  exit -- stop the application and exit\n"
             )
 
     def sendreply(self, msg):
@@ -482,9 +505,10 @@ class Daemonizer:
 
     def governor(self):
         # Back off if respawning too often
+        now = time.time()
         if not self.lasttime:
             pass
-        elif time.time() - self.lasttime < self.backofflimit:
+        elif now - self.lasttime < self.backofflimit:
             # Exited rather quickly; slow down the restarts
             self.backoff += 1
             if self.backoff >= self.backofflimit:
@@ -494,14 +518,14 @@ class Daemonizer:
                     self.error("restarting too often; quit")
                     self.exit(1)
             self.info("sleep %s to avoid rapid restarts" % self.backoff)
-            time.sleep(self.backoff)
+            self.delay = now + self.backoff
         else:
             # Reset the backoff timer
             self.backoff = 0
-        self.lasttime = time.time()
+            self.delay = 0
 
     def forkandexec(self):
-        self.governor()
+        self.lasttime = time.time()
         pid = os.fork()
         if pid != 0:
             # Parent
@@ -530,6 +554,7 @@ class Daemonizer:
         self.waitstatus = None
         if pid == self.appid:
             self.appid = 0
+            self.governor()
         if os.WIFEXITED(sts):
             es = os.WEXITSTATUS(sts)
             msg = "pid %d: exit status %s" % (pid, es)
