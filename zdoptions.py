@@ -293,7 +293,7 @@ class RunnerOptions(ZDOptions):
         self.add("user", "runner.user", "u:", "user=")
         self.add("directory", "runner.directory", "z:", "directory=",
                  ZConfig.datatypes.existing_directory)
-        self.add("hang_around", "runner.hang_around")
+        self.add("hang_around", "runner.hang_around", default=0)
 
 
 # ZConfig datatype
