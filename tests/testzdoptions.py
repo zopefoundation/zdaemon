@@ -153,7 +153,7 @@ class TestBasicFunctionality(TestZDOptions):
         self.check_exit_code(options, ["-afoo"])
 
 
-class TestZDOptionsEnvironment(ZDOptionsTestBase):
+class EnvironmentOptions(ZDOptionsTestBase):
 
     class OptionsClass(ZDOptions):
         def __init__(self):
@@ -172,8 +172,16 @@ class TestZDOptionsEnvironment(ZDOptionsTestBase):
 
         def load_configfile(self):
             if getattr(self, "configtext", None):
-                self.configroot, xxx = ZConfig.loadConfigFile(
-                    self.schema, StringIO("opt 3"))
+                self.configfile = tempfile.mktemp()
+                f = open(self.configfile, 'w')
+                f.write(self.configtext)
+                f.close()
+                try:
+                    ZDOptions.load_configfile(self)
+                finally:
+                    os.unlink(self.configfile)
+            else:
+                ZDOptions.load_configfile(self)
 
     # Save and restore the environment around each test:
 
@@ -186,6 +194,20 @@ class TestZDOptionsEnvironment(ZDOptionsTestBase):
 
     def tearDown(self):
         os.environ = self._oldenv
+
+    def create_with_config(self, text):
+        options = self.OptionsClass()
+        zdpkgdir = os.path.dirname(os.path.abspath(zdaemon.__file__))
+        options.schemadir = os.path.join(zdpkgdir, 'tests')
+        options.schemafile = "envtest.xml"
+        # configfile must be set for ZDOptions to use ZConfig:
+        if text:
+            options.configfile = "not used"
+            options.configtext = text
+        return options
+
+
+class TestZDOptionsEnvironment(EnvironmentOptions):
 
     def test_with_environment(self):
         os.environ["OPT"] = "2"
@@ -223,24 +245,15 @@ class TestZDOptionsEnvironment(ZDOptionsTestBase):
             self.fail("expected SystemExit")
 
     def test_environment_overrides_configfile(self):
-        options = self.create_with_config()
+        options = self.create_with_config("opt 3")
         options.realize([])
         self.assertEqual(options.opt, 3)
 
         os.environ["OPT"] = "2"
-        options = self.create_with_config()
+        options = self.create_with_config("opt 3")
         options.realize([])
         self.assertEqual(options.opt, 2)
 
-    def create_with_config(self):
-        options = self.OptionsClass()
-        zdpkgdir = os.path.dirname(os.path.abspath(zdaemon.__file__))
-        options.schemadir = os.path.join(zdpkgdir, 'tests')
-        options.schemafile = "envtest.xml"
-        # configfile must be set for ZDOptions to use ZConfig:
-        options.configfile = "not used"
-        options.configtext = "opt 3"
-        return options
 
 def test_suite():
     suite = unittest.TestSuite()
