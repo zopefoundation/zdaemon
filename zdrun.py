@@ -244,21 +244,39 @@ class Daemonizer:
     commandsocket = None
 
     def opensocket(self):
-        self.checkopen()
+        sockname = self.options.sockname
+        tempname = "%s.%d" % (sockname, os.getpid())
+        self.unlink_quietly(tempname)
+        while 1:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            try:
+                sock.bind(tempname)
+                os.chmod(tempname, 0700)
+                try:
+                    os.link(tempname, sockname)
+                    break
+                except os.error:
+                    # Lock contention, or stale socket.
+                    self.checkopen()
+                    # Stale socket -- delete, sleep, and try again.
+                    msg = "Unlinking stale socket %s; sleep 1" % sockname
+                    sys.stderr.write(msg + "\n")
+                    warn(msg)
+                    self.unlink_quietly(sockname)
+                    sock.close()
+                    time.sleep(1)
+                    continue
+            finally:
+                self.unlink_quietly(tempname)
+        sock.listen(1)
+        sock.setblocking(0)
+        self.mastersocket = sock
+
+    def unlink_quietly(self, filename):
         try:
-            os.unlink(self.options.sockname)
+            os.unlink(filename)
         except os.error:
             pass
-        self.mastersocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        oldumask = None
-        try:
-            oldumask = os.umask(077)
-            self.mastersocket.bind(self.options.sockname)
-        finally:
-            if oldumask is not None:
-                os.umask(oldumask)
-        self.mastersocket.listen(1)
-        self.mastersocket.setblocking(0)
 
     def checkopen(self):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -270,11 +288,11 @@ class Daemonizer:
         except socket.error:
             pass
         else:
-            if not data.endswith("\n"):
-                data += "\n"
+            while data.endswith("\n"):
+                data = data[:-1]
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
-            sys.stderr.write(msg)
+            sys.stderr.write(msg + "\n")
             critical(msg)
             sys.exit(1)
 
