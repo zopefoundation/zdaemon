@@ -279,6 +279,8 @@ class ZDOptions:
 
 class RunnerOptions(ZDOptions):
 
+    uid = gid = None
+
     def __init__(self):
         ZDOptions.__init__(self)
         self.add("backofflimit", "runner.backoff_limit",
@@ -294,6 +296,29 @@ class RunnerOptions(ZDOptions):
         self.add("directory", "runner.directory", "z:", "directory=",
                  ZConfig.datatypes.existing_directory)
         self.add("hang_around", "runner.hang_around", default=0)
+
+    def realize(self, *args, **kwds):
+        ZDOptions.realize(self, *args, **kwds)
+
+        # Additional checking of user option; set uid and gid
+        if self.user is not None:
+            import pwd
+            try:
+                uid = int(self.user)
+            except ValueError:
+                try:
+                    pwrec = pwd.getpwnam(self.user)
+                except KeyError:
+                    self.usage("username %r not found" % self.user)
+                uid = pwrec[2]
+            else:
+                try:
+                    pwrec = pwd.getpwuid(uid)
+                except KeyError:
+                    self.usage("uid %r not found" % self.user)
+            gid = pwrec[3]
+            self.uid = uid
+            self.gid = gid
 
 
 # ZConfig datatype

@@ -218,29 +218,13 @@ class Daemonizer:
         self.run()
 
     def set_uid(self):
-        if self.options.user is None:
+        if self.options.uid is None:
             return
-        if os.name != "posix":
-            self.options.usage("-u USER only supported on Unix")
-        if os.geteuid() != 0:
-            self.options.usage("only root can use -u USER")
-        import pwd
-        try:
-            uid = int(self.options.user)
-        except: # int() can raise all sorts of errors
-            try:
-                pwrec = pwd.getpwnam(self.options.user)
-            except KeyError:
-                self.options.usage("username %r not found" % self.options.user)
-            uid = pwrec[2]
-        else:
-            try:
-                pwrec = pwd.getpwuid(uid)
-            except KeyError:
-                self.options.usage("uid %r not found" % self.options.user)
-        gid = pwrec[3]
-        os.setgid(gid)
-        os.setuid(uid)
+        uid = os.geteuid()
+        if uid != 0 and uid != self.options.uid:
+            self.options.usage("only root can use -u USER to change users")
+        os.setuid(self.options.uid)
+        os.setgid(self.options.gid)
 
     def run(self):
         self.proc = Subprocess(self.options)
