@@ -84,6 +84,24 @@ class TestZDOptions(unittest.TestCase):
         # haven't been enabled.
         self.check_exit_code(self.OptionsClass(), ["A"])
 
+    def test_positional_args(self):
+        options = self.OptionsClass()
+        options.positional_args_allowed = 1
+        options.realize(["A", "B"])
+        self.assertEqual(options.args, ["A", "B"])
+
+    def test_positional_args_empty(self):
+        options = self.OptionsClass()
+        options.positional_args_allowed = 1
+        options.realize([])
+        self.assertEqual(options.args, [])
+
+    def test_positional_args_unknown_option(self):
+        # Make sure an unknown option doesn't become a positional arg.
+        options = self.OptionsClass()
+        options.positional_args_allowed = 1
+        self.check_exit_code(options, ["-o", "A", "B"])
+
     def test_conflicting_flags(self):
         # Check that we get an error for flags which compete over the
         # same option setting.
