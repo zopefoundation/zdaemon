@@ -146,7 +146,7 @@ class Options:
                 self.forever += 1
             if o == "-h":
                 print __doc__,
-                sys.exit()
+                sys.exit(0)
             if o == "-s":
                 self.sockname = a
             if o == "-x":
@@ -269,39 +269,33 @@ class Subprocess:
         """
         self.pid = 0
 
-class Daemonizer:
+class Client:
 
-    def main(self, args=None):
-        self.prepare(args)
-        self.run()
+    """A class representing the control client."""
 
-    def prepare(self, args=None):
-        self.opts = Options(args)
-        if self.opts.isclient:
-            self.setcommand(self.opts.args)
-        else:
-            self.proc = Subprocess(self.opts)
+    def __init__(self, opts, args=None):
+        """Constructor.
 
-    def errwrite(self, msg):
-        sys.stderr.write(msg)
-
-    def exit(self, sts=0):
-        sys.exit(sts)
-
-    def setcommand(self, args):
+        Arguments are an Options instance and a list of program
+        arguments representing the command to send to the server.
+        """
+        self.opts = opts
+        if args is None:
+            args = opts.args
         if not args:
             self.command = "status"
         else:
             self.command = " ".join(args)
 
-    def sendcommand(self):
+    def doit(self):
+        """Send the command to the server and write the results to stdout."""
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             sock.connect(self.opts.sockname)
         except socket.error, msg:
-            self.errwrite("Can't connect to %r: %s\n" %
-                          (self.opts.sockname, msg))
-            self.exit(1)
+            sys.stderr.write("Can't connect to %r: %s\n" %
+                             (self.opts.sockname, msg))
+            sys.exit(1)
         sock.send(self.command + "\n")
         sock.shutdown(1) # We're not writing any more
         lastdata = ""
@@ -312,15 +306,23 @@ class Daemonizer:
             sys.stdout.write(data)
             lastdata = data
         if not lastdata:
-            self.errwrite("No response received\n")
-            self.exit(1)
+            sys.stderr.write("No response received\n")
+            sys.exit(1)
         if not lastdata.endswith("\n"):
             sys.stdout.write("\n")
 
-    def run(self):
+class Daemonizer:
+
+    def main(self, args=None):
+        self.opts = Options(args)
         if self.opts.isclient:
-            self.sendcommand()
-            return
+            clt = Client(self.opts)
+            clt.doit()
+        else:
+            self.run()
+
+    def run(self):
+        self.proc = Subprocess(self.opts)
         self.opensocket()
         try:
             self.setsignals()
@@ -367,9 +369,9 @@ class Daemonizer:
                 data += "\n"
             msg = ("Another zdaemon is already up using socket %r:\n%s" %
                    (self.opts.sockname, data))
-            self.errwrite(msg)
+            sys.stderr.write(msg)
             critical(msg)
-            self.exit(1)
+            sys.exit(1)
 
     def setsignals(self):
         signal.signal(signal.SIGTERM, self.sigexit)
@@ -379,7 +381,7 @@ class Daemonizer:
 
     def sigexit(self, sig, frame):
         critical("daemon manager killed by %s" % signame(sig))
-        self.exit(1)
+        sys.exit(1)
 
     waitstatus = None
 
@@ -455,7 +457,7 @@ class Daemonizer:
                     exception("socket.error in doaccept(): %s" % str(msg))
                     self.commandsocket = None
         info("Exiting")
-        self.exit(0)
+        sys.exit(0)
 
     def reportstatus(self):
         pid, sts = self.waitstatus
@@ -475,8 +477,31 @@ class Daemonizer:
             if es in self.opts.exitcodes:
                 msg = msg + "; exiting now"
                 info(msg)
-                self.exit(es)
+                sys.exit(es)
             info(msg)
+
+    backoff = 0
+
+    def governor(self):
+        # Back off if respawning too frequently
+        now = time.time()
+        if not self.proc.lasttime:
+            pass
+        elif now - self.proc.lasttime < self.opts.backofflimit:
+            # Exited rather quickly; slow down the restarts
+            self.backoff += 1
+            if self.backoff >= self.opts.backofflimit:
+                if self.opts.forever:
+                    self.backoff = self.opts.backofflimit
+                else:
+                    critical("restarting too frequently; quit")
+                    sys.exit(1)
+            info("sleep %s to avoid rapid restarts" % self.backoff)
+            self.delay = now + self.backoff
+        else:
+            # Reset the backoff timer
+            self.backoff = 0
+            self.delay = 0
 
     def doaccept(self):
         if self.commandsocket:
@@ -568,7 +593,7 @@ class Daemonizer:
         else:
             self.sendreply("Exiting now")
             info("Exiting")
-            self.exit(0)
+            sys.exit(0)
 
     def cmd_kill(self, args):
         if args[1:]:
@@ -632,29 +657,6 @@ class Daemonizer:
                     msg = msg[sent:]
         except socket.error, msg:
             warn("Error sending reply: %s" % str(msg))
-
-    backoff = 0
-
-    def governor(self):
-        # Back off if respawning too frequently
-        now = time.time()
-        if not self.proc.lasttime:
-            pass
-        elif now - self.proc.lasttime < self.opts.backofflimit:
-            # Exited rather quickly; slow down the restarts
-            self.backoff += 1
-            if self.backoff >= self.opts.backofflimit:
-                if self.opts.forever:
-                    self.backoff = self.opts.backofflimit
-                else:
-                    critical("restarting too frequently; quit")
-                    self.exit(1)
-            info("sleep %s to avoid rapid restarts" % self.backoff)
-            self.delay = now + self.backoff
-        else:
-            # Reset the backoff timer
-            self.backoff = 0
-            self.delay = 0
 
 # Log messages with various severities.
 # This uses zLOG, but the API is a simplified version of PEP 282
