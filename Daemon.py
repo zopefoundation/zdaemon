@@ -12,7 +12,7 @@
 #
 ##############################################################################
 
-import os, sys, time, signal
+import os, sys, signal
 import zLOG
 
 pyth = sys.executable
