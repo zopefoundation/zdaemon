@@ -406,6 +406,8 @@ class ZDCmd(cmd.Cmd):
             print
         except IOError, msg:
             print msg
+        except OSError, msg:
+            print msg
 
     def help_logtail(self):
         print "logtail [logfile] -- Run tail -f on the given logfile."
