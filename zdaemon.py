@@ -83,8 +83,11 @@ class Options:
 
     """A class to parse and hold the command line options.
 
-    Options are represented by instance attributes.
+    Options are represented by various attributes (backofflimit etc.).
     Positional arguments are represented by the args attribute.
+
+    This also has a public usage() method that can be used to report
+    errors related to the command line.
     """
 
     progname = "zdaemon.py"             # Program name for usage message
@@ -129,7 +132,7 @@ class Options:
         When -h is detected, print the module docstring to stdout and exit(0).
         """
         for o, a in self.opts:
-            # Alphabetical order please!
+            # Keep these in alphabetical order please!
             if o == "-b":
                 try:
                     self.backofflimit = float(a)
@@ -163,6 +166,109 @@ class Options:
         sys.stderr.write("For help, use %s -h\n" % self.progname)
         sys.exit(2)
 
+class Subprocess:
+
+    """A class to manage a subprocess."""
+
+    # Initial state; overridden by instance variables
+    pid = 0 # Subprocess pid; 0 when not running
+    lasttime = 0 # Last time the subprocess was started; 0 if never
+
+    def __init__(self, opts, args=None):
+        """Constructor.
+
+        Arguments are an Options instance and a list of program
+        arguments; the latter's first item must be the program name.
+        """
+        if args is None:
+            args = opts.args
+        if not args:
+            opts.usage("missing 'program' argument")
+        self.opts = opts
+        self.args = args
+        self._set_filename(args[0])
+
+    def _set_filename(self, program):
+        """Internal: turn a program name into a file name, using $PATH."""
+        if "/" in program:
+            filename = program
+            try:
+                st = os.stat(filename)
+            except os.error:
+                self.opts.usage("can't stat program %r" % program)
+        else:
+            path = get_path()
+            for dir in path:
+                filename = os.path.join(dir, program)
+                try:
+                    st = os.stat(filename)
+                except os.error:
+                    continue
+                mode = st[ST_MODE]
+                if mode & 0111:
+                    break
+            else:
+                self.opts.usage("can't find program %r on PATH %s" %
+                                (program, path))
+        if not os.access(filename, os.X_OK):
+            self.opts.usage("no permission to run program %r" % filename)
+        self.filename = filename
+
+    def spawn(self):
+        """Start the subprocess.  It must not be running already.
+
+        Return the process id.  If the fork() call fails, an exception
+        is raised (and not caught).
+        """
+        assert not self.pid
+        self.lasttime = time.time()
+        pid = os.fork()
+        if pid != 0:
+            # Parent
+            self.pid = pid
+            info("spawned process pid=%d" % pid)
+            return pid
+        else:
+            # Child
+            try:
+                # Close file descriptors except std{in,out,err}.
+                # XXX We don't know how many to close; hope 100 is plenty.
+                for i in range(3, 100):
+                    try:
+                        os.close(i)
+                    except os.error:
+                        pass
+                try:
+                    os.execv(self.filename, self.args)
+                except os.error, err:
+                    sys.stderr.write("can't exec %r: %s\n" %
+                                     (self.filename, err))
+            finally:
+                os._exit(127)
+            # Does not return
+
+    def kill(self, sig):
+        """Send a signal to the subprocess.  This may or may not kill it.
+
+        Return None if the signal was sent, or an error message string
+        if an error occurred or if the subprocess is not running.
+        """
+        if not self.pid:
+            return "no subprocess running"
+        try:
+            os.kill(self.pid, sig)
+        except os.error, msg:
+            return str(msg)
+        return None
+
+    def setstatus(self, sts):
+        """Set process status returned by wait() or waitpid().
+
+        This simply notes the fact that the subprocess is no longer
+        running by setting self.pid to 0.
+        """
+        self.pid = 0
+
 class Daemonizer:
 
     def main(self, args=None):
@@ -174,7 +280,7 @@ class Daemonizer:
         if self.opts.isclient:
             self.setcommand(self.opts.args)
         else:
-            self.setprogram(self.opts.args)
+            self.proc = Subprocess(self.opts)
 
     def errwrite(self, msg):
         sys.stderr.write(msg)
@@ -210,47 +316,6 @@ class Daemonizer:
             self.exit(1)
         if not lastdata.endswith("\n"):
             sys.stdout.write("\n")
-
-    def setprogram(self, args):
-        if not args:
-            self.opts.usage("missing 'program' argument")
-        self.filename = self.checkcommand(args[0])
-        self.args = args # A list of strings like for execvp()
-        self.info("opts=%r; filename=%r; args=%r" %
-                  (self.opts.opts, self.filename, self.args))
-
-    def checkcommand(self, command):
-        if "/" in command:
-            filename = command
-            try:
-                st = os.stat(filename)
-            except os.error:
-                self.opts.usage("can't stat program %r" % command)
-        else:
-            path = self.getpath()
-            for dir in path:
-                filename = os.path.join(dir, command)
-                try:
-                    st = os.stat(filename)
-                except os.error:
-                    continue
-                mode = st[ST_MODE]
-                if mode & 0111:
-                    break
-            else:
-                self.opts.usage("can't find program %r on PATH %s" %
-                           (command, path))
-        if not os.access(filename, os.X_OK):
-            self.opts.usage("no permission to run program %r" % filename)
-        return filename
-
-    def getpath(self):
-        path = ["/bin", "/usr/bin", "/usr/local/bin"]
-        if os.environ.has_key("PATH"):
-            p = os.environ["PATH"]
-            if p:
-                path = p.split(os.pathsep)
-        return path
 
     def run(self):
         if self.opts.isclient:
@@ -303,7 +368,7 @@ class Daemonizer:
             msg = ("Another zdaemon is already up using socket %r:\n%s" %
                    (self.opts.sockname, data))
             self.errwrite(msg)
-            self.panic(msg)
+            critical(msg)
             self.exit(1)
 
     def setsignals(self):
@@ -313,7 +378,7 @@ class Daemonizer:
         signal.signal(signal.SIGCHLD, self.sigchild)
 
     def sigexit(self, sig, frame):
-        self.info("daemon manager killed by %s" % self.signame(sig))
+        critical("daemon manager killed by %s" % signame(sig))
         self.exit(1)
 
     waitstatus = None
@@ -327,18 +392,17 @@ class Daemonizer:
         pid = os.fork()
         if pid != 0:
             # Parent
-            self.blather("daemon manager forked; parent exiting")
+            debug("daemon manager forked; parent exiting")
             os._exit(0)
         # Child
-        self.info("daemonizing the process")
+        info("daemonizing the process")
         if self.opts.zdirectory:
             try:
                 os.chdir(self.opts.zdirectory)
             except os.error, err:
-                self.problem("can't chdir into %r: %s" %
-                             (self.opts.zdirectory, err))
+                warn("can't chdir into %r: %s" % (self.opts.zdirectory, err))
             else:
-                self.info("set current directory: %r" % self.opts.zdirectory)
+                info("set current directory: %r" % self.opts.zdirectory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
@@ -349,14 +413,14 @@ class Daemonizer:
 
     mood = 1 # 1: up, 0: down, -1: suicidal
     delay = 0 # If nonzero, delay starting or killing until this time
-    appid = 0 # Application pid; indicates status (0 == not running)
     killing = 0 # If true, send SIGKILL when delay expires
+    proc = None # Subprocess instance
 
     def runforever(self):
-        self.info("daemon manager started")
-        while self.mood >= 0 or self.appid:
-            if self.mood > 0 and not self.appid and not self.delay:
-                self.forkandexec()
+        info("daemon manager started")
+        while self.mood >= 0 or self.proc.pid:
+            if self.mood > 0 and not self.proc.pid and not self.delay:
+                self.proc.spawn()
             if self.waitstatus:
                 self.reportstatus()
             r, w, x = [self.mastersocket], [], []
@@ -367,8 +431,8 @@ class Daemonizer:
                 timeout = max(0, min(timeout, self.delay - time.time()))
                 if timeout <= 0:
                     self.delay = 0
-                    if self.killing and self.appid:
-                        self.killapp(signal.SIGKILL)
+                    if self.killing and self.proc.pid:
+                        self.proc.kill(signal.SIGKILL)
                         self.delay = time.time() + self.opts.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
@@ -382,18 +446,37 @@ class Daemonizer:
                 try:
                     self.dorecv()
                 except socket.error, msg:
-                    self.problem("socket.error in dorecv(): %s" % str(msg),
-                                 error=sys.exc_info())
+                    exception("socket.error in dorecv(): %s" % str(msg))
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
                 except socket.error, msg:
-                    self.problem("socket.error in doaccept(): %s" % str(msg),
-                                 error=sys.exc_info())
+                    exception("socket.error in doaccept(): %s" % str(msg))
                     self.commandsocket = None
-        self.info("Exiting")
+        info("Exiting")
         self.exit(0)
+
+    def reportstatus(self):
+        pid, sts = self.waitstatus
+        self.waitstatus = None
+        es, msg = decode_wait_status(sts)
+        msg = "pid %d: " % pid + msg
+        if pid != self.proc.pid:
+            msg = "unknown " + msg
+            warn(msg)
+        else:
+            if self.killing:
+                self.killing = 0
+                self.delay = 0
+            else:
+                self.governor()
+            self.proc.setstatus(sts)
+            if es in self.opts.exitcodes:
+                msg = msg + "; exiting now"
+                info(msg)
+                self.exit(es)
+            info(msg)
 
     def doaccept(self):
         if self.commandsocket:
@@ -439,8 +522,8 @@ class Daemonizer:
         self.backoff = 0
         self.delay = 0
         self.killing = 0
-        if not self.appid:
-            self.forkandexec()
+        if not self.proc.pid:
+            self.proc.spawn()
             self.sendreply("Application started")
         else:
             self.sendreply("Application already started")
@@ -450,8 +533,8 @@ class Daemonizer:
         self.backoff = 0
         self.delay = 0
         self.killing = 0
-        if self.appid:
-            self.killapp(signal.SIGTERM)
+        if self.proc.pid:
+            self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
             self.killing = 1
             self.delay = time.time() + self.opts.backofflimit
@@ -463,13 +546,13 @@ class Daemonizer:
         self.backoff = 0
         self.delay = 0
         self.killing = 0
-        if self.appid:
-            self.killapp(signal.SIGTERM)
+        if self.proc.pid:
+            self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
             self.killing = 1
             self.delay = time.time() + self.opts.backofflimit
         else:
-            self.forkandexec()
+            self.proc.spawn()
             self.sendreply("Application started")
 
     def cmd_exit(self, args):
@@ -477,14 +560,14 @@ class Daemonizer:
         self.backoff = 0
         self.delay = 0
         self.killing = 0
-        if self.appid:
-            self.killapp(signal.SIGTERM)
+        if self.proc.pid:
+            self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will exit later")
             self.killing = 1
             self.delay = time.time() + self.opts.backofflimit
         else:
             self.sendreply("Exiting now")
-            self.info("Exiting")
+            info("Exiting")
             self.exit(0)
 
     def cmd_kill(self, args):
@@ -496,17 +579,17 @@ class Daemonizer:
                 return
         else:
             sig = signal.SIGTERM
-        if not self.appid:
+        if not self.proc.pid:
             self.sendreply("Application not running")
         else:
-            msg = self.killapp(sig)
+            msg = self.proc.kill(sig)
             if msg:
                 self.sendreply("Kill %d failed: %s" % (sig, msg))
             else:
                 self.sendreply("Signal %d sent" % sig)
 
     def cmd_status(self, args):
-        if not self.appid:
+        if not self.proc.pid:
             status = "stopped"
         else:
             status = "running"
@@ -515,12 +598,12 @@ class Daemonizer:
                        "mood=%d\n" % self.mood +
                        "delay=%r\n" % self.delay +
                        "backoff=%r\n" % self.backoff +
-                       "lasttime=%r\n" % self.lasttime +
-                       "application=%r\n" % self.appid +
+                       "lasttime=%r\n" % self.proc.lasttime +
+                       "application=%r\n" % self.proc.pid +
                        "manager=%r\n" % os.getpid() + 
                        "backofflimit=%r\n" % self.opts.backofflimit +
-                       "filename=%r\n" % self.filename +
-                       "args=%r\n" % self.args)
+                       "filename=%r\n" % self.proc.filename +
+                       "args=%r\n" % self.proc.args)
 
     def cmd_help(self, args):
         self.sendreply(
@@ -548,152 +631,124 @@ class Daemonizer:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
         except socket.error, msg:
-            self.problem("Error sending reply: %s" % str(msg))
-
-    def killapp(self, sig):
-        if self.appid:
-            try:
-                os.kill(self.appid, sig)
-            except os.error, msg:
-                self.problem("Couldn't send signal %d to pid %d: %s" %
-                             (sig, self.appid, msg))
-                return msg
-            self.info("Sent signal %d to pid %d" % (sig, self.appid))
-        return None
+            warn("Error sending reply: %s" % str(msg))
 
     backoff = 0
-    lasttime = None
 
     def governor(self):
-        # Back off if respawning too often
+        # Back off if respawning too frequently
         now = time.time()
-        if not self.lasttime:
+        if not self.proc.lasttime:
             pass
-        elif now - self.lasttime < self.opts.backofflimit:
+        elif now - self.proc.lasttime < self.opts.backofflimit:
             # Exited rather quickly; slow down the restarts
             self.backoff += 1
             if self.backoff >= self.opts.backofflimit:
                 if self.opts.forever:
                     self.backoff = self.opts.backofflimit
                 else:
-                    self.error("restarting too often; quit")
+                    critical("restarting too frequently; quit")
                     self.exit(1)
-            self.info("sleep %s to avoid rapid restarts" % self.backoff)
+            info("sleep %s to avoid rapid restarts" % self.backoff)
             self.delay = now + self.backoff
         else:
             # Reset the backoff timer
             self.backoff = 0
             self.delay = 0
 
-    def forkandexec(self):
-        self.lasttime = time.time()
-        pid = os.fork()
-        if pid != 0:
-            # Parent
-            self.appid = pid
-            self.info("forked child pid %d" % pid)
+# Log messages with various severities.
+# This uses zLOG, but the API is a simplified version of PEP 282
+
+def critical(msg):
+    """Log a critical message."""
+    _log(msg, zLOG.PANIC)
+
+def error(msg):
+    """Log an error message."""
+    _log(msg, zLOG.ERROR)
+
+def exception(msg):
+    """Log an exception (an error message with a traceback attached)."""
+    _log(msg, zLOG.ERROR, error=sys.exc_info())
+
+def warn(msg):
+    """Log a warning message."""
+    _log(msg, zLOG.PROBLEM)
+
+def info(msg):
+    """Log an informational message."""
+    _log(msg, zLOG.INFO)
+
+def debug(msg):
+    """Log a debugging message."""
+    _log(msg, zLOG.DEBUG)
+
+def _log(msg, severity=zLOG.INFO, error=None):
+    """Internal: generic logging function."""
+    zLOG.LOG("ZD:%d" % os.getpid(), severity, msg, "", error)
+
+# Helpers for dealing with signals and exit status
+
+def decode_wait_status(sts):
+    """Decode the status returned by wait() or waitpid().
+    
+    Return a tuple (exitstatus, message) where exitstatus is the exit
+    status, or -1 if the process was killed by a signal; and message
+    is a message telling what happened.  It is the caller's
+    responsibility to display the message.
+    """
+    if os.WIFEXITED(sts):
+        es = os.WEXITSTATUS(sts) & 0xffff
+        msg = "exit status %s" % es
+        return es, msg
+    elif os.WIFSIGNALED(sts):
+        sig = os.WTERMSIG(sts)
+        msg = "terminated by %s" % signame(sig)
+        if hasattr(os, "WCOREDUMP"):
+            iscore = os.WCOREDUMP(sts)
         else:
-            # Child
-            self.startprogram()
+            iscore = sts & 0x80
+        if iscore:
+            msg += " (core dumped)"
+        return -1, msg
+    else:
+        msg = "unknown termination cause 0x%04x" % sts
+        return -1, msg
 
-    def startprogram(self):
-        try:
-            if self.commandsocket:
-                self.commandsocket.close()
-            if self.mastersocket:
-                self.mastersocket.close()
-            self.blather("about to exec %s" % self.filename)
-            try:
-                os.execv(self.filename, self.args)
-            except os.error, err:
-                self.panic("can't exec %r: %s" % (self.filename, err))
-        finally:
-            os._exit(127)
+_signames = None
 
-    def reportstatus(self):
-        pid, sts = self.waitstatus
-        self.waitstatus = None
-        if pid == self.appid:
-            self.appid = 0
-            if not self.killing:
-                self.governor()
-            self.killing = 0
-            self.delay = 0
-        if os.WIFEXITED(sts):
-            es = os.WEXITSTATUS(sts)
-            msg = "pid %d: exit status %s" % (pid, es)
-            if es in self.opts.exitcodes:
-                msg = msg + "; exiting"
-                self.info(msg)
-                self.exit(es)
-            else:
-                self.problem(msg)
-        elif os.WIFSIGNALED(sts):
-            sig = os.WTERMSIG(sts)
-            msg = ("pid %d: terminated by %s" % (pid, self.signame(sig)))
-            if hasattr(os, "WCOREDUMP"):
-                iscore = os.WCOREDUMP(sts)
-            else:
-                iscore = sts & 0x80
-            if iscore:
-                msg += " (core dumped)"
-            self.problem(msg)
-        else:
-            msg = "pid %d: unknown termination cause 0x%04x" % (pid, sts)
-            self.problem(msg)
+def signame(sig):
+    """Return a symbolic name for a signal.
 
-    signames = None
+    Return "signal NNN" if there is no corresponding SIG name in the
+    signal module.
+    """
 
-    def signame(self, sig):
-        """Return the symbolic name for signal sig.
+    if _signames is None:
+        _init_signames()
+    return _signames.get(sig) or "signal %d" % sig
 
-        Returns 'unknown' if there is no SIG name bound to sig in the
-        signal module.
-        """
+def _init_signames():
+    global _signames
+    d = {}
+    for k, v in signal.__dict__.items():
+        k_startswith = getattr(k, "startswith", None)
+        if k_startswith is None:
+            continue
+        if k_startswith("SIG") and not k_startswith("SIG_"):
+            d[v] = k
+    _signames = d
 
-        if self.signames is None:
-            self.setupsignames()
-        return self.signames.get(sig) or "signal %d" % sig
+def get_path():
+    """Return a list corresponding to $PATH, or a default."""
+    path = ["/bin", "/usr/bin", "/usr/local/bin"]
+    if os.environ.has_key("PATH"):
+        p = os.environ["PATH"]
+        if p:
+            path = p.split(os.pathsep)
+    return path
 
-    def setupsignames(self):
-            self.signames = {}
-            for k, v in signal.__dict__.items():
-                startswith = getattr(k, "startswith", None)
-                if startswith is None:
-                    continue
-                if startswith("SIG") and not startswith("SIG_"):
-                    self.signames[v] = k
-
-    # Error handling
-
-    # Log messages with various severities
-
-    def trace(self, msg):
-        self.log(msg, zLOG.TRACE)
-
-    def debug(self, msg):
-        self.log(msg, zLOG.DEBUG)
-
-    def blather(self, msg):
-        self.log(msg, zLOG.BLATHER)
-
-    def info(self, msg):
-        self.log(msg, zLOG.INFO)
-
-    def problem(self, msg):
-        self.log(msg, zLOG.PROBLEM)
-
-    def error(self, msg, error=None):
-        self.log(msg, zLOG.ERROR, error)
-
-    def panic(self, msg, error=None):
-        self.log(msg, zLOG.PANIC, error)
-
-    def getsubsystem(self):
-        return "ZD:%d" % os.getpid()
-
-    def log(self, msg, severity=zLOG.INFO, error=None):
-        zLOG.LOG(self.getsubsystem(), severity, msg, "", error)
+# Main program
 
 def main(args=None):
     d = Daemonizer()

@@ -52,8 +52,8 @@ class ZDaemonTests(unittest.TestCase):
                (self.ppath, self.python, self.zdaemon, self.zdsock, args))
         os.system(cmd)
         # When the daemon crashes, the following may help debug it:
-        ##os.system("%s %s -s %s %s &" %
-        ##          (self.python, self.zdaemon, self.zdsock, args))
+        ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
+        ##          (self.ppath, self.python, self.zdaemon, self.zdsock, args))
 
     def run(self, args):
         if type(args) is type(""):
@@ -135,6 +135,22 @@ class ZDaemonTests(unittest.TestCase):
                 self.fail("SystemExit expected")
         finally:
             sys.stderr = save_sys_stderr
+
+    def testSubprocessBasic(self):
+        # Check basic subprocess management: spawn, kill, wait
+        opts = zdaemon.Options([])
+        proc = zdaemon.Subprocess(opts, ["sleep", "100"])
+        self.assertEqual(proc.pid, 0)
+        pid = proc.spawn()
+        self.assertEqual(proc.pid, pid)
+        msg = proc.kill(signal.SIGTERM)
+        self.assertEqual(msg, None)
+        wpid, wsts = os.waitpid(pid, 0)
+        self.assertEqual(wpid, pid)
+        self.assertEqual(os.WIFSIGNALED(wsts), 1)
+        self.assertEqual(os.WTERMSIG(wsts), signal.SIGTERM)
+        proc.setstatus(wsts)
+        self.assertEqual(proc.pid, 0)
 
 def test_suite():
     suite = unittest.TestSuite()
