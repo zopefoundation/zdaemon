@@ -7,8 +7,37 @@ import signal
 import tempfile
 import unittest
 import socket
+
 from StringIO import StringIO
+
+import ZConfig
+
 from zdaemon import zdrun, zdctl
+
+
+class ConfiguredOptions:
+    """Options class that loads configuration from a specified string.
+
+    This always loads from the string, regardless of any -C option
+    that may be given.
+    """
+
+    def set_configuration(self, configuration):
+        self.__configuration = configuration
+        self.configfile = "<preloaded string>"
+
+    def load_configfile(self):
+        sio = StringIO(self.__configuration)
+        cfg = ZConfig.loadConfigFile(self.schema, sio, self.zconfig_options)
+        self.configroot, self.confighandlers = cfg
+
+
+class ConfiguredZDRunOptions(ConfiguredOptions, zdrun.ZDRunOptions):
+
+    def __init__(self, configuration):
+        zdrun.ZDRunOptions.__init__(self)
+        self.set_configuration(configuration)
+
 
 class ZDaemonTests(unittest.TestCase):
 
@@ -145,6 +174,37 @@ class ZDaemonTests(unittest.TestCase):
         self.assertEqual(os.WTERMSIG(wsts), signal.SIGTERM)
         proc.setstatus(wsts)
         self.assertEqual(proc.pid, 0)
+
+    def testEventlogOverride(self):
+        # Make sure runner.eventlog is used if it exists
+        options = ConfiguredZDRunOptions("""\
+            <runner>
+              program /bin/true
+              <eventlog>
+                level 42
+              </eventlog>
+            </runner>
+
+            <eventlog>
+              level 35
+            </eventlog>
+            """)
+        options.realize(["/bin/true"])
+        self.assertEqual(options.config_logger.level, 42)
+
+    def testEventlogWithoutOverride(self):
+        # Make sure eventlog is used if runner.eventlog doesn't exist
+        options = ConfiguredZDRunOptions("""\
+            <runner>
+              program /bin/true
+            </runner>
+
+            <eventlog>
+              level 35
+            </eventlog>
+            """)
+        options.realize(["/bin/true"])
+        self.assertEqual(options.config_logger.level, 35)
 
     def testRunIgnoresParentSignals(self):
         # Spawn a process which will in turn spawn a zdrun process.

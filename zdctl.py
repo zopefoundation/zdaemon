@@ -196,6 +196,7 @@ class ZDCmd(cmd.Cmd):
                 self.options.python,
                 self.options.zdrun,
                 ]
+            args += self._get_override("-S", "schemafile")
             args += self._get_override("-C", "configfile")
             args += self._get_override("-b", "backofflimit")
             args += self._get_override("-d", "daemon", flag=1)
@@ -552,8 +553,9 @@ class TailHelper:
     def fsize(self):
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
 
-def main(args=None):
-    options = ZDCtlOptions()
+def main(args=None, options=None):
+    if options is None:
+        options = ZDCtlOptions()
     options.realize(args)
     c = ZDCmd(options)
     if options.args:

@@ -89,8 +89,13 @@ from zdaemon.zdoptions import RunnerOptions
 class ZDRunOptions(RunnerOptions):
 
     positional_args_allowed = 1
-    logsectionname = "eventlog"
+    logsectionname = "runner.eventlog"
     program = None
+    schemafile = None
+
+    def __init__(self):
+        RunnerOptions.__init__(self)
+        self.add("schemafile", short="S:", default="schema.xml")
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
@@ -101,6 +106,12 @@ class ZDRunOptions(RunnerOptions):
         if self.sockname:
             # Convert socket name to absolute path
             self.sockname = os.path.abspath(self.sockname)
+
+    def load_logconf(self, sectname):
+        """Load alternate eventlog if the specified section isn't present."""
+        RunnerOptions.load_logconf(self, sectname)
+        if self.config_logger is None and sectname != "eventlog":
+            RunnerOptions.load_logconf(self, "eventlog")
 
 
 class Subprocess:
