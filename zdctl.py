@@ -1,9 +1,29 @@
 #! /usr/bin/env python
+##############################################################################
+#
+# Copyright (c) 2001, 2002 Zope Corporation and Contributors.
+# All Rights Reserved.
+#
+# This software is subject to the provisions of the Zope Public License,
+# Version 2.0 (ZPL).  A copy of the ZPL should accompany this distribution.
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+# WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+# FOR A PARTICULAR PURPOSE
+#
+##############################################################################
+"""zdctl -- control an application run by zdaemon.
 
-"""
-zdctl -- control an application run by zdaemon.
+Usage: python zdctl.py -C config-file [action [arguments]]
 
-Usage: python zdctl.py config-file [command [arguments]]
+Options:
+-C/--configuration URL -- configuration file or URL
+action [arguments] -- see below
+
+If no action is specified on the command line, a "shell" interpreting
+actions typed interactively is started.
+
+Use the action "help" to find out about available actions.
 """
 
 import os
@@ -11,26 +31,81 @@ import re
 import cmd
 import sys
 import time
+import signal
 import socket
+
+if __name__ == "__main__":
+    # Add the parent of the script directory to the module search path
+    from os.path import dirname, abspath, normpath
+    sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
+
+from ZEO.runsvr import Options
+
+
+class ZDOptions(Options):
+
+    # Where's python?
+    python = sys.executable
+
+    # Where's zdaemon?
+    if __name__ == "__main__":
+        _file = __file__
+    else:
+        _file = sys.argv[0]
+    _file = os.path.normpath(os.path.abspath(_file))
+    _dir = os.path.dirname(_file)
+    zdaemon = os.path.join(_dir, "zdaemon.py")
+
+    # Options for zdaemon
+    backofflimit = 10                   # -b SECONDS
+    forever = 0                         # -f
+    sockname = os.path.abspath("zdsock") # -s SOCKET
+    exitcodes = [0, 2]                  # -x LIST
+    user = None                         # -u USER
+    zdirectory = "/"                    # -z DIRECTORY
+
+    # Program (and arguments) for zdaemon
+    program = None
+
+    def load_configuration(self):
+        Options.load_configuration(self) # Sets self.rootconf
+        if not self.rootconf:
+            self.usage("a configuration file is required; use -C")
+        # XXX Should allow overriding more zdaemon options here
+        if self.program is None:
+            self.program = self.rootconf.getlist("program")
+        if self.program is None:
+            self.usage("no program specified in configuration")
+
 
 class ZDCmd(cmd.Cmd):
 
     prompt = "(zdctl) "
 
     def __init__(self, options):
+        print "program:", " ".join(options.program)
         self.options = options
         cmd.Cmd.__init__(self)
-        self.zdstatus()
+        self.do_status()
+        if self.zd_status:
+            m = re.search("(?m)^args=(.*)$", self.zd_status)
+            if m:
+                s = m.group(1)
+                args = eval(s, {"__builtins__": {}})
+                if args != self.options.program:
+                    print "WARNING! zdaemon is managing a different program!"
+                    print "our program   =", self.options.program
+                    print "daemon's args =", args
 
-    def zdcommand(self, command):
-        """Send a command to the zdaemon server and return the response.
+    def send_action(self, action):
+        """Send an action to the zdaemon server and return the response.
 
         Return None if the server is not up or any other error happened.
         """
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             sock.connect(self.options.sockname)
-            sock.send(command + "\n")
+            sock.send(action + "\n")
             sock.shutdown(1) # We're not writing any more
             response = ""
             while 1:
@@ -39,15 +114,16 @@ class ZDCmd(cmd.Cmd):
                     break
                 response += data
             sock.close()
+            print "response =", `response`
             return response
         except socket.error, msg:
             return None
 
-    def zdstatus(self):
+    def get_status(self):
         self.zd_up = 0
         self.zd_pid = 0
         self.zd_status = None
-        resp = self.zdcommand("status")
+        resp = self.send_action("status")
         if not resp:
             return
         m = re.search("(?m)^application=(\d+)$", resp)
@@ -57,110 +133,136 @@ class ZDCmd(cmd.Cmd):
         self.zd_pid = int(m.group(1))
         self.zd_status = resp
 
-    def do_start(self, arg):
-        if not self.zd_up:
-            command = [self.options.python,
-                       self.options.zdaemon,
-                       "-d",
-                       "-s", self.options.sockname,
-                       self.options.program] + self.options.program_arguments
-            print command
-            os.spawnvp(os.P_WAIT, command[0], command)
-        else:
-            self.zdcommand("start")
-        self.zdstatus()
-        while not self.zd_pid:
-            sys.stdout.write(". ")
-            sys.stdout.flush()
-            time.sleep(1)
-            self.zdstatus()
-        print "started, pid=%d" % self.zd_pid
-
-    def do_stop(self, arg):
-        self.zdstatus()
-        if not self.zd_up:
-            print "daemon manager not running"
-        elif not self.zd_pid:
-            print "daemon not running"
-        else:
-            self.zdcommand("stop")
-            self.zdstatus()
-            while self.zd_pid:
+    def awhile(self, cond, msg):
+        try:
+            self.get_status()
+            while not cond():
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
-                self.zdstatus()
-            print "daemon stopped"
+                self.get_status()
+        except KeyboardInterrupt:
+            print "^C"
+        else:
+            print msg % self.__dict__
+
+    def help_help(self):
+        print "help          -- Print a list of available actions."
+        print "help <action> -- Print help for <action>."
+
+    def do_start(self, arg):
+        if not self.zd_up:
+            args = [
+                self.options.python,
+                self.options.zdaemon,
+                "-b", str(self.options.backofflimit),
+                "-d",
+                "-s", self.options.sockname,
+                "-x", ",".join(map(str, self.options.exitcodes)),
+                "-z", self.options.zdirectory,
+                ]
+            if self.options.forever:
+                args.append("-f")
+            if self.options.user:
+                argss.extend(["-u", str(self.options.user)])
+            args.extend(self.options.program)
+            print args
+            os.spawnvp(os.P_WAIT, args[0], args)
+        else:
+            self.send_action("start")
+        self.awhile(lambda: self.zd_pid, "started, pid=%(zd_pid)d")
+
+    def help_start(self):
+        print "start -- Start the daemon process."
+        print "         If it is already running, do nothing."
+
+    def do_stop(self, arg):
+        self.get_status()
+        if not self.zd_up:
+            print "daemon manager not running"
+        elif not self.zd_pid:
+            print "program not running"
+        else:
+            self.send_action("stop")
+            self.awhile(lambda: not self.zd_pid, "program stopped")
+
+    def help_stop(self):
+        print "stop -- Stop the daemon process."
+        print "        If it is not running, do nothing."
 
     def do_restart(self, arg):
-        self.zdstatus()
+        self.get_status()
         pid = self.zd_pid
         if not pid:
             self.do_start(arg)
         else:
-            self.zdcommand("restart")
-            self.zdstatus()
-            while self.zd_pid in (0, pid):
-                sys.stdout.write(". ")
-                sys.stdout.flush()
-                time.sleep(1)
-                self.zdstatus()
-            print "daemon restarted, pid=%d" % self.zd_pid
+            self.send_action("restart")
+            self.awhile(lambda: self.zd_pid not in (0, pid),
+                        "program restarted, pid=%(zd_pid)d")
 
-    def do_status(self, arg):
-        self.zdstatus()
+    def help_restart(self):
+        print "restart -- Stop and then start the daemon process."
+
+    def do_kill(self, arg):
+        if not arg:
+            sig = signal.SIGTERM
+        else:
+            try:
+                sig = int(arg)
+            except: # int() can raise any number of exceptions
+                print "invalid signal number", `arg`
+                return
+        self.get_status()
+        if not self.zd_pid:
+            print "program not running"
+            return
+        print "kill(%d, %d)" % (self.zd_pid, sig)
+        try:
+            os.kill(self.zd_pid, sig)
+        except os.error, msg:
+            print "Error:", msg
+        else:
+            print "signal %d sent to process %d" % (sig, self.zd_pid)
+
+    def help_kill(self):
+        print "kill [sig] -- Send signal sig to the daemon process."
+        print "              The default signal is SIGTERM."
+
+    def do_wait(self, arg):
+        self.awhile(lambda: not self.zd_pid, "program stopped")
+        self.do_status()
+
+    def help_wait(self):
+        print "wait -- Wait for the daemon process to exit."
+
+    def do_status(self, arg=""):
+        self.get_status()
         if not self.zd_up:
             print "daemon manager not running"
         elif not self.zd_pid:
-            print "daemon not running"
+            print "daemon manager running; program not running"
         else:
-            print "daemon running: pid=%d" % self.zd_pid
+            print "program running; pid=%d" % self.zd_pid
+        if arg == "-l" and self.zd_status:
+            print self.zd_status
+
+    def help_status(self):
+        print "status [-l] -- Print status for the daemon process."
+        print "               With -l, show raw status output as well."
 
     def do_quit(self, arg):
-        self.zdstatus()
+        self.get_status()
         if not self.zd_pid:
-            self.zdcommand("exit")
-            self.zdstatus()
-            while self.zd_up:
-                sys.stdout.write(". ")
-                sys.stdout.flush()
-                time.sleep(1)
-                self.zdstatus()
-            print "daemon not running; daemon manager stopped"
+            print "program not running; stopping daemon manager"
+            self.send_action("exit")
+            self.awhile(lambda: not self.zd_up, "daemon manager stopped")
         else:
-            print "daemon and daemon manager still running"
+            print "program and daemon manager still running"
         return 1
 
-class ZDOptions:
-
-    python = sys.executable
-    if __name__ == "__main__":
-        _file = __file__
-    else:
-        _file = sys.argv[0]
-    _file = os.path.normpath(os.path.abspath(_file))
-    _dir = os.path.dirname(_file)
-    zdaemon = os.path.join(_dir, "zdaemon.py")
-
-    backofflimit = 10                   # -b SECONDS
-    isclient = 0                        # -c
-    daemon = 0                          # -d
-    forever = 0                         # -f
-    sockname = "zdsock"                 # -s SOCKET
-    exitcodes = [0, 2]                  # -x LIST
-    user = None                         # -u USER
-    zdirectory = "/"                    # -z DIRECTORY
-
-    program = "sleep"
-    program_arguments = ["100"]
-
-##    program = os.path.join(_dir, "tests/nokill.py")
-##    program_arguments = []
-
-    def __init__(self, args=None):
-        if args is None:
-            args = sys.argv[1:]
-        self.args = args
+    def help_quit(self):
+        print "quit -- Exit the zdctl shell."
+        print "        If the program is not running, stop the daemon manager."
 
 def main(args=None):
     options = ZDOptions(args)
