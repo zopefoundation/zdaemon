@@ -6,10 +6,10 @@ zdaemon -- run an application as a daemon.
 Usage: python zdaemon.py [zdaemon-options] program [program-arguments]
 
 Options:
+  -b SECONDS -- set backoff limit to SECONDS (default 10; see below)
   -d -- run as a proper daemon; fork a background process, close files etc.
+  -f -- run forever (by default, exit when the backoff limit is exceeded)
   -h -- print usage message and exit
-
-Arguments:
   program [program-arguments] -- an arbitrary application to run
 
 This daemon manager has two purposes: it restarts the application when
@@ -21,14 +21,23 @@ Important: if at any point the application exits with exit status 2,
 it is not restarted.  Any other form of termination (either being
 killed by a signal or exiting with an exit status other than 2) causes
 it to be restarted.
+
+Backoff limit: when the application exits (nearly) immediately after a
+restart, the daemon manager starts slowing down by delaying between
+restarts.  The delay starts at 1 second and is increased by one on
+each restart up to the backoff limit given by the -b option; it is
+reset when the application runs for more than the backoff limit
+seconds.  By default, when the delay reaches the backoff limit, the
+daemon manager exits (under the assumption that the application has a
+persistent fault).  The -f (forever) option prevents this exit; use it
+when you expect that a temporary external problem (such as a network
+outage or an overfull disk) may prevent the application from starting
+but you want the daemon manager to keep trying.
+
 """
 
 """
 XXX TO DO
-
-- A parametrizable "governor" on the automatic restart, limiting the
-  frequency of restarts and possible stopping altogether if the
-  application fails too often
 
 - A way to stop both the daemon manager and the application.
 
@@ -40,8 +49,9 @@ XXX TO DO
 """
 
 import os
-assert os.name == "posix" # This code makes Unix-specific assumptions
+assert os.name == "posix" # This code has many Unix-specific assumptions
 import sys
+import time
 import getopt
 import signal
 from stat import ST_MODE
@@ -50,10 +60,14 @@ import zLOG
 
 class Daemonizer:
 
+    # Settable options
+    daemon = 0
+    forever = 0
+    backofflimit = 10
+
     def __init__(self):
         self.filename = None
         self.args = []
-        self.daemon = 0
 
     def main(self, args=None):
         self.prepare(args)
@@ -64,7 +78,7 @@ class Daemonizer:
             args = sys.argv[1:]
         self.blather("args=%s" % repr(args))
         try:
-            opts, args = getopt.getopt(args, "dh")
+            opts, args = getopt.getopt(args, "b:dfh")
         except getopt.error, msg:
             self.usage(str(msg))
         self.parseoptions(opts)
@@ -73,11 +87,18 @@ class Daemonizer:
     def parseoptions(self, opts):
         self.info("opts=%s" % repr(opts))
         for o, a in opts:
+            if o == "-b":
+                try:
+                    self.backofflimit = float(a)
+                except:
+                    self.usage("invalid number: %s" % repr(a))
+            if o == "-d":
+                self.daemon += 1
+            if o == "-f":
+                self.forever += 1
             if o == "-h":
                 print __doc__,
                 self.exit()
-            if o == "-d":
-                self.daemon += 1
 
     def setprogram(self, args):
         if not args:
@@ -133,7 +154,7 @@ class Daemonizer:
 
     def sigexit(self, sig, frame):
         self.info("daemon manager killed by signal %s(%d)" %
-                  (self.signalname(sig), sig))
+                  (self.signame(sig), sig))
         self.exit(1)
 
     def daemonize(self):
@@ -155,7 +176,31 @@ class Daemonizer:
     def runforever(self):
         self.info("daemon manager started")
         while 1:
+            self.governor()
             self.forkandexec()
+
+    backoff = 0
+    lasttime = None
+
+    def governor(self):
+        # Back off if respawning too often
+        if not self.lasttime:
+            pass
+        elif time.time() - self.lasttime < self.backofflimit:
+            # Exited rather quickly; slow down the restarts
+            self.backoff += 1
+            if self.backoff >= self.backofflimit:
+                if self.forever:
+                    self.backoff = self.backofflimit
+                else:
+                    self.problem("restarting too often; quit")
+                    self.exit(1)
+            self.info("sleep %s to avoid rapid restarts" % self.backoff)
+            time.sleep(self.backoff)
+        else:
+            # Reset the backoff timer
+            self.backoff = 0
+        self.lasttime = time.time()
 
     def forkandexec(self):
         pid = os.fork()
@@ -185,13 +230,14 @@ class Daemonizer:
             msg = "pid %d: exit status %s" % (pid, es)
             if es == 0:
                 self.info(msg)
+            elif es == 2:
+                self.problem(msg)
+                self.exit(es)
             else:
                 self.warning(msg)
-                if es == 2:
-                    self.exit(es)
         elif os.WIFSIGNALED(sts):
             signum = os.WTERMSIG(sts)
-            signame = self.signalname(signum)
+            signame = self.signame(signum)
             msg = ("pid %d: terminated by signal %s(%s)" %
                    (pid, signame, signum))
             if hasattr(os, "WCOREDUMP"):
@@ -202,15 +248,12 @@ class Daemonizer:
                 msg += " (core dumped)"
             self.warning(msg)
         else:
-            # XXX what should we do here?
-            signum = os.WSTOPSIG(sts)
-            signame = self.signalname(signum)
-            msg = "pid %d: stopped by signal %s(%s)" % (pid, signame, signum)
+            msg = "pid %d: unknown termination cause 0x%04x" % (pid, sts)
             self.warning(msg)
 
     signames = None
 
-    def signalname(self, sig):
+    def signame(self, sig):
         """Return the symbolic name for signal sig.
 
         Returns 'unknown' if there is no SIG name bound to sig in the
@@ -233,8 +276,8 @@ class Daemonizer:
     # Error handling
 
     def usage(self, msg):
+        self.problem(str(msg))
         self.errwrite("Error: %s\n" % str(msg))
-        self.error(str(msg))
         self.errwrite("For help, use zdaemon.py -h\n")
         self.exit(2)
 
@@ -261,7 +304,7 @@ class Daemonizer:
     def warning(self, msg):
         self.log(msg, zLOG.WARNING)
 
-    def error(self, msg):
+    def problem(self, msg):
         self.log(msg, zLOG.ERROR)
 
     def panic(self, msg):
