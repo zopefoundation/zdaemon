@@ -14,10 +14,11 @@
 ##############################################################################
 """zdctl -- control an application run by zdaemon.
 
-Usage: python zdctl.py -C config-file [action [arguments]]
+Usage: python zdctl.py [-C URL] [-p PROGRAM] [action [arguments]]
 
 Options:
 -C/--configuration URL -- configuration file or URL
+-p/--program PROGRAM -- the program to run
 action [arguments] -- see below
 
 If no action is specified on the command line, a "shell" interpreting
@@ -78,7 +79,9 @@ class ZDOptions(zdoptions.ZDOptions):
 
     def __init__(self):
         zdoptions.ZDOptions.__init__(self)
-        self.add("program", "zdctl.program", "p:", "program=", string_list)
+        self.add("program", "zdctl.program", "p:", "program=",
+                 handler=string_list,
+                 required="no program specified; use -p or -C")
 
 
 class ZDCmd(cmd.Cmd):
