@@ -181,10 +181,10 @@ class ZDCmd(cmd.Cmd):
         if not self.zd_up:
             print "daemon manager not running"
         elif not self.zd_pid:
-            print "program not running"
+            print "daemon process not running"
         else:
             self.send_action("stop")
-            self.awhile(lambda: not self.zd_pid, "program stopped")
+            self.awhile(lambda: not self.zd_pid, "daemon process stopped")
 
     def help_stop(self):
         print "stop -- Stop the daemon process."
@@ -198,7 +198,7 @@ class ZDCmd(cmd.Cmd):
         else:
             self.send_action("restart")
             self.awhile(lambda: self.zd_pid not in (0, pid),
-                        "program restarted, pid=%(zd_pid)d")
+                        "daemon process restarted, pid=%(zd_pid)d")
 
     def help_restart(self):
         print "restart -- Stop and then start the daemon process."
@@ -214,7 +214,7 @@ class ZDCmd(cmd.Cmd):
                 return
         self.get_status()
         if not self.zd_pid:
-            print "program not running"
+            print "daemon process not running"
             return
         print "kill(%d, %d)" % (self.zd_pid, sig)
         try:
@@ -229,7 +229,7 @@ class ZDCmd(cmd.Cmd):
         print "              The default signal is SIGTERM."
 
     def do_wait(self, arg):
-        self.awhile(lambda: not self.zd_pid, "program stopped")
+        self.awhile(lambda: not self.zd_pid, "daemon process stopped")
         self.do_status()
 
     def help_wait(self):
@@ -240,7 +240,7 @@ class ZDCmd(cmd.Cmd):
         if not self.zd_up:
             print "daemon manager not running"
         elif not self.zd_pid:
-            print "daemon manager running; program not running"
+            print "daemon manager running; daemon process not running"
         else:
             print "program running; pid=%d" % self.zd_pid
         if arg == "-l" and self.zd_status:
@@ -253,16 +253,17 @@ class ZDCmd(cmd.Cmd):
     def do_quit(self, arg):
         self.get_status()
         if not self.zd_pid:
-            print "program not running; stopping daemon manager"
+            print "daemon process not running; stopping daemon manager"
             self.send_action("exit")
             self.awhile(lambda: not self.zd_up, "daemon manager stopped")
         else:
-            print "program and daemon manager still running"
+            print "daemon process and daemon manager still running"
         return 1
 
     def help_quit(self):
         print "quit -- Exit the zdctl shell."
-        print "        If the program is not running, stop the daemon manager."
+        print ("        If the daemon process is not running, "
+               "stop the daemon manager.")
 
 def main(args=None):
     options = ZDOptions(args)
