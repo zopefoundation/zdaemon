@@ -22,6 +22,8 @@ class ZDaemonTests(unittest.TestCase):
     zdaemon = os.path.join(parent, "zdaemon.py")
     assert os.path.exists(zdaemon)
 
+    ppath = os.pathsep.join(sys.path)
+
     def setUp(self):
         self.zdsock = tempfile.mktemp()
         self.new_stdout = StringIO()
@@ -46,8 +48,9 @@ class ZDaemonTests(unittest.TestCase):
     def rundaemon(self, args):
         if type(args) is type([]):
             args = " ".join(args)
-        os.system("%s %s -d -s %s %s" %
-                  (self.python, self.zdaemon, self.zdsock, args))
+        cmd = ("PYTHONPATH=%s %s %s -d -s %s %s" %
+               (self.ppath, self.python, self.zdaemon, self.zdsock, args))
+        os.system(cmd)
         # When the daemon crashes, the following may help debug it:
         ##os.system("%s %s -s %s %s &" %
         ##          (self.python, self.zdaemon, self.zdsock, args))
