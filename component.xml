@@ -100,7 +100,7 @@
         Command-line option: -d or --daemon.
 
         If this option is true, zdrun.py runs in the background as a
-        true daemon.  It forks an child process which becomes the
+        true daemon.  It forks a child process which becomes the
         subprocess manager, while the parent exits (making the shell
         that started it believe it is done).  The child process also
         does the following:
