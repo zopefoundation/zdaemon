@@ -38,6 +38,19 @@ class ZDOptionsTestBase(unittest.TestCase):
         sys.stdout = self.save_stdout
         sys.stderr = self.save_stderr
 
+    def check_exit_code(self, options, args):
+        save_sys_stderr = sys.stderr
+        try:
+            sys.stderr = StringIO()
+            try:
+                options.realize(args)
+            except SystemExit, err:
+                self.assertEqual(err.code, 2)
+            else:
+                self.fail("SystemExit expected")
+        finally:
+            sys.stderr = save_sys_stderr
+
 
 class TestZDOptions(ZDOptionsTestBase):
 
@@ -82,19 +95,6 @@ class TestZDOptions(ZDOptionsTestBase):
     def test_unrecognized(self):
         # Check that we get an error for an unrecognized option
         self.check_exit_code(self.OptionsClass(), ["-/"])
-
-    def check_exit_code(self, options, args):
-        save_sys_stderr = sys.stderr
-        try:
-            sys.stderr = StringIO()
-            try:
-                options.realize(args)
-            except SystemExit, err:
-                self.assertEqual(err.code, 2)
-            else:
-                self.fail("SystemExit expected")
-        finally:
-            sys.stderr = save_sys_stderr
 
 
 class TestBasicFunctionality(TestZDOptions):
@@ -155,6 +155,8 @@ class TestBasicFunctionality(TestZDOptions):
 
 class EnvironmentOptions(ZDOptionsTestBase):
 
+    saved_schema = None
+
     class OptionsClass(ZDOptions):
         def __init__(self):
             ZDOptions.__init__(self)
@@ -164,11 +166,14 @@ class EnvironmentOptions(ZDOptionsTestBase):
         def load_schema(self):
             # Doing this here avoids needing a separate file for the schema:
             if self.schema is None:
-                self.schema = ZConfig.loadSchemaFile(StringIO("""\
-                   <schema>
-                     <key name='opt' datatype='integer' default='12'/>
-                   </schema>
-                   """))
+                if EnvironmentOptions.saved_schema is None:
+                    schema = ZConfig.loadSchemaFile(StringIO("""\
+                        <schema>
+                          <key name='opt' datatype='integer' default='12'/>
+                        </schema>
+                        """))
+                    EnvironmentOptions.saved_schema = schema
+                self.schema = EnvironmentOptions.saved_schema
 
         def load_configfile(self):
             if getattr(self, "configtext", None):
