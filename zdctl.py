@@ -564,11 +564,11 @@ class TailHelper:
     def fsize(self):
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
 
-def main(args=None, options=None):
+def main(args=None, options=None, cmdclass=None):
     if options is None:
         options = ZDCtlOptions()
     options.realize(args)
-    c = ZDCmd(options)
+    c = cmdclass(options)
     if options.args:
         c.onecmd(" ".join(options.args))
     if options.interactive:

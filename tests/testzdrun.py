@@ -90,13 +90,20 @@ class ZDaemonTests(unittest.TestCase):
         ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
         ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
-    def run(self, args):
+    def run(self, args, cmdclass=None):
         if type(args) is type(""):
             args = args.split()
         try:
-            zdctl.main(["-s", self.zdsock] + args)
+            zdctl.main(["-s", self.zdsock] + args, cmdclass=cmdclass)
         except SystemExit:
             pass
+
+    def testCmdclassOverride(self):
+        class MyCmd(zdctl.ZDCmd):
+            def do_sproing(self, rest):
+                print rest
+        self.run("-p echo sproing expected", cmdclass=MyCmd)
+        self.expect = "expected\n"
 
     def testSystem(self):
         self.rundaemon(["echo", "-n"])
