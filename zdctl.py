@@ -234,13 +234,16 @@ class ZDCmd(cmd.Cmd):
                     if v == value: # We didn't override anything
                         return []
                     break
-        args = [opt]
-        if not flag:
+        if flag:
+            if value:
+                args = [opt]
+            else:
+                args = []
+        else:
             if svalue is None:
                 svalue = str(value)
-            args.append(svalue)
+            args = [opt, svalue]
         return args
-                        
 
     def help_start(self):
         print "start -- Start the daemon process."
