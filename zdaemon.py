@@ -20,9 +20,10 @@ Client mode options:
   [command] -- the command to send to the daemon manager (default "status")
 
 Client commands are:
-  status -- report application status
-  kill [signal] -- send the given signal number to the application
-                   (default signal is 14, i.e. SIGTERM)
+  help -- return command help
+  status -- report application status (this is the default command)
+  kill [signal] -- send a signal to the application
+                   (default signal is SIGTERM)
 
 This daemon manager has two purposes: it restarts the application when
 it dies, and (when requested to do so with the -d option) it runs the
@@ -51,18 +52,14 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- Refactor the client/server code to be less ugly; avoid blocking
-  recv() calls; don't assume send() always sends everything.
+- Refactor the readcommand() to avoid blocking recv() calls.
 
 - Rethink client commands; maybe start/restart/stop make more sense?
   (Still need a way to send an arbitrary signal)
 
-- Should it be possible to change other parameters from the client?
-  (e.g. filename, command, backoff etc.)
-
 - Do the governor without actual sleeps, using event scheduling etc.
 
-- Add docstrings
+- Add docstrings.
 
 """
 
@@ -287,62 +284,98 @@ class Daemonizer:
                     self.appid = 0
                 self.reportstatus(wpid, wsts)
             if r:
-                try:
-                    self.readcommand()
-                except:
-                    self.problem("Exception in readcommand()")
+                self.readcommand()
+
+    conn = None
 
     def readcommand(self):
-        conn, addr = self.controlsocket.accept()
         try:
-            data = conn.recv(1000)
-            if not data:
-                conn.send("No input\n")
-                return
-            line = data
-            while "\n" not in line:
+            conn, addr = self.controlsocket.accept()
+            self.conn = conn
+            try:
                 data = conn.recv(1000)
                 if not data:
-                    conn.send("Incomplete input\n")
+                    self.sendreply("No input")
                     return
-                line += data
-            lines = line.split("\n")
-            words = lines[0].split()
-            if not words:
-                conn.send("Empty command\n")
-                return
-            command = words[0]
-            if command == "status":
-                if not self.appid:
-                    status = "not running"
-                else:
-                    status = "running"
-                conn.send("Application %s\n" % status +
-                          "pid=%d\n" % self.appid +
-                          "filename=%s\n" % repr(self.filename) +
-                          "args=%s\n" % repr(self.args))
-            elif command == "kill":
-                if words[1:]:
-                    try:
-                        sig = int(words[1])
-                    except:
-                        conn.send("Bad signal %s\n" % repr(words[1]))
+                line = data
+                while "\n" not in line:
+                    data = conn.recv(1000)
+                    if not data:
+                        self.sendreply("Input not terminated by newline")
                         return
-                else:
-                    sig = signal.SIGTERM
-                if not self.appid:
-                    conn.send("Application not running\n")
-                else:
-                    try:
-                        os.kill(self.appid, sig)
-                    except os.error, msg:
-                        conn.send("Kill %d failed: %s\n" % (sig, str(msg)))
-                    else:
-                        conn.send("Signal %d sent\n" % sig)
+                    line += data
+                self.docommand(line)
+            finally:
+                conn.close()
+            self.conn = None
+        except socket.error, msg:
+            self.problem("socket error: %s" % str(msg),
+                         error=sys.exc_info())
+
+    def docommand(self, line):
+        lines = line.split("\n")
+        args = lines[0].split()
+        if not args:
+            self.sendreply("Empty command")
+            return
+        command = args[0]
+        methodname = "cmd_" + command
+        method = getattr(self, methodname, None)
+        if method:
+            method(args)
+        else:
+            self.sendreply("Unknown command %s" % (`args[0]`))
+
+    def cmd_kill(self, args):
+        if args[1:]:
+            try:
+                sig = int(args[1])
+            except:
+                self.sendreply("Bad signal %s" % repr(args[1]))
+                return
+        else:
+            sig = signal.SIGTERM
+        if not self.appid:
+            self.sendreply("Application not running")
+        else:
+            try:
+                os.kill(self.appid, sig)
+            except os.error, msg:
+                self.sendreply("Kill %d failed: %s" % (sig, str(msg)))
             else:
-                conn.send("Unknown command %s\n" % (`words[0]`))
-        finally:
-            conn.close()
+                self.sendreply("Signal %d sent" % sig)
+
+    def cmd_status(self, args):
+        if not self.appid:
+            status = "stopped"
+        else:
+            status = "running"
+        self.sendreply("status=%s\n" % status +
+                       "manager=%d\n" % os.getpid() + 
+                       "application=%d\n" % self.appid +
+                       "filename=%s\n" % repr(self.filename) +
+                       "args=%s\n" % repr(self.args))
+
+    def cmd_help(self, args):
+        self.sendreply(
+            "Available commands:\n"
+            "  help -- return command help\n"
+            "  status -- report application status (default command)\n"
+            "  kill [signal] -- send a signal to the application\n"
+            "                   (default signal is SIGTERM)\n"
+            )
+
+    def sendreply(self, msg):
+        if not msg.endswith("\n"):
+            msg = msg + "\n"
+        conn = self.conn
+        if hasattr(conn, "sendall"):
+            conn.sendall(msg)
+        else:
+            # This is quadratic, but msg is rarely more than 100 bytes :-)
+            while msg:
+                sent = conn.send(msg)
+                msg = msg[sent:]
 
     backoff = 0
     lasttime = None
@@ -402,10 +435,8 @@ class Daemonizer:
             else:
                 self.warning(msg)
         elif os.WIFSIGNALED(sts):
-            signum = os.WTERMSIG(sts)
-            signame = self.signame(signum)
-            msg = ("pid %d: terminated by signal %s(%s)" %
-                   (pid, signame, signum))
+            sig = os.WTERMSIG(sts)
+            msg = ("pid %d: terminated by %s" % (pid, self.signame(sig)))
             if hasattr(os, "WCOREDUMP"):
                 iscore = os.WCOREDUMP(sts)
             else:
@@ -428,7 +459,7 @@ class Daemonizer:
 
         if self.signames is None:
             self.setupsignames()
-        return self.signames.get(sig, "unknown")
+        return self.signames.get(sig) or "signal %d" % sig
 
     def setupsignames(self):
             self.signames = {}
@@ -470,17 +501,17 @@ class Daemonizer:
     def warning(self, msg):
         self.log(msg, zLOG.WARNING)
 
-    def problem(self, msg):
-        self.log(msg, zLOG.ERROR)
+    def problem(self, msg, error=None):
+        self.log(msg, zLOG.ERROR, error)
 
-    def panic(self, msg):
-        self.log(msg, zLOG.PANIC)
+    def panic(self, msg, error=None):
+        self.log(msg, zLOG.PANIC, error)
 
     def getsubsystem(self):
         return "ZD:%d" % os.getpid()
 
-    def log(self, msg, severity=zLOG.INFO):
-        zLOG.LOG(self.getsubsystem(), severity, msg)
+    def log(self, msg, severity=zLOG.INFO, error=None):
+        zLOG.LOG(self.getsubsystem(), severity, msg, "", error)
 
 def main(args=None):
     d = Daemonizer()
