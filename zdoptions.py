@@ -118,7 +118,7 @@ class ZDOptions:
         add(name, confname)
             Configuration option 'confname' maps to attribute 'name'
         add(name, None, short, long)
-            Command line option '-short' or '--long' maps to 'name' 
+            Command line option '-short' or '--long' maps to 'name'
         add(None, None, short, long, handler)
             Command line option calls handler
         add(name, None, short, long, handler)

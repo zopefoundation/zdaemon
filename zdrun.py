@@ -223,8 +223,8 @@ class Daemonizer:
         uid = os.geteuid()
         if uid != 0 and uid != self.options.uid:
             self.options.usage("only root can use -u USER to change users")
-        os.setuid(self.options.uid)
         os.setgid(self.options.gid)
+        os.setuid(self.options.uid)
 
     def run(self):
         self.proc = Subprocess(self.options)
