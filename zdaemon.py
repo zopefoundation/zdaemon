@@ -17,10 +17,10 @@ it dies, and (when requested to do so with the -d option) it runs the
 application in the background, detached from the foreground tty
 session that started it (if any).
 
-Important: if at any point the application exits with exit status 2,
-it is not restarted.  Any other form of termination (either being
-killed by a signal or exiting with an exit status other than 2) causes
-it to be restarted.
+Important: if at any point the application exits with exit status 0 or
+2, it is not restarted.  Any other form of termination (either being
+killed by a signal or exiting with an exit status other than 0 or 2)
+causes it to be restarted.
 
 Backoff limit: when the application exits (nearly) immediately after a
 restart, the daemon manager starts slowing down by delaying between
@@ -39,17 +39,13 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- A way to stop both the daemon manager and the application.
-
-- A way to restart the application.
-
-- More control over logging (zdaemon logging should be controllable
-  separate from application logging).
+- Read commands from a Unix-domain socket, to stop, start and restart
+  the application, and to stop the daemon manager.
 
 """
 
 import os
-assert os.name == "posix" # This code has many Unix-specific assumptions
+assert os.name == "posix", "This code makes many Unix-specific assumptions"
 import sys
 import time
 import getopt
@@ -230,6 +226,7 @@ class Daemonizer:
             msg = "pid %d: exit status %s" % (pid, es)
             if es == 0:
                 self.info(msg)
+                self.exit(0)
             elif es == 2:
                 self.problem(msg)
                 self.exit(es)
