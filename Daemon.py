@@ -12,36 +12,87 @@
 # 
 ##############################################################################
 
-import os, sys, time, posix, signal
+import os, sys, time, signal
 from ZDaemonLogging import pstamp
-import Heartbeat
 import zLOG
+from SignalPasser import SignalPasser
 
 pyth = sys.executable
 
-class KidDiedOnMeError(Exception):
+class DieNow(Exception):
     pass
 
-class ExecError(Exception):
-    pass
+def run(argv, pidfile=''):
+    if os.environ.has_key('ZDAEMON_MANAGED'):
+        # We're being run by the child.
+        return
 
-class ForkError(Exception):
-    pass
+    os.environ['ZDAEMON_MANAGED']='TRUE'
 
-FORK_ATTEMPTS = 2
-
-def forkit(attempts = FORK_ATTEMPTS):
-    while attempts:
-        # if at first you don't succeed...
-        attempts = attempts - 1
+    if not os.environ.has_key('Z_DEBUG_MODE'):
+        detach() # detach from the controlling terminal
+    
+    while 1:
         try:
             pid = os.fork()
-        except os.error:
-            pstamp('Houston, the fork failed', zLOG.ERROR)
-            time.sleep(2)
+            if pid:
+                # We're the parent (the daemon process)
+                # pass all "normal" signals along to our child, but don't
+                # respond to them ourselves unless they say "die"!
+                interesting = [1, 2, 3, 10, 12, 15]
+                # ie. HUP, INT, QUIT, USR1, USR2, TERM
+                for sig in interesting:
+                    signal.signal(sig, SignalPasser(sig))
+                pstamp('Houston, we have forked: pid %s' % pid, zLOG.INFO)
+                write_pidfile(pidfile)
+                p,s = wait(pid) # waitpid will block until child exit
+                if s:
+                    # continue and restart because our child died
+                    # with a nonzero exit code, meaning he bit it in
+                    # an unsavory way (likely a segfault or something)
+                    log_pid(p, s)
+                    continue
+                else:
+                    # no need to restart, our child wanted to die.
+                    raise DieNow
+
+            else:
+                # we're the child (Zope/ZEO)
+                args = [pyth]
+                if not __debug__:
+                    # we're running in optimized mode
+                    args.append('-O')
+                os.execv(pyth, tuple(args) + tuple(argv))
+
+        except DieNow:
+            sys.exit()
+
+def detach():
+    # do the funky chicken dance to detach from the terminal 
+    pid = os.fork()
+    if pid: sys.exit(0)
+    os.close(0); sys.stdin  = open('/dev/null')
+    os.close(1); sys.stdout = open('/dev/null','w')
+    os.close(2); sys.stderr = open('/dev/null','w')
+    os.setsid()
+
+def write_pidfile(pidfile):
+    if pidfile:
+        pf = open(pidfile, 'w+')
+        pf.write(("%s" % os.getpid()))
+        pf.close()
+
+def wait(pid):
+    while 1:
+        try:
+            p,s = os.waitpid(pid, 0)
+        except OSError:
+            # catch EINTR, it's raised as a result of
+            # interrupting waitpid with a signal
+            # and we don't care about it.
+            continue
         else:
-            pstamp('Houston, we have forked', zLOG.INFO)
-            return pid
+            return p, s
 
 def log_pid(p, s):
     if os.WIFEXITED(s):
@@ -72,99 +123,6 @@ def log_pid(p, s):
                                             signum)
     pstamp('Aiieee! Process %s %s' % (p, msg),
            zLOG.ERROR)
-    
-def run(argv, pidfile='', signals=None):
-    if signals is None:
-        signals = []
-    if os.environ.has_key('ZDAEMON_MANAGED'):
-        # We're the child at this point.
-        return
-    
-    os.environ['ZDAEMON_MANAGED']='TRUE'
-    
-    if not os.environ.has_key('Z_DEBUG_MODE'):
-        # Detach from terminal
-        pid = os.fork()
-        if pid:
-            sys.exit(0)
-        os.close(0); sys.stdin  = open('/dev/null')
-        os.close(1); sys.stdout = open('/dev/null','w')
-        os.close(2); sys.stderr = open('/dev/null','w')
-        os.setsid()
-
-    while 1:
-
-        try:
-            pid = forkit()
-
-            if pid is None:
-                raise ForkError
-
-            elif pid:
-                # the process we're daemoning for can signify that it
-                # wants us to notify it when we get specific signals
-                #
-                #
-                # we always register TERM and INT so we can reap our child.
-                signals = signals + [signal.SIGTERM, signal.SIGINT]
-                # TERM happens on normal kill
-                # INT happens on Ctrl-C (debug mode)
-                import SignalPasser
-                SignalPasser.pass_signals_to_process(pid, signals)
-
-                # Parent 
-                pstamp(('Hi, I just forked off a kid: %s' % pid), zLOG.INFO)
-                # here we want the pid of the parent
-                if pidfile:
-                    pf = open(pidfile, 'w+')
-                    pf.write(("%s" % os.getpid()))
-                    pf.close()
-
-                while 1: 
-                    if not Heartbeat.BEAT_DELAY:
-                        try:
-                            p,s = os.waitpid(pid, 0)
-                        except OSError:
-                            # catch EINTR, it's raised as a result of
-                            # interrupting waitpid with a signal
-                            # and we don't care about it.
-                            continue
-                    else:
-                        try:
-                            p,s = os.waitpid(pid, os.WNOHANG)
-                        except OSError:
-                            # catch EINTR, it's raised as a result of
-                            # interrupting waitpid with a signal
-                            # and we don't care about it.
-                            p, s = None, None
-                        if not p:
-                            time.sleep(Heartbeat.BEAT_DELAY)
-                            Heartbeat.heartbeat()
-                            continue
-                    if s:
-                        log_pid(p, s)
-                    else:
-                        pstamp(('The kid, %s, died on me.' % pid),
-                               zLOG.WARNING)
-                        raise ForkError
-
-                    raise KidDiedOnMeError
-
-            else:
-                # Child
-                if __debug__:
-                    # non optimized
-                    os.execv(pyth, (pyth,) + tuple(argv))
-                else:
-                    # optimized
-                    os.execv(pyth, (pyth, '-O') + tuple(argv))
-
-        except ExecError:
-            sys.exit()
-        except ForkError:
-            sys.exit()
-        except KidDiedOnMeError:
-            pass
 
 _signals = None
 
