@@ -254,6 +254,8 @@ class ZDOptions:
                 if name and value is not None:
                     setattr(self, name, value)
 
+        if self.configfile is None:
+            self.configfile = self.default_configfile()
         if self.zconfig_options and self.configfile is None:
             self.usage("configuration overrides (-X) cannot be used"
                        " without a configuration file")
@@ -293,6 +295,16 @@ class ZDOptions:
             if (os.getenv("EVENT_LOG_FILE") is None and
                 os.getenv("STUPID_LOG_FILE") is None):
                 self.load_logconf(self.logsectionname)
+
+    def default_configfile(self):
+        """Return the name of the default config file, or None."""
+        # This allows a default configuration file to be used without
+        # affecting the -C command line option; setting self.configfile
+        # before calling realize() makes the -C option unusable since
+        # then realize() thinks it has already seen the option.  If no
+        # -C is used, realize() will call this method to try to locate
+        # a configuration file.
+        return None
 
     def load_schema(self):
         if self.schema is None:
