@@ -4,13 +4,25 @@
 zdaemon -- run an application as a daemon.
 
 Usage: python zdaemon.py [zdaemon-options] program [program-arguments]
+Or:    python zdaemon.py -c [command]
 
 Options:
   -b SECONDS -- set backoff limit to SECONDS (default 10; see below)
+  -c -- client mode, to sends a command to the daemon manager; see below
   -d -- run as a proper daemon; fork a background process, close files etc.
   -f -- run forever (by default, exit when the backoff limit is exceeded)
   -h -- print usage message and exit
+  -s SOCKET -- Unix socket name for client communication (default "zdsock")
   program [program-arguments] -- an arbitrary application to run
+
+Client mode options:
+  -s SOCKET -- socket name (a Unix pathname) for client communication
+  [command] -- the command to send to the daemon manager (default "status")
+
+Client commands are:
+  status -- report application status
+  kill [signal] -- send the given signal number to the application
+                   (default signal is 14, i.e. SIGTERM)
 
 This daemon manager has two purposes: it restarts the application when
 it dies, and (when requested to do so with the -d option) it runs the
@@ -39,8 +51,20 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- Read commands from a Unix-domain socket, to stop, start and restart
-  the application, and to stop the daemon manager.
+- Refactor the client/server code to be less ugly; avoid blocking
+  recv() calls; don't assume send() always sends everything.
+
+- Rethink client commands; maybe start/restart/stop make more sense?
+  (Still need a way to send an arbitrary signal)
+
+- Should it be possible to change other parameters from the client?
+  (e.g. filename, command, backoff etc.)
+
+- Do the governor without actual sleeps, using event scheduling etc.
+
+- Change directory (where?) before starting the application
+
+- Add docstrings
 
 """
 
@@ -48,6 +72,9 @@ import os
 assert os.name == "posix", "This code makes many Unix-specific assumptions"
 import sys
 import time
+import errno
+import socket
+import select
 import getopt
 import signal
 from stat import ST_MODE
@@ -60,6 +87,8 @@ class Daemonizer:
     daemon = 0
     forever = 0
     backofflimit = 10
+    sockname = "zdsock"
+    isclient = 0
 
     def __init__(self):
         self.filename = None
@@ -74,20 +103,26 @@ class Daemonizer:
             args = sys.argv[1:]
         self.blather("args=%s" % repr(args))
         try:
-            opts, args = getopt.getopt(args, "b:dfh")
+            opts, args = getopt.getopt(args, "b:cdfhs:")
         except getopt.error, msg:
             self.usage(str(msg))
         self.parseoptions(opts)
-        self.setprogram(args)
+        if self.isclient:
+            self.setcommand(args)
+        else:
+            self.setprogram(args)
 
     def parseoptions(self, opts):
         self.info("opts=%s" % repr(opts))
         for o, a in opts:
+            # Alphabetical order please!
             if o == "-b":
                 try:
                     self.backofflimit = float(a)
                 except:
                     self.usage("invalid number: %s" % repr(a))
+            if o == "-c":
+                self.isclient += 1
             if o == "-d":
                 self.daemon += 1
             if o == "-f":
@@ -95,6 +130,36 @@ class Daemonizer:
             if o == "-h":
                 print __doc__,
                 self.exit()
+            if o == "-s":
+                self.sockname = a
+
+    def setcommand(self, args):
+        if not args:
+            self.command = "status"
+        else:
+            self.command = " ".join(args)
+
+    def sendcommand(self):
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        try:
+            sock.connect(self.sockname)
+        except socket.error, msg:
+            self.errwrite("Can't connect to %s: %s\n" %
+                          (repr(self.sockname), str(msg)))
+            self.exit(1)
+        sock.send(self.command + "\n")
+        lastdata = ""
+        while 1:
+            data = sock.recv(1000)
+            if not data:
+                break
+            sys.stdout.write(data)
+            lastdata = data
+        if not lastdata:
+            self.errwrite("No response received\n")
+            self.exit(1)
+        if not lastdata.endswith("\n"):
+            sys.stdout.write("\n")
 
     def setprogram(self, args):
         if not args:
@@ -138,20 +203,53 @@ class Daemonizer:
         return path
 
     def run(self):
-        self.setsignals()
-        if self.daemon:
-            self.daemonize()
-        self.runforever()
+        if self.isclient:
+            self.sendcommand()
+            return
+        self.opensocket()
+        try:
+            self.setsignals()
+            if self.daemon:
+                self.daemonize()
+            self.runforever()
+        finally:
+            try:
+                os.unlink(self.sockname)
+            except os.error:
+                pass
+
+    controlsocket = None
+
+    def opensocket(self):
+        try:
+            os.unlink(self.sockname)
+        except os.error:
+            pass
+        self.controlsocket = socket.socket(socket.AF_UNIX,
+                                           socket.SOCK_STREAM)
+        oldumask = None
+        try:
+            oldumask = os.umask(077)
+            self.controlsocket.bind(self.sockname)
+        finally:
+            if oldumask is not None:
+                os.umask(oldumask)
+        self.controlsocket.listen(1)
+        self.controlsocket.setblocking(0)
 
     def setsignals(self):
         signal.signal(signal.SIGTERM, self.sigexit)
         signal.signal(signal.SIGHUP, self.sigexit)
         signal.signal(signal.SIGINT, self.sigexit)
+        signal.signal(signal.SIGCHLD, self.sigchild)
 
     def sigexit(self, sig, frame):
         self.info("daemon manager killed by signal %s(%d)" %
                   (self.signame(sig), sig))
         self.exit(1)
+
+    def sigchild(self, sig, frame):
+        pass
 
     def daemonize(self):
         pid = os.fork()
@@ -169,11 +267,83 @@ class Daemonizer:
         sys.stderr = sys.__stderr__ = open("/dev/null", "w")
         os.setsid()
 
+    appid = 0 # Application pid; indicates status (0 == not running)
+
     def runforever(self):
         self.info("daemon manager started")
         while 1:
-            self.governor()
-            self.forkandexec()
+            if not self.appid:
+                self.forkandexec()
+            r, w, x = [self.controlsocket], [], []
+            timeout = 30
+            try:
+                r, w, x = select.select(r, w, x, timeout)
+            except select.error, err:
+                if err[0] != errno.EINTR:
+                    raise
+                r = w = x = []
+            wpid, wsts = os.waitpid(-1, os.WNOHANG)
+            if wpid != 0:
+                if wpid == self.appid:
+                    self.appid = 0
+                self.reportstatus(wpid, wsts)
+            if r:
+                try:
+                    self.readcommand()
+                except:
+                    self.problem("Exception in readcommand()")
+
+    def readcommand(self):
+        conn, addr = self.controlsocket.accept()
+        try:
+            data = conn.recv(1000)
+            if not data:
+                conn.send("No input\n")
+                return
+            line = data
+            while "\n" not in line:
+                data = conn.recv(1000)
+                if not data:
+                    conn.send("Incomplete input\n")
+                    return
+                line += data
+            lines = line.split("\n")
+            words = lines[0].split()
+            if not words:
+                conn.send("Empty command\n")
+                return
+            command = words[0]
+            if command == "status":
+                if not self.appid:
+                    status = "not running"
+                else:
+                    status = "running"
+                conn.send("Application %s\n" % status +
+                          "pid=%d\n" % self.appid +
+                          "filename=%s\n" % repr(self.filename) +
+                          "args=%s\n" % repr(self.args))
+            elif command == "kill":
+                if words[1:]:
+                    try:
+                        sig = int(words[1])
+                    except:
+                        conn.send("Bad signal %s\n" % repr(words[1]))
+                        return
+                else:
+                    sig = signal.SIGTERM
+                if not self.appid:
+                    conn.send("Application not running\n")
+                else:
+                    try:
+                        os.kill(self.appid, sig)
+                    except os.error, msg:
+                        conn.send("Kill %d failed: %s\n" % (sig, str(msg)))
+                    else:
+                        conn.send("Signal %d sent\n" % sig)
+            else:
+                conn.send("Unknown command %s\n" % (`words[0]`))
+        finally:
+            conn.close()
 
     backoff = 0
     lasttime = None
@@ -199,12 +369,12 @@ class Daemonizer:
         self.lasttime = time.time()
 
     def forkandexec(self):
+        self.governor()
         pid = os.fork()
         if pid != 0:
             # Parent
+            self.appid = pid
             self.info("forked child pid %d" % pid)
-            wpid, wsts = os.waitpid(pid, 0)
-            self.reportstatus(wpid, wsts)
         else:
             # Child
             self.startprogram()
