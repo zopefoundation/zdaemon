@@ -130,7 +130,9 @@ class ZDCmd(cmd.Cmd):
                     print "daemon's args =", args
 
     def emptyline(self):
-        pass # We don't want a blank line to repeat the last command
+        # We don't want a blank line to repeat the last command.
+        # Showing status is a nice alternative.
+        self.do_status()
 
     def send_action(self, action):
         """Send an action to the zdrun server and return the response.
