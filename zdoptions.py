@@ -273,6 +273,24 @@ class ZDOptions:
         EventLogger.event_logger.logger = logger
 
 
+class RunnerOptions(ZDOptions):
+
+    def __init__(self):
+        ZDOptions.__init__(self)
+        self.add("backofflimit", "runner.backoff_limit",
+                 "b:", "backoff-limit=", int, default=10)
+        self.add("daemon", "runner.daemon", "d", "daemon", flag=1, default=0)
+        self.add("forever", "runner.forever", "f", "forever",
+                 flag=1, default=0)
+        self.add("sockname", "runner.socket_name", "s:", "socket-name=",
+                 ZConfig.datatypes.existing_dirpath, default="zdsock")
+        self.add("exitcodes", "runner.exit_codes", "x:", "exit-codes=",
+                 list_of_ints, default=[0, 2])
+        self.add("user", "runner.user", "u:", "user=")
+        self.add("zdirectory", "runner.directory", "z:", "directory=",
+                 ZConfig.datatypes.existing_directory, default="/")
+
+
 # ZConfig datatype
 
 def list_of_ints(arg):

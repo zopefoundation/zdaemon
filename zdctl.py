@@ -14,12 +14,21 @@
 ##############################################################################
 """zdctl -- control an application run by zdaemon.
 
-Usage: python zdctl.py [-C URL] [-h] [-p PROGRAM] [action [arguments]]
+Usage: python zdctl.py [-C URL] [-h] [-p PROGRAM]
+       [zdrun-options] [action [arguments]]
 
 Options:
 -C/--configuration URL -- configuration file or URL
 -h/--help -- print usage message and exit
+-b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
+-d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
+-f/--forever -- run forever (by default, exit when backoff limit is exceeded)
+-h/--help -- print this usage message and exit
 -p/--program PROGRAM -- the program to run
+-s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
+-u/--user USER -- run as this user (or numeric uid)
+-x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
+-z/--directory DIRECTORY -- directory to chdir to when using -d (default "/")
 action [arguments] -- see below
 
 Actions are commands like "start", "stop" and "status".  If no action
@@ -45,46 +54,48 @@ import socket
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
-    from os.path import dirname, abspath, normpath
-    sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
+    # (but only when the script is run from inside the zdaemon package)
+    from os.path import dirname, basename, abspath, normpath
+    scriptdir = dirname(normpath(abspath(sys.argv[0])))
+    if basename(scriptdir).lower() == "zdaemon":
+        sys.path.append(dirname(scriptdir))
 
 import ZConfig
-from zdaemon.zdoptions import ZDOptions
+from zdaemon.zdoptions import RunnerOptions
 
 
 def string_list(arg):
     return arg.split()
 
 
-class ZDCtlOptions(ZDOptions):
+class ZDCtlOptions(RunnerOptions):
 
     positional_args_allowed = 1
 
-    # Where's python?
-    python = sys.executable
-
-    # Where's zdaemon?
-    if __name__ == "__main__":
-        _file = sys.argv[0]
-    else:
-        _file = __file__
-    _file = os.path.normpath(os.path.abspath(_file))
-    _dir = os.path.dirname(_file)
-    zdaemon = os.path.join(_dir, "zdrun.py")
-
-    # Options for zdaemon
-    backofflimit = 10                   # -b SECONDS
-    forever = 0                         # -f
-    sockname = os.path.abspath("zdsock") # -s SOCKET
-    exitcodes = [0, 2]                  # -x LIST
-    user = None                         # -u USER
-    zdirectory = "/"                    # -z DIRECTORY
-
     def __init__(self):
-        ZDOptions.__init__(self)
-        self.add("program", "zdctl.program", "p:", "program=",
+        RunnerOptions.__init__(self)
+        self.add("program", "runner.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
+        self.add("python", "runner.python")
+        self.add("zdrun", "runner.zdrun")
+
+    def realize(self, *args, **kwds):
+        RunnerOptions.realize(self, *args, **kwds)
+
+        # Where's python?
+        if not self.python:
+            self.python = sys.executable
+
+        # Where's zdrun?
+        if not self.zdrun:
+            if __name__ == "__main__":
+                file = sys.argv[0]
+            else:
+                file = __file__
+            file = os.path.normpath(os.path.abspath(file))
+            dir = os.path.dirname(file)
+            self.zdrun = os.path.join(dir, "zdrun.py")
 
 
 class ZDCmd(cmd.Cmd):
@@ -101,7 +112,7 @@ class ZDCmd(cmd.Cmd):
                 s = m.group(1)
                 args = eval(s, {"__builtins__": {}})
                 if args != self.options.program:
-                    print "WARNING! zdaemon is managing a different program!"
+                    print "WARNING! zdrun is managing a different program!"
                     print "our program   =", self.options.program
                     print "daemon's args =", args
 
@@ -109,7 +120,7 @@ class ZDCmd(cmd.Cmd):
         pass # We don't want a blank line to repeat the last command
 
     def send_action(self, action):
-        """Send an action to the zdaemon server and return the response.
+        """Send an action to the zdrun server and return the response.
 
         Return None if the server is not up or any other error happened.
         """
@@ -169,7 +180,7 @@ class ZDCmd(cmd.Cmd):
         if not self.zd_up:
             args = [
                 self.options.python,
-                self.options.zdaemon,
+                self.options.zdrun,
                 "-b", str(self.options.backofflimit),
                 "-d",
                 "-s", self.options.sockname,
@@ -287,7 +298,7 @@ class ZDCmd(cmd.Cmd):
     def show_options(self):
         print "schemafile:  ", repr(self.options.schemafile)
         print "configfile:  ", repr(self.options.configfile)
-        print "zdaemon:     ", repr(self.options.zdaemon)
+        print "zdrun:       ", repr(self.options.zdrun)
         print "program:     ", repr(self.options.program)
         print "backofflimit:", repr(self.options.backofflimit)
         print "forever:     ", repr(self.options.forever)

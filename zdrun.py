@@ -15,12 +15,10 @@
 """zrdun -- run an application as a daemon.
 
 Usage: python zrdun.py [zrdun-options] program [program-arguments]
-Or:    python zrdun.py -c [command]
 
 Options:
 -C/--configuration URL -- configuration file or URL
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
--c/--client -- client mode, to sends a command to the daemon manager
 -d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
@@ -29,20 +27,6 @@ Options:
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default "/")
 program [program-arguments] -- an arbitrary application to run
-
-Client mode options:
-  -s SOCKET -- socket name (a Unix pathname) for client communication
-  [command] -- the command to send to the daemon manager (default "status")
-
-Client commands are:
-  help -- return command help
-  status -- report application status (this is the default command)
-  kill [signal] -- send a signal to the application
-                   (default signal is SIGTERM)
-  start -- start the application if not already running
-  stop -- stop the application if running; daemon manager keeps running
-  restart -- stop followed by start
-  exit -- stop the application and exit
 
 This daemon manager has two purposes: it restarts the application when
 it dies, and (when requested to do so with the -d option) it runs the
@@ -91,32 +75,28 @@ from stat import ST_MODE
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
-    from os.path import dirname, abspath, normpath
-    sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
+    # (but only when the script is run from inside the zdaemon package)
+    from os.path import dirname, basename, abspath, normpath
+    scriptdir = dirname(normpath(abspath(sys.argv[0])))
+    if basename(scriptdir).lower() == "zdaemon":
+        sys.path.append(dirname(scriptdir))
 
 import ZConfig.datatypes
 import zLOG
-from zdaemon.zdoptions import ZDOptions, list_of_ints
+from zdaemon.zdoptions import RunnerOptions
 
-class ZDRunOptions(ZDOptions):
+
+class ZDRunOptions(RunnerOptions):
 
     positional_args_allowed = 1
+    program = None
 
-    def __init__(self):
-        ZDOptions.__init__(self)
-        self.add("backofflimit", "zdrun.backoff_limit",
-                 "b:", "backoff-limit=", int, default=10)
-        self.add("isclient", None, "c", "client", flag=1, default=0)
-        self.add("daemon", "zdrun.daemon", "d", "daemon", flag=1, default=0)
-        self.add("forever", "zdrun.forever", "f", "forever",
-                 flag=1, default=0)
-        self.add("sockname", "zdrun.socket_name", "s:", "socket-name=",
-                 ZConfig.datatypes.existing_dirpath, default="zdsock")
-        self.add("exitcodes", "zdrun.exit_codes", "x:", "exit-codes=",
-                 list_of_ints, default=[0, 2])
-        self.add("user", "zdrun.user", "u:", "user=")
-        self.add("zdirectory", "zdrun.directory", "z:", "directory=",
-                 ZConfig.datatypes.existing_directory, default="/")
+    def realize(self, *args, **kwds):
+        RunnerOptions.realize(self, *args, **kwds)
+        if self.args:
+            self.program = self.args
+        if not self.program:
+            self.usage("no program specified (use -C or positional args)")
 
 
 class Subprocess:
@@ -224,47 +204,6 @@ class Subprocess:
         """
         self.pid = 0
 
-class Client:
-
-    """A class representing the control client."""
-
-    def __init__(self, options, args=None):
-        """Constructor.
-
-        Arguments are an ZDRunOptions instance and a list of program
-        arguments representing the command to send to the server.
-        """
-        self.options = options
-        if args is None:
-            args = options.args
-        if not args:
-            self.command = "status"
-        else:
-            self.command = " ".join(args)
-
-    def doit(self):
-        """Send the command to the server and write the results to stdout."""
-        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        try:
-            sock.connect(self.options.sockname)
-        except socket.error, msg:
-            sys.stderr.write("Can't connect to %r: %s\n" %
-                             (self.options.sockname, msg))
-            sys.exit(1)
-        sock.send(self.command + "\n")
-        sock.shutdown(1) # We're not writing any more
-        lastdata = ""
-        while 1:
-            data = sock.recv(1000)
-            if not data:
-                break
-            sys.stdout.write(data)
-            lastdata = data
-        if not lastdata:
-            sys.stderr.write("No response received\n")
-            sys.exit(1)
-        if not lastdata.endswith("\n"):
-            sys.stdout.write("\n")
 
 class Daemonizer:
 
@@ -272,11 +211,7 @@ class Daemonizer:
         self.options = ZDRunOptions()
         self.options.realize(args)
         self.set_uid()
-        if self.options.isclient:
-            clt = Client(self.options)
-            clt.doit()
-        else:
-            self.run()
+        self.run()
 
     def set_uid(self):
         if self.options.user is None:
