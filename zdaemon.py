@@ -217,12 +217,14 @@ class Subprocess:
     def spawn(self):
         """Start the subprocess.  It must not be running already.
 
-        Return the process id.  If the fork() call fails, an exception
-        is raised (and not caught).
+        Return the process id.  If the fork() call fails, return 0.
         """
         assert not self.pid
         self.lasttime = time.time()
-        pid = os.fork()
+        try:
+            pid = os.fork()
+        except os.error:
+            return 0
         if pid != 0:
             # Parent
             self.pid = pid
@@ -386,7 +388,10 @@ class Daemonizer:
     waitstatus = None
 
     def sigchild(self, sig, frame):
-        pid, sts = os.waitpid(-1, os.WNOHANG)
+        try:
+            pid, sts = os.waitpid(-1, os.WNOHANG)
+        except os.error:
+            return
         if pid:
             self.waitstatus = pid, sts
 
@@ -422,7 +427,10 @@ class Daemonizer:
         info("daemon manager started")
         while self.mood >= 0 or self.proc.pid:
             if self.mood > 0 and not self.proc.pid and not self.delay:
-                self.proc.spawn()
+                pid = self.proc.spawn()
+                if not pid:
+                    # Can't fork.  Try again later...
+                    self.delay = time.time() + self.backofflimit
             if self.waitstatus:
                 self.reportstatus()
             r, w, x = [self.mastersocket], [], []
