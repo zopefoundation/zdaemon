@@ -337,8 +337,9 @@ class Daemonizer:
         os.close(2)
         sys.stderr = sys.__stderr__ = open("/dev/null", "w")
         os.setsid()
+        os.umask(022) # Create no group/other writable files/directories
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page
-        # 417) also recommends calling umask(0) and closing unused
+        # 417) recommends calling umask(0) and closing unused
         # file descriptors.  In his Network Programming book, he
         # additionally recommends ignoring SIGHUP and forking again
         # after the setsid() call, for obscure SVR4 reasons.
