@@ -1,18 +1,42 @@
 #! /usr/bin/env python
 
 """
-zdaemon -- run a program as a daemon.
+zdaemon -- run an application as a daemon.
 
-Usage: python zdaemon.py [zdaemon-options] program [program-options]
+Usage: python zdaemon.py [zdaemon-options] program [program-arguments]
 
 Options:
-
--d -- run as a proper daemon; fork a background process, close files etc.
--h -- print usage message and exit
+  -d -- run as a proper daemon; fork a background process, close files etc.
+  -h -- print usage message and exit
 
 Arguments:
+  program [program-arguments] -- an arbitrary application to run
 
-program [program-options] -- an arbitrary command line to be run
+This daemon manager has two purposes: it restarts the application when
+it dies, and (when requested to do so with the -d option) it runs the
+application in the background, detached from the foreground tty
+session that started it (if any).
+
+Important: if at any point the application exits with exit status 2,
+it is not restarted.  Any other form of termination (either being
+killed by a signal or exiting with an exit status other than 2) causes
+it to be restarted.
+"""
+
+"""
+XXX TO DO
+
+- A parametrizable "governor" on the automatic restart, limiting the
+  frequency of restarts and possible stopping altogether if the
+  application fails too often
+
+- A way to stop both the daemon manager and the application.
+
+- A way to restart the application.
+
+- More control over logging (zdaemon logging should be controllable
+  separate from application logging).
+
 """
 
 import os
@@ -50,7 +74,8 @@ class Daemonizer:
         self.info("opts=%s" % repr(opts))
         for o, a in opts:
             if o == "-h":
-                self.usage(exit=0)
+                print __doc__,
+                self.exit()
             if o == "-d":
                 self.daemon += 1
 
@@ -68,7 +93,7 @@ class Daemonizer:
             try:
                 st = os.stat(filename)
             except os.error:
-                self.usage("can't stat command: %s\n" % repr(command))
+                self.usage("can't stat program %s" % repr(command))
         else:
             path = self.getpath()
             for dir in path:
@@ -81,10 +106,10 @@ class Daemonizer:
                 if mode & 0111:
                     break
             else:
-                self.usage("can't find command: %s on PATH %s\n" %
+                self.usage("can't find program %s on PATH %s" %
                            (repr(command), path))
         if not os.access(filename, os.X_OK):
-            self.usage("no permission to run command %s\n" % repr(filename))
+            self.usage("no permission to run program %s" % repr(filename))
         return filename
 
     def getpath(self):
@@ -207,13 +232,11 @@ class Daemonizer:
 
     # Error handling
 
-    def usage(self, msg=None, exit=2):
-        if msg:
-            self.errwrite("Error: %s\n" % str(msg))
-            if exit == 2:
-                self.error(str(msg))
-        self.errwrite(__doc__)
-        self.exit(exit)
+    def usage(self, msg):
+        self.errwrite("Error: %s\n" % str(msg))
+        self.error(str(msg))
+        self.errwrite("For help, use zdaemon.py -h\n")
+        self.exit(2)
 
     def errwrite(self, msg):
         sys.stderr.write(msg)
