@@ -317,6 +317,28 @@ class Daemonizer:
             self.waitstatus = pid, sts
 
     def daemonize(self):
+
+        # To daemonize, we need to become the leader of our own session
+        # (process) group.  If we do not, signals sent to our
+        # parent process will also be sent to us.   This might be bad because
+        # signals such as SIGINT can be sent to our parent process during
+        # normal (uninteresting) operations such as when we press Ctrl-C in the
+        # parent terminal window to escape from a logtail command.
+        # To disassociate ourselves from our parent's session group we use
+        # os.setsid.  It means "set session id", which has the effect of
+        # disassociating a process from is current session and process group
+        # and setting itself up as a new session leader.
+        #
+        # Unfortunately we cannot call setsid if we're already a session group
+        # leader, so we use "fork" to make a copy of ourselves that is
+        # guaranteed to not be a session group leader.
+        #
+        # We also change directories, set stderr and stdout to null, and
+        # change our umask.
+        #
+        # This explanation was (gratefully) garnered from
+        # http://www.hawklord.uklinux.net/system/daemons/d3.htm
+
         pid = os.fork()
         if pid != 0:
             # Parent
@@ -689,9 +711,9 @@ def get_path():
     return path
 
 # Main program
-
 def main(args=None):
     assert os.name == "posix", "This code makes many Unix-specific assumptions"
+
     zLOG.initialize()
     d = Daemonizer()
     d.main(args)
