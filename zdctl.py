@@ -9,7 +9,7 @@
 # THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
 # WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
-# FOR A PARTICULAR PURPOSE
+# FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
 """zdctl -- control an application run by zdaemon.
@@ -21,7 +21,7 @@ Options:
 -C/--configuration URL -- configuration file or URL
 -h/--help -- print usage message and exit
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
--d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
+-d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
 -i/--interactive -- start an interactive shell after executing commands
