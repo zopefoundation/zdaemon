@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from StringIO import StringIO
 
-from zdaemon.zdaemon import Daemonizer
+from zdaemon import zdaemon
 
 class ZDaemonTests(unittest.TestCase):
 
@@ -58,7 +58,7 @@ class ZDaemonTests(unittest.TestCase):
     def run(self, args):
         if type(args) is type(""):
             args = args.split()
-        d = Daemonizer()
+        d = zdaemon.Daemonizer()
         try:
             d.main(["-s", self.zdsock] + args)
         except SystemExit:
@@ -87,6 +87,10 @@ class ZDaemonTests(unittest.TestCase):
         time.sleep(1)
         self.run("-c exit")
         self.expect = "Sent SIGTERM\nSent SIGTERM; will exit later\n"
+
+    def testHelp(self):
+        self.run("-h")
+        self.expect = zdaemon.__doc__
 
 def test_suite():
     suite = unittest.TestSuite()
