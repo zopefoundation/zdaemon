@@ -212,14 +212,7 @@ class ZDOptions:
 
         if self.configfile is not None:
             # Process config file
-            if self.schema is None:
-                # Load schema
-                if self.schemadir is None:
-                    self.schemadir = os.path.dirname(__file__)
-                self.schemafile = os.path.join(self.schemadir, self.schemafile)
-                self.schema = ZConfig.loadSchema(self.schemafile)
-
-            # Load configuration
+            self.load_schema()
             try:
                 self.configroot, xxx = ZConfig.loadConfig(self.schema,
                                                           self.configfile)
@@ -254,6 +247,14 @@ class ZDOptions:
             if (os.getenv("EVENT_LOG_FILE") is None and
                 os.getenv("STUPID_LOG_FILE") is None):
                 self.load_logconf(self.logsectionname)
+
+    def load_schema(self):
+        if self.schema is None:
+            # Load schema
+            if self.schemadir is None:
+                self.schemadir = os.path.dirname(__file__)
+            self.schemafile = os.path.join(self.schemadir, self.schemafile)
+            self.schema = ZConfig.loadSchema(self.schemafile)
 
     def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
