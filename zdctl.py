@@ -511,6 +511,10 @@ class TailHelper:
         while 1:
             newsz = self.fsize()
             bytes_added = newsz - sz
+            if bytes_added < 0:
+                sz = 0
+                print "==> File truncated <=="
+                bytes_added = newsz
             if bytes_added > 0:
                 self.f.seek(-bytes_added, 2)
                 bytes = self.f.read(bytes_added)
