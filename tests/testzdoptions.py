@@ -75,6 +75,36 @@ class TestZDOptions(unittest.TestCase):
             else:
                 self.fail("%s didn't call sys.exit()" % repr(arg))
 
+    def test_unrecognized(self):
+        # Check that we get an error for an unrecognized option
+        self.check_exit_code(self.OptionsClass(), ["-/"])
+
+    def test_no_positional_args(self):
+        # Check that we get an error for positional args when they
+        # haven't been enabled.
+        self.check_exit_code(self.OptionsClass(), ["A"])
+
+    def test_conflicting_flags(self):
+        # Check that we get an error for flags which compete over the
+        # same option setting.
+        options = self.OptionsClass()
+        options.add("setting", None, "a", flag=1)
+        options.add("setting", None, "b", flag=2)
+        self.check_exit_code(options, ["-a", "-b"])
+
+    def check_exit_code(self, options, args):
+        save_sys_stderr = sys.stderr
+        try:
+            sys.stderr = StringIO()
+            try:
+                options.realize(args)
+            except SystemExit, err:
+                self.assertEqual(err.code, 2)
+            else:
+                self.fail("SystemExit expected")
+        finally:
+            sys.stderr = save_sys_stderr
+
 def test_suite():
     suite = unittest.TestSuite()
     for cls in [TestZDOptions]:
