@@ -449,6 +449,9 @@ class ZDCmd(cmd.Cmd):
             print "To run the program in the foreground, please stop it first."
             return
         program = " ".join(self.options.program)
+        program = "\n".join (["export EVENT_LOG_FILE",
+                              "EVENT_LOG_FILE=",
+                              program])
         print program
         try:
             os.system(program)
