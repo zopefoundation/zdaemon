@@ -65,7 +65,7 @@ def run(argv, pidfile=''):
                     # an unsavory way (likely a segfault or something)
                     continue
                 else:
-                    pstamp("zdaemon exiting")
+                    pstamp("zdaemon exiting", zLOG.INFO)
                     # no need to restart, our child wanted to die.
                     raise DieNow
 
