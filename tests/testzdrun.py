@@ -224,7 +224,7 @@ class ZDaemonTests(unittest.TestCase):
         except socket.error, msg:
             response = ''
         params = response.split('\n')
-        self.assert_(len(params) > 1)
+        self.assert_(len(params) > 1, repr(response))
         # kill the process
         send_action('exit\n', zdrun_socket)
 
