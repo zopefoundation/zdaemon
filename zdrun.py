@@ -17,7 +17,8 @@
 Usage: python zrdun.py [zrdun-options] program [program-arguments]
 
 Options:
--C/--configuration URL -- configuration file or URL
+-C/--configure URL -- configuration file or URL
+-S/--schema XML Schema -- XML schema for configuration file
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
 -d/--daemon -- run as a proper daemon; fork a subprocess, setsid(), etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
@@ -93,7 +94,8 @@ class ZDRunOptions(RunnerOptions):
 
     def __init__(self):
         RunnerOptions.__init__(self)
-        self.add("schemafile", short="S:", default="schema.xml",
+        self.add("schemafile", short="S:", long="schema=",
+                 default="schema.xml",
                  handler=self.set_schemafile)
 
     def set_schemafile(self, file):
