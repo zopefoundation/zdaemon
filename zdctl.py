@@ -47,10 +47,14 @@ if __name__ == "__main__":
     sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
 
 import ZConfig
-from ZEO.runsvr import Options
+import zdoptions
 
 
-class ZDOptions(Options):
+def string_list(arg):
+    return arg.split()
+
+
+class ZDOptions(zdoptions.ZDOptions):
 
     # Where's python?
     python = sys.executable
@@ -72,24 +76,9 @@ class ZDOptions(Options):
     user = None                         # -u USER
     zdirectory = "/"                    # -z DIRECTORY
 
-    # Program (and arguments) for zdaemon
-    program = None
-
-    def load_schema(self):
-        self.schemafile = os.path.join(self._dir, "schema.xml")
-        self.schema = ZConfig.loadSchema(self.schemafile)
-
-    def load_configuration(self):
-        Options.load_configuration(self) # Sets self.rootconf
-        if not self.rootconf:
-            self.usage("a configuration file is required; use -C")
-        # XXX Should allow overriding more zdaemon options here
-        if self.program is None:
-            program = self.rootconf.zdctl.program
-            if program:
-                self.program = program.split()
-        if self.program is None:
-            self.usage("no program specified in configuration")
+    def __init__(self):
+        zdoptions.ZDOptions.__init__(self)
+        self.add("program", "p:", "program=", "zdctl.program", string_list)
 
 
 class ZDCmd(cmd.Cmd):
@@ -109,6 +98,9 @@ class ZDCmd(cmd.Cmd):
                     print "WARNING! zdaemon is managing a different program!"
                     print "our program   =", self.options.program
                     print "daemon's args =", args
+
+    def emptyline(self):
+        pass # We don't want a blank line to repeat the last command
 
     def send_action(self, action):
         """Send an action to the zdaemon server and return the response.
@@ -288,7 +280,7 @@ class ZDCmd(cmd.Cmd):
 
     def show_options(self):
         print "schemafile:  ", repr(self.options.schemafile)
-        print "configuration:", repr(self.options.configuration)
+        print "configfile:  ", repr(self.options.configfile)
         print "zdaemon:     ", repr(self.options.zdaemon)
         print "program:     ", repr(self.options.program)
         print "backofflimit:", repr(self.options.backofflimit)
@@ -342,7 +334,8 @@ class ZDCmd(cmd.Cmd):
                "stop the daemon manager.")
 
 def main(args=None):
-    options = ZDOptions(args)
+    options = ZDOptions()
+    options.realize(args)
     c = ZDCmd(options)
     if options.args:
         c.onecmd(" ".join(options.args))
