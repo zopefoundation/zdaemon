@@ -208,9 +208,9 @@ class ZDCmd(cmd.Cmd):
             args += self._get_override("-z", "directory")
             args.extend(self.options.program)
             if self.options.daemon:
-                flag = os.P_WAIT
-            else:
                 flag = os.P_NOWAIT
+            else:
+                flag = os.P_WAIT
             os.spawnvp(flag, args[0], args)
         elif not self.zd_pid:
             self.send_action("start")
