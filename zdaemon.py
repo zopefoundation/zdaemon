@@ -797,6 +797,7 @@ def get_path():
 
 def main(args=None):
     assert os.name == "posix", "This code makes many Unix-specific assumptions"
+    zLOG.initialize()
     d = Daemonizer()
     d.main(args)
 
