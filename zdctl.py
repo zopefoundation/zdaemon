@@ -501,10 +501,9 @@ class TailHelper:
     MAX_BUFFSIZE = 1024
 
     def __init__(self, fname):
-        self.fname = fname
+        self.f = open(fname, 'r')
 
     def tailf(self):
-        f = open(self.fname, 'r')
         sz, lines = self.tail(10)
         for line in lines:
             sys.stdout.write(line)
@@ -513,17 +512,16 @@ class TailHelper:
             newsz = self.fsize()
             bytes_added = newsz - sz
             if bytes_added > 0:
-                f.seek(-bytes_added, 2)
-                bytes = f.read(bytes_added)
+                self.f.seek(-bytes_added, 2)
+                bytes = self.f.read(bytes_added)
                 sys.stdout.write(bytes)
                 sys.stdout.flush()
                 sz = newsz
             time.sleep(1)
 
     def tail(self, max=10):
-        f = open(self.fname, 'r')
-        f.seek(0, 2)
-        pos = sz = f.tell()
+        self.f.seek(0, 2)
+        pos = sz = self.f.tell()
 
         lines = []
         bytes = []
@@ -532,8 +530,8 @@ class TailHelper:
         while 1:
             if pos == 0:
                 break
-            f.seek(pos)
-            byte = f.read(1)
+            self.f.seek(pos)
+            byte = self.f.read(1)
             if byte == '\n':
                 if len(lines) == max:
                     break
@@ -550,7 +548,7 @@ class TailHelper:
         return sz, lines
 
     def fsize(self):
-        return os.stat(self.fname)[stat.ST_SIZE]
+        return os.fstat(self.f.fileno())[stat.ST_SIZE]
     
 def main(args=None):
     options = ZDCtlOptions()
