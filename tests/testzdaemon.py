@@ -92,6 +92,50 @@ class ZDaemonTests(unittest.TestCase):
         self.run("-h")
         self.expect = zdaemon.__doc__
 
+    def testOptionsSysArgv(self):
+        # Check that options are parsed from sys.argv by default
+        save_sys_argv = sys.argv
+        try:
+            sys.argv = ["A", "-c", "B", "C"]
+            opts = zdaemon.Options()
+        finally:
+            sys.argv = save_sys_argv
+        self.assertEqual(opts.opts, [("-c", "")])
+        self.assertEqual(opts.isclient, 1)
+        self.assertEqual(opts.args, ["B", "C"])
+
+    def testOptionsBasic(self):
+        # Check basic option parsing
+        opts = zdaemon.Options(["-c", "B", "C"], "foo")
+        self.assertEqual(opts.opts, [("-c", "")])
+        self.assertEqual(opts.isclient, 1)
+        self.assertEqual(opts.args, ["B", "C"])
+        self.assertEqual(opts.progname, "foo")
+
+    def testOptionsHelp(self):
+        # Check that -h behaves properly
+        try:
+            zdaemon.Options(["-h"])
+        except SystemExit, err:
+            self.failIf(err.code)
+        else:
+            self.fail("SystemExit expected")
+        self.expect = zdaemon.__doc__
+
+    def testOptionsError(self):
+        # Check that we get an error for an unrecognized option
+        save_sys_stderr = sys.stderr
+        try:
+            sys.stderr = StringIO()
+            try:
+                zdaemon.Options(["-/"])
+            except SystemExit, err:
+                self.assertEqual(err.code, 2)
+            else:
+                self.fail("SystemExit expected")
+        finally:
+            sys.stderr = save_sys_stderr
+
 def test_suite():
     suite = unittest.TestSuite()
     if os.name == "posix":
