@@ -44,6 +44,36 @@ def forkit(attempts = FORK_ATTEMPTS):
             pstamp('Houston, we have forked', zLOG.INFO)
             return pid
 
+def log_pid(p, s):
+    if os.WIFEXITED(s):
+        es = os.WEXITSTATUS(s)
+        msg = "terminated normally, exit status: %s" % es
+    elif os.WIFSIGNALED(s):
+        signum = os.WTERMSIG(s)
+        signame = get_signal_name(signum)
+        msg = "terminated by signal %s(%s)" % (signame,
+                                              signum)
+        # We'd like to report whether a core file
+        # was produced, but there isn't a standard
+        # way to check.  It seems that some
+        # (many?) Unixes use bit 0x80 in the wait
+        # status, but how to tell?  A simple
+        # alternative is to assume that no core
+        # file was produced if the wait status is
+        # exactly equal to the signal.  Otherwise,
+        # there might be a core file and it's
+        # useful to print the wait status.
+        if signum != s:
+            msg += ", wait status: %s" % signum
+    else:
+        # XXX what should we do here?
+        signum = os.WSTOPSIG(s)
+        signame = get_signal_name(signum)
+        msg = "stopped by signal %s(%s)" % (signame,
+                                            signum)
+    pstamp('Aiieee! Process %s %s' % (p, msg),
+           zLOG.ERROR)
+    
 def run(argv, pidfile=''):
     if os.environ.has_key('ZDAEMON_MANAGED'):
         # We're the child at this point.
@@ -80,42 +110,15 @@ def run(argv, pidfile=''):
 
                 while 1: 
                     if not Heartbeat.BEAT_DELAY:
-                        p,s = os.waitpid(pid, 0)
+                        p, s = os.waitpid(pid, 0)
                     else:
-                        p,s = os.waitpid(pid, os.WNOHANG)
+                        p, s = os.waitpid(pid, os.WNOHANG)
                         if not p:
                             time.sleep(Heartbeat.BEAT_DELAY)
                             Heartbeat.heartbeat()
                             continue
                     if s:
-                        if os.WIFEXITED(s):
-                            es = os.WEXITSTATUS(s)
-                            msg = "terminated normally, exit status: %s" % es
-                        elif os.WIFSIGNALED(s):
-                            signum = os.WTERMSIG(s)
-                            signame = get_signal_name(signum)
-                            msg = "terminated by signal %s(%s)" % (signame,
-                                                                  signum)
-                            # We'd like to report whether a core file
-                            # was produced, but there isn't a standard
-                            # way to check.  It seems that some
-                            # (many?) Unixes use bit 0x80 in the wait
-                            # status, but how to tell?  A simple
-                            # alternative is to assume that no core
-                            # file was produced if the wait status is
-                            # exactly equal to the signal.  Otherwise,
-                            # there might be a core file and it's
-                            # useful to print the wait status.
-                            if signum != s:
-                                msg += ", wait status: %s" % signum
-                        else:
-                            # XXX what should we do here?
-                            signum = os.WSTOPSIG(s)
-                            signame = get_signal_name(signum)
-                            msg = "stopped by signal %s(%s)" % (signame,
-                                                                signum)
-                        pstamp('Aiieee! Process %s %s' % (p, msg),
-                               zLOG.ERROR)
+                        log_pid(p, s)
                     else:
                         pstamp(('The kid, %s, died on me.' % pid),
                                zLOG.WARNING)
