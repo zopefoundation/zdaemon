@@ -350,7 +350,8 @@ class Daemonizer:
 
     def runforever(self):
         info("daemon manager started")
-        while self.mood >= 0 or self.proc.pid:
+        min_mood = not self.options.hang_around
+        while self.mood >= min_mood or self.proc.pid:
             if self.mood > 0 and not self.proc.pid and not self.delay:
                 pid = self.proc.spawn()
                 if not pid:

@@ -19,6 +19,7 @@
     <key name="user" datatype="string" />
     <key name="directory" datatype="existing-directory" default="/" />
     <key name="default-to-interactive" datatype="boolean" default="true" />
+    <key name="hang-around" datatype="boolean" default="false" />
   </sectiontype>
 
   <section name="*" type="runner" attribute="runner" required="yes" />
