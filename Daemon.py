@@ -56,6 +56,9 @@ def run(argv, pidfile=''):
         pid = os.fork()
         if pid:
             sys.exit(0)
+        posix.close(0); sys.stdin  = open('/dev/null')
+        posix.close(1); sys.stdout = open('/dev/null','w')
+        posix.close(2); sys.stderr = open('/dev/null','w')
         posix.setsid()
 
     while 1:
