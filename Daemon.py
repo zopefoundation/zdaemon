@@ -88,8 +88,22 @@ def run(argv, pidfile=''):
                             Heartbeat.heartbeat()
                             continue
                     if s:
-                        pstamp(('Aiieee! %s exited with error code: %s' 
-                                % (p, s)), zLOG.ERROR)
+                        if os.WIFEXITED(s):
+                            es = os.WEXITSTATUS(s)
+                            msg = "terminated normally, exit status: %s" % es
+                        elif os.WIFSIGNALED(s):
+                            signum = os.WTERMSIG(s)
+                            signame = get_signal_name(signum)
+                            msg = "terminated by signal %s(%s)" % (signame,
+                                                                  signum)
+                        else:
+                            # XXX what should we do here?
+                            signum = os.WSTOPSIG(s)
+                            signame = get_signal_name(signum)
+                            msg = "stopped by signal %s(%s)" % (signame,
+                                                                signum)
+                        pstamp('Aiieee! Process %s %s' % (p, msg),
+                               zLOG.ERROR)
                     else:
                         pstamp(('The kid, %s, died on me.' % pid),
                                zLOG.WARNING)
@@ -112,3 +126,22 @@ def run(argv, pidfile=''):
             sys.exit()
         except KidDiedOnMeError:
             pass
+
+_signals = None
+
+def get_signal_name(n):
+    """Return the symbolic name for signal n.
+
+    Returns 'unknown' if there is no SIG name bound to n in the signal
+    module.
+    """
+    global _signals
+    if _signals is None:
+        _signals = {}
+        for k, v in signal.__dict__.items():
+            startswith = getattr(k, 'startswith', None)
+            if startswith is None:
+                continue
+            if startswith('SIG'):
+                _signals[v] = k
+    return _signals.get(n, 'unknown')
