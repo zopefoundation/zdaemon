@@ -68,7 +68,6 @@ XXX TO DO
 """
 
 import os
-assert os.name == "posix", "This code makes many Unix-specific assumptions"
 import sys
 import time
 import errno
@@ -796,6 +795,7 @@ def get_path():
 # Main program
 
 def main(args=None):
+    assert os.name == "posix", "This code makes many Unix-specific assumptions"
     d = Daemonizer()
     d.main(args)
 
