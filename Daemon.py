@@ -12,8 +12,7 @@
 # 
 ##############################################################################
 
-import os, sys, time, signal
-
+import os, sys, time, posix, signal
 from ZDaemonLogging import pstamp
 import Heartbeat
 import zLOG
@@ -74,7 +73,9 @@ def log_pid(p, s):
     pstamp('Aiieee! Process %s %s' % (p, msg),
            zLOG.ERROR)
     
-def run(argv, pidfile=''):
+def run(argv, pidfile='', signals=None):
+    if signals is None:
+        signals = []
     if os.environ.has_key('ZDAEMON_MANAGED'):
         # We're the child at this point.
         return
@@ -100,6 +101,17 @@ def run(argv, pidfile=''):
                 raise ForkError
 
             elif pid:
+                # the process we're daemoning for can signify that it
+                # wants us to notify it when we get specific signals
+                #
+                #
+                # we always register TERM and INT so we can reap our child.
+                signals = signals + [signal.SIGTERM, signal.SIGINT]
+                # TERM happens on normal kill
+                # INT happens on Ctrl-C (debug mode)
+                import SignalPasser
+                SignalPasser.pass_signals_to_process(pid, signals)
+
                 # Parent 
                 pstamp(('Hi, I just forked off a kid: %s' % pid), zLOG.INFO)
                 # here we want the pid of the parent
@@ -110,9 +122,21 @@ def run(argv, pidfile=''):
 
                 while 1: 
                     if not Heartbeat.BEAT_DELAY:
-                        p, s = os.waitpid(pid, 0)
+                        try:
+                            p,s = os.waitpid(pid, 0)
+                        except OSError:
+                            # catch EINTR, it's raised as a result of
+                            # interrupting waitpid with a signal
+                            # and we don't care about it.
+                            continue
                     else:
-                        p, s = os.waitpid(pid, os.WNOHANG)
+                        try:
+                            p,s = os.waitpid(pid, os.WNOHANG)
+                        except OSError:
+                            # catch EINTR, it's raised as a result of
+                            # interrupting waitpid with a signal
+                            # and we don't care about it.
+                            p, s = None, None
                         if not p:
                             time.sleep(Heartbeat.BEAT_DELAY)
                             Heartbeat.heartbeat()
