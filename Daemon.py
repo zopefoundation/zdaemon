@@ -12,7 +12,7 @@
 # 
 ##############################################################################
 
-import os, sys, time, signal, posix
+import os, sys, time, signal
 
 from ZDaemonLogging import pstamp
 import Heartbeat
@@ -56,10 +56,10 @@ def run(argv, pidfile=''):
         pid = os.fork()
         if pid:
             sys.exit(0)
-        posix.close(0); sys.stdin  = open('/dev/null')
-        posix.close(1); sys.stdout = open('/dev/null','w')
-        posix.close(2); sys.stderr = open('/dev/null','w')
-        posix.setsid()
+        os.close(0); sys.stdin  = open('/dev/null')
+        os.close(1); sys.stdout = open('/dev/null','w')
+        os.close(2); sys.stderr = open('/dev/null','w')
+        os.setsid()
 
     while 1:
 
