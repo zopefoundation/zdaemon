@@ -295,6 +295,7 @@ class ZDOptions:
     def load_configfile(self):
         self.configroot, xxx = ZConfig.loadConfig(self.schema,
                                                   self.configfile)
+        self.confighandlers = xxx
 
     def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
