@@ -260,9 +260,25 @@ class TestZDOptionsEnvironment(EnvironmentOptions):
         self.assertEqual(options.opt, 2)
 
 
+class TestCommandLineOverrides(EnvironmentOptions):
+
+    def test_simple_override(self):
+        options = self.create_with_config("# empty config")
+        options.realize(["-X", "opt=-2"])
+        self.assertEqual(options.opt, -2)
+
+    def test_error_propogation(self):
+        self.check_exit_code(self.create_with_config("# empty"),
+                             ["-Xopt=1", "-Xopt=2"])
+        self.check_exit_code(self.create_with_config("# empty"),
+                             ["-Xunknown=foo"])
+
+
 def test_suite():
     suite = unittest.TestSuite()
-    for cls in [TestBasicFunctionality, TestZDOptionsEnvironment]:
+    for cls in [TestBasicFunctionality,
+                TestZDOptionsEnvironment,
+                TestCommandLineOverrides]:
         suite.addTest(unittest.makeSuite(cls))
     return suite
 
