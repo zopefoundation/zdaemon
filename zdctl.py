@@ -42,11 +42,6 @@ action "help" to find out about available actions.
 
 from __future__ import nested_scopes
 
-# XXX Related code lives in lib/python/Zope/Startup/ZctlLib.py on the
-# 'chrism-install-branch' branch.
-# The code there knows more about Zope and about Windows, but doesn't
-# use zdaemon.py or ZConfig.
-
 import os
 import re
 import cmd
@@ -87,7 +82,7 @@ class ZDCtlOptions(RunnerOptions):
         self.add("logfile", "runner.logfile", "l:", "logfile=")
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
-        self.add("prompt", "runner.prompt")
+        self.add("prompt", "runner.prompt", default="zdctl>")
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
