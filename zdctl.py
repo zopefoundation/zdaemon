@@ -14,11 +14,12 @@
 ##############################################################################
 """zdctl -- control an application run by zdaemon.
 
-Usage: python zdctl.py [-C URL] [-h] [-p PROGRAM]
+Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
 
 Options:
 -C/--configuration URL -- configuration file or URL
+-S/--configuration XML Schema -- XML schema for configuration file
 -h/--help -- print usage message and exit
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
@@ -71,6 +72,8 @@ class ZDCtlOptions(RunnerOptions):
 
     def __init__(self):
         RunnerOptions.__init__(self)
+        self.add("schemafile", short="S:", default="schema.xml",
+                 handler=self.set_schemafile)
         self.add("interactive", None, "i", "interactive", flag=1)
         self.add("default_to_interactive", "runner.default_to_interactive",
                  default=1)
@@ -104,6 +107,10 @@ class ZDCtlOptions(RunnerOptions):
             file = os.path.normpath(os.path.abspath(file))
             dir = os.path.dirname(file)
             self.zdrun = os.path.join(dir, "zdrun.py")
+
+    def set_schemafile(self, file):
+        self.schemafile = file
+
 
 
 class ZDCmd(cmd.Cmd):
