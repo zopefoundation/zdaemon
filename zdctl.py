@@ -83,10 +83,9 @@ class ZDCmd(cmd.Cmd):
     prompt = "(zdctl) "
 
     def __init__(self, options):
-        print "program:", " ".join(options.program)
         self.options = options
         cmd.Cmd.__init__(self)
-        self.do_status()
+        self.get_status()
         if self.zd_status:
             m = re.search("(?m)^args=(.*)$", self.zd_status)
             if m:
@@ -114,7 +113,6 @@ class ZDCmd(cmd.Cmd):
                     break
                 response += data
             sock.close()
-            print "response =", `response`
             return response
         except socket.error, msg:
             return None
@@ -166,7 +164,6 @@ class ZDCmd(cmd.Cmd):
             if self.options.user:
                 argss.extend(["-u", str(self.options.user)])
             args.extend(self.options.program)
-            print args
             os.spawnvp(os.P_WAIT, args[0], args)
         else:
             self.send_action("start")
@@ -252,7 +249,9 @@ class ZDCmd(cmd.Cmd):
 
     def do_quit(self, arg):
         self.get_status()
-        if not self.zd_pid:
+        if not self.zd_up:
+            print "daemon manager not running"
+        elif not self.zd_pid:
             print "daemon process not running; stopping daemon manager"
             self.send_action("exit")
             self.awhile(lambda: not self.zd_up, "daemon manager stopped")
@@ -271,6 +270,8 @@ def main(args=None):
     if options.args:
         c.onecmd(" ".join(options.args))
     else:
+        print "program:", " ".join(options.program)
+        c.do_status()
         c.cmdloop()
 
 if __name__ == "__main__":
