@@ -250,7 +250,10 @@ class ZDOptions:
                 self.usage(message)
 
         if self.logsectionname:
-            self.load_logconf(self.logsectionname)
+            # Let the environment override the config file
+            if (os.getenv("EVENT_LOG_FILE") is None and
+                os.getenv("STUPID_LOG_FILE") is None):
+                self.load_logconf(self.logsectionname)
 
     def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
