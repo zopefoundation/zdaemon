@@ -6,8 +6,8 @@ import time
 import signal
 import tempfile
 import unittest
+import socket
 from StringIO import StringIO
-
 from zdaemon import zdrun, zdctl
 
 class ZDaemonTests(unittest.TestCase):
@@ -145,6 +145,49 @@ class ZDaemonTests(unittest.TestCase):
         self.assertEqual(os.WTERMSIG(wsts), signal.SIGTERM)
         proc.setstatus(wsts)
         self.assertEqual(proc.pid, 0)
+
+    def testRunIgnoresParentSignals(self):
+        # Spawn a process which will in turn spawn a zdrun process.
+        # We make sure that the zdrun process is still running even if
+        # its parent process receives an interrupt signal (it should
+        # not be passed to zdrun).
+        zdrun_socket = os.path.join(self.here, 'testsock')
+        zdctlpid = os.spawnvp(
+            os.P_NOWAIT,
+            sys.executable,
+            [sys.executable, os.path.join(self.here, 'parent.py')]
+            )
+        time.sleep(2) # race condition possible here
+        os.kill(zdctlpid, signal.SIGINT)
+        try:
+            response = send_action('status\n', zdrun_socket) or ''
+        except socket.error, msg:
+            response = ''
+        params = response.split('\n')
+        self.assert_(len(params) > 1)
+        # kill the process
+        send_action('exit\n', zdrun_socket)
+        
+def send_action(action, sockname):
+    """Send an action to the zdrun server and return the response.
+
+    Return None if the server is not up or any other error happened.
+    """
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        sock.connect(sockname)
+        sock.send(action + "\n")
+        sock.shutdown(1) # We're not writing any more
+        response = ""
+        while 1:
+            data = sock.recv(1000)
+            if not data:
+                break
+            response += data
+        sock.close()
+        return response
+    except socket.error, msg:
+        return None
 
 def test_suite():
     suite = unittest.TestSuite()
