@@ -165,7 +165,7 @@ class Options:
                 print __doc__,
                 sys.exit(0)
             if o == "-s":
-                self.sockname = a
+                self.sockname = os.path.abspath(a)
             if o == "-u":
                 self.user = a
             if o == "-x":
