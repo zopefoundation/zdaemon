@@ -1,3 +1,17 @@
+##############################################################################
+#
+# Copyright (c) 2003 Zope Corporation and Contributors.
+# All Rights Reserved.
+#
+# This software is subject to the provisions of the Zope Public License,
+# Version 2.0 (ZPL).  A copy of the ZPL should accompany this distribution.
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+# WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+##############################################################################
+
 """Option processing for zdaemon and related code."""
 
 import os
@@ -220,7 +234,9 @@ class ZDOptions:
         # Process environment variables
         for envvar in self.environ_map.keys():
             name, handler = self.environ_map[envvar]
-            if os.environ.has_key(envvar) and getattr(self, name) is None:
+            if name and getattr(self, name, None) is not None:
+                continue
+            if os.environ.has_key(envvar):
                 value = os.environ[envvar]
                 if handler is not None:
                     try:
