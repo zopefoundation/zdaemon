@@ -247,6 +247,13 @@ class ZDCmd(cmd.Cmd):
         print "status [-l] -- Print status for the daemon process."
         print "               With -l, show raw status output as well."
 
+    def do_logreopen(self, arg):
+        self.do_kill(str(signal.SIGUSR2))
+
+    def help_logreopen(self):
+        print "logreopen -- Send a SIGUSR2 signal to the daemon process."
+        print "             This is designed to reopen the log file."
+
     def do_quit(self, arg):
         self.get_status()
         if not self.zd_up:
