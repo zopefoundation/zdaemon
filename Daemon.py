@@ -33,6 +33,15 @@ class SignalPasser:
         if signum in [signal.SIGTERM, signal.SIGINT]:
             raise DieNow
 
+PASSED_SIGNALS = (
+    signal.SIGHUP,
+    signal.SIGINT,
+    signal.SIGQUIT,
+    signal.SIGUSR1,
+    signal.SIGUSR2,
+    signal.SIGTERM,
+    )
+
 def run(argv, pidfile=''):
     if os.environ.has_key('ZDAEMON_MANAGED'):
         # We're being run by the child.
@@ -50,9 +59,7 @@ def run(argv, pidfile=''):
                 # We're the parent (the daemon process)
                 # pass all "normal" signals along to our child, but don't
                 # respond to them ourselves unless they say "die"!
-                interesting = [1, 2, 3, 10, 12, 15]
-                # ie. HUP, INT, QUIT, USR1, USR2, TERM
-                for sig in interesting:
+                for sig in PASSED_SIGNALS:
                     signal.signal(sig, SignalPasser(pid))
                 pstamp('Started subprocess: pid %s' % pid, zLOG.INFO)
                 write_pidfile(pidfile)
