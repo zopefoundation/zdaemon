@@ -180,7 +180,8 @@ class TestZDOptionsEnvironment(ZDOptionsTestBase):
     def setUp(self):
         self._oldenv = os.environ
         env = {}
-        env.update(os.environ)
+        for k, v in os.environ.items():
+            env[k] = v
         os.environ = env
 
     def tearDown(self):
