@@ -25,14 +25,13 @@ import unittest
 import zdaemon
 import zdaemon.tests
 import zdaemon.Daemon
-import zdaemon.ZDaemonLogging
 import zLOG
 
 class TestDoneError(RuntimeError):
     pass
 
 def pstamp(message, sev):
-    zdaemon.ZDaemonLogging.pstamp(message, sev)
+    zLOG.LOG("zdaemon", sev, message)
     if sev >= zLOG.ERROR:
         raise TestDoneError(message)
 
