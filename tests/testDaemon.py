@@ -74,5 +74,9 @@ class DaemonTest(unittest.TestCase):
             self.fail("exit didn't raise an exception")
 
 def test_suite():
-    return unittest.makeSuite(DaemonTest)
+    if hasattr(os, 'setsid'):
+        return unittest.makeSuite(DaemonTest)
+    else:
+        return None
+
 
