@@ -11,9 +11,6 @@ if __name__ == "__main__":
     arg = sys.argv[1]
     if arg == "signal":
         import signal
-        f = open("/tmp/%d" % os.getpid(), "w")
-        f.write("x")
-        f.close()
         os.kill(os.getpid(), signal.SIGKILL)
     elif arg == "exit":
         os._exit(2)
