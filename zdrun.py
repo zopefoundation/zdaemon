@@ -26,6 +26,7 @@ Options:
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
 -m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
+-t/--transcript FILE -- transript of output from daemon-mode program
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 program [program-arguments] -- an arbitrary application to run
@@ -97,6 +98,8 @@ class ZDRunOptions(RunnerOptions):
         self.add("schemafile", short="S:", long="schema=",
                  default="schema.xml",
                  handler=self.set_schemafile)
+        self.add("transcript", "runner.transcript", "t:", "transcript=",
+                 default="/dev/null")
 
     def set_schemafile(self, file):
         self.schemafile = file
@@ -348,7 +351,7 @@ class Daemonizer:
         # parent terminal window to escape from a logtail command.
         # To disassociate ourselves from our parent's session group we use
         # os.setsid.  It means "set session id", which has the effect of
-        # disassociating a process from its current session and process group
+        # disassociating a process from is current session and process group
         # and setting itself up as a new session leader.
         #
         # Unfortunately we cannot call setsid if we're already a session group
@@ -380,9 +383,9 @@ class Daemonizer:
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
-        sys.stdout = sys.__stdout__ = open("/dev/null", "w")
+        sys.stdout = sys.__stdout__ = open(self.options.transcript, "a", 0)
         os.close(2)
-        sys.stderr = sys.__stderr__ = open("/dev/null", "w")
+        sys.stderr = sys.__stderr__ = open(self.options.transcript, "a", 0)
         os.setsid()
         os.umask(self.options.umask)
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page

@@ -250,6 +250,18 @@
       </description>
     </key>
 
+    <key name="transcript" datatype="existing-dirpath"
+         required="no">
+      <description>
+        The name of a file in which a transcript of all output from
+        the command being run will be written to when daemonized.
+
+        If not specified, output from the command will be discarded.
+
+        This only takes effect when the "daemon" option is enabled.
+      </description>
+    </key>
+
     <key name="prompt" datatype="string"
          required="no">
        <description>
