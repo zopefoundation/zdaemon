@@ -402,6 +402,19 @@ class ZDCmd(cmd.Cmd):
         print "                     A default file may exist."
         print "                     Hit ^C to exit this mode."
 
+    def do_shell(self, arg):
+        if not arg:
+            arg = os.getenv("SHELL") or "/bin/sh"
+        try:
+            os.system(arg)
+        except KeyboardInterrupt:
+            print
+
+    def help_shell(self):
+        print "shell [command] -- Execute a shell command."
+        print "                   Without a command, start an interactive sh."
+        print "An alias for this command is ! [command]"
+
     def do_quit(self, arg):
         self.get_status()
         if not self.zd_up:
