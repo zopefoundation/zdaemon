@@ -152,6 +152,14 @@ class TestBasicFunctionality(TestZDOptions):
         options.add("setting", None, "a:", handler=int)
         self.check_exit_code(options, ["-afoo"])
 
+    def test_raise_getopt_errors(self):
+        options = self.OptionsClass()
+        # note that we do not add "a" to the list of options;
+        # if raise_getopt_errors was true, this test would error
+        options.realize(["-afoo"], raise_getopt_errs=False)
+        # check_exit_code realizes the options with raise_getopt_errs=True
+        self.check_exit_code(options, ['-afoo'])
+                                       
 
 class EnvironmentOptions(ZDOptionsTestBase):
 

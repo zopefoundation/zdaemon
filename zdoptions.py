@@ -185,7 +185,8 @@ class ZDOptions:
             if required:
                 self.required_map[name] = required
 
-    def realize(self, args=None, progname=None, doc=None):
+    def realize(self, args=None, progname=None, doc=None,
+                raise_getopt_errs=True):
         """Realize a configuration.
 
         Optional arguments:
@@ -209,12 +210,16 @@ class ZDOptions:
         self.progname = progname
         self.doc = doc
 
+        self.options = []
+        self.args = []
+
         # Call getopt
         try:
             self.options, self.args = getopt.getopt(
                 args, "".join(self.short_options), self.long_options)
         except getopt.error, msg:
-            self.usage(msg)
+            if raise_getopt_errs:
+                self.usage(msg)
 
         # Check for positional args
         if self.args and not self.positional_args_allowed:
