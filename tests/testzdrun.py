@@ -90,7 +90,7 @@ class ZDaemonTests(unittest.TestCase):
         ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
         ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
-    def run(self, args, cmdclass=None):
+    def _run(self, args, cmdclass=None):
         if type(args) is type(""):
             args = args.split()
         try:
@@ -102,7 +102,7 @@ class ZDaemonTests(unittest.TestCase):
         class MyCmd(zdctl.ZDCmd):
             def do_sproing(self, rest):
                 print rest
-        self.run("-p echo sproing expected", cmdclass=MyCmd)
+        self._run("-p echo sproing expected", cmdclass=MyCmd)
         self.expect = "expected\n"
 
     def testSystem(self):
@@ -110,27 +110,27 @@ class ZDaemonTests(unittest.TestCase):
         self.expect = ""
 
 ##     def testInvoke(self):
-##         self.run("echo -n")
+##         self._run("echo -n")
 ##         self.expect = ""
 
 ##     def testControl(self):
 ##         self.rundaemon(["sleep", "1000"])
 ##         time.sleep(1)
-##         self.run("stop")
+##         self._run("stop")
 ##         time.sleep(1)
-##         self.run("exit")
+##         self._run("exit")
 ##         self.expect = "Sent SIGTERM\nExiting now\n"
 
 ##     def testStop(self):
 ##         self.rundaemon([self.python, self.nokill])
 ##         time.sleep(1)
-##         self.run("stop")
+##         self._run("stop")
 ##         time.sleep(1)
-##         self.run("exit")
+##         self._run("exit")
 ##         self.expect = "Sent SIGTERM\nSent SIGTERM; will exit later\n"
 
     def testHelp(self):
-        self.run("-h")
+        self._run("-h")
         import __main__
         self.expect = __main__.__doc__
 
