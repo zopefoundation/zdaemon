@@ -564,7 +564,7 @@ class TailHelper:
     def fsize(self):
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
 
-def main(args=None, options=None, cmdclass=None):
+def main(args=None, options=None, cmdclass=ZDCmd):
     if options is None:
         options = ZDCtlOptions()
     options.realize(args)
