@@ -5,23 +5,23 @@
 #
 # chkconfig: 345 90 10
 # description: start a Zope-related server (Zope, ZEO or ZRS)
-#
-# (XXX If there are more conventional names for some of the envvars
-# below, please check in a fix.  INSTANCE_HOME, ZOPE_HOME and
-# SOFTWARE_HOME still confuse me.)
 
 # Edit to indicate which Python to use
 PYTHON=/usr/local/bin/python2.2
 
-# Edit to indicate where your Zope modules are
-ZOPELIB=$HOME/projects/ZODB3
+# Edit to indicate where the core Zope software lives
+ZOPE_HOME=$HOME/projects/Zope
 
-# Edit to indicate where your config file is (may be a URL too)
-CONFIGFILE=$ZOPELIB/zdaemon/sample.conf
+# Edit to indicate where your Zope instance lives
+INSTANCE_HOME=$HOME/projects/Zope
+
+# Edit to indicate where your config file is
+CONFIG_LOCATION=$INSTANCE_HOME/sample.conf
 
 # You shouldn't need to edit these
-ZDCTL=$ZOPELIB/zdaemon/zdctl.py
-CMD="$PYTHON $ZDCTL -C $CONFIGFILE"
+SOFTWARE_HOME=$ZOPE_HOME/lib/python
+ZDCTL=$SOFTWARE_HOME/zdaemon/zdctl.py
+CMD="$PYTHON $ZDCTL -C $CONFIG_LOCATION"
 
 # Parse the command line
 case $1 in
