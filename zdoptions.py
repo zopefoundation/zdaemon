@@ -291,10 +291,7 @@ class ZDOptions:
                 self.usage(message)
 
         if self.logsectionname:
-            # Let the environment override the config file
-            if (os.getenv("EVENT_LOG_FILE") is None and
-                os.getenv("STUPID_LOG_FILE") is None):
-                self.load_logconf(self.logsectionname)
+            self.load_logconf(self.logsectionname)
 
     def default_configfile(self):
         """Return the name of the default config file, or None."""
