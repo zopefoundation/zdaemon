@@ -24,6 +24,7 @@ Options:
 -d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
+-i/--interactive -- start an interactive shell after executing commands
 -p/--program PROGRAM -- the program to run
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
@@ -31,10 +32,11 @@ Options:
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default "/")
 action [arguments] -- see below
 
-Actions are commands like "start", "stop" and "status".  If no action
-is specified on the command line, a "shell" interpreting actions typed
-interactively is started.  Use the action "help" to find out about
-available actions.
+Actions are commands like "start", "stop" and "status".  If -i is
+specified or no action is specified on the command line, a "shell"
+interpreting actions typed interactively is started (unless the
+configuration option default_to_interactive is set to false).  Use the
+action "help" to find out about available actions.
 """
 
 from __future__ import nested_scopes
@@ -74,6 +76,9 @@ class ZDCtlOptions(RunnerOptions):
 
     def __init__(self):
         RunnerOptions.__init__(self)
+        self.add("interactive", None, "i", "interactive", flag=1)
+        self.add("default_to_interactive", "runner.default_to_interactive",
+                 default=1)
         self.add("program", "runner.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
@@ -82,6 +87,12 @@ class ZDCtlOptions(RunnerOptions):
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
+
+        # Maybe the config file requires -i or positional args
+        if not self.args and not self.interactive:
+            if not self.default_to_interactive:
+                self.usage("either -i or an action argument is required")
+            self.interactive = 1
 
         # Where's python?
         if not self.python:
@@ -356,7 +367,7 @@ def main(args=None):
     c = ZDCmd(options)
     if options.args:
         c.onecmd(" ".join(options.args))
-    else:
+    if options.interactive:
         print "program:", " ".join(options.program)
         c.do_status()
         c.cmdloop()

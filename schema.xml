@@ -16,6 +16,7 @@
 	       default="0,2" />
     <key name="user" datatype="string" />
     <key name="directory" datatype="existing-directory" default="/" />
+    <key name="default-to-interactive" datatype="boolean" default="true" />
   </sectiontype>
 
   <section name="*" type="runner" attribute="runner" required="yes" />
