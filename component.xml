@@ -26,7 +26,7 @@
       here too.
     </description>
 
-    <section name="*" type="eventlog"
+    <section name="*" type="ZConfig.logger.log"
              attribute="eventlog"
              required="no">
       <description>
