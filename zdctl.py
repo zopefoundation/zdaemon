@@ -191,6 +191,9 @@ class ZDCmd(cmd.Cmd):
         print
         return 1
 
+    def help_EOF(self):
+        print "To quit, type ^D or use the quit command."
+
     def do_start(self, arg):
         self.get_status()
         if not self.zd_up:
