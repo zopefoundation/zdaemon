@@ -345,6 +345,7 @@ class ZDCmd(cmd.Cmd):
         print "python:      ", repr(self.options.python)
         print "program:     ", repr(self.options.program)
         print "backofflimit:", repr(self.options.backofflimit)
+        print "daemon:      ", repr(self.options.daemon)
         print "forever:     ", repr(self.options.forever)
         print "sockname:    ", repr(self.options.sockname)
         print "exitcodes:   ", repr(self.options.exitcodes)
