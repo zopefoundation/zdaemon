@@ -91,11 +91,14 @@ class ZDRunOptions(RunnerOptions):
     positional_args_allowed = 1
     logsectionname = "runner.eventlog"
     program = None
-    schemafile = None
 
     def __init__(self):
         RunnerOptions.__init__(self)
-        self.add("schemafile", short="S:", default="schema.xml")
+        self.add("schemafile", short="S:", default="schema.xml",
+                 handler=self.set_schemafile)
+
+    def set_schemafile(self, file):
+        self.schemafile = file
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
