@@ -15,7 +15,7 @@
     file Doc/zdctl.txt.  This all is specific to Unix/Linux.
   </description>
 
-  <import package="zLOG"/>
+  <import package="ZConfig.components.logger"/>
 
   <import package="zdaemon"/>
 
