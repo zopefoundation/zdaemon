@@ -97,6 +97,9 @@ class ZDRunOptions(RunnerOptions):
             self.program = self.args
         if not self.program:
             self.usage("no program specified (use -C or positional args)")
+        if self.sockname:
+            # Convert socket name to absolute path
+            self.sockname = os.path.abspath(self.sockname)
 
 
 class Subprocess:
