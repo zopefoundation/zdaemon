@@ -4,6 +4,8 @@
     Schema for zdctl.py and zdrun.py.
   </description>
 
+  <import package="zLOG"/>
+
   <sectiontype name="runner">
     <key name="python" datatype="existing-path" />
     <key name="zdrun" datatype="existing-path" />
@@ -20,5 +22,7 @@
   </sectiontype>
 
   <section name="*" type="runner" attribute="runner" required="yes" />
+
+  <section name="*" type="eventlog" attribute="eventlog" required="no" />
 
 </schema>

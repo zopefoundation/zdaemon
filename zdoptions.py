@@ -251,7 +251,7 @@ class ZDOptions:
         if self.logsectionname:
             self.load_logconf(self.logsectionname)
 
-    def load_logconf(self, sectname="logger"):
+    def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
         obj = self.configroot
         for p in parts:
@@ -287,7 +287,7 @@ class RunnerOptions(ZDOptions):
         self.add("exitcodes", "runner.exit_codes", "x:", "exit-codes=",
                  list_of_ints, default=[0, 2])
         self.add("user", "runner.user", "u:", "user=")
-        self.add("zdirectory", "runner.directory", "z:", "directory=",
+        self.add("directory", "runner.directory", "z:", "directory=",
                  ZConfig.datatypes.existing_directory, default="/")
 
 

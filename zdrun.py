@@ -19,7 +19,7 @@ Usage: python zrdun.py [zrdun-options] program [program-arguments]
 Options:
 -C/--configuration URL -- configuration file or URL
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
--d/--daemon-- run as a proper daemon; fork a subprocess, close files etc.
+-d/--daemon -- run as a proper daemon; fork a subprocess, setsid(), etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
@@ -89,6 +89,7 @@ from zdaemon.zdoptions import RunnerOptions
 class ZDRunOptions(RunnerOptions):
 
     positional_args_allowed = 1
+    logsectionname = "eventlog"
     program = None
 
     def realize(self, *args, **kwds):
@@ -321,14 +322,14 @@ class Daemonizer:
             os._exit(0)
         # Child
         info("daemonizing the process")
-        if self.options.zdirectory:
+        if self.options.directory:
             try:
-                os.chdir(self.options.zdirectory)
+                os.chdir(self.options.directory)
             except os.error, err:
                 warn("can't chdir into %r: %s" %
-                     (self.options.zdirectory, err))
+                     (self.options.directory, err))
             else:
-                info("set current directory: %r" % self.options.zdirectory)
+                info("set current directory: %r" % self.options.directory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
@@ -336,6 +337,11 @@ class Daemonizer:
         os.close(2)
         sys.stderr = sys.__stderr__ = open("/dev/null", "w")
         os.setsid()
+        # XXX Stevens, in his Advanced Unix book, section 13.3 (page
+        # 417) also recommends calling umask(0) and closing unused
+        # file descriptors.  In his Network Programming book, he
+        # additionally recommends ignoring SIGHUP and forking again
+        # after the setsid() call, for obscure SVR4 reasons.
 
     mood = 1 # 1: up, 0: down, -1: suicidal
     delay = 0 # If nonzero, delay starting or killing until this time

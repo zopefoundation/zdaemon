@@ -196,7 +196,7 @@ class ZDCmd(cmd.Cmd):
                 "-d",
                 "-s", self.options.sockname,
                 "-x", ",".join(map(str, self.options.exitcodes)),
-                "-z", self.options.zdirectory,
+                "-z", self.options.directory,
                 ]
             if self.options.forever:
                 args.append("-f")
@@ -316,7 +316,7 @@ class ZDCmd(cmd.Cmd):
         print "sockname:    ", repr(self.options.sockname)
         print "exitcodes:   ", repr(self.options.exitcodes)
         print "user:        ", repr(self.options.user)
-        print "zdirectory:  ", repr(self.options.zdirectory)
+        print "directory:   ", repr(self.options.directory)
 
     def show_python(self):
         version = sys.version.replace("\n", "\n              ")
