@@ -167,7 +167,7 @@ class ZDaemonTests(unittest.TestCase):
         self.assert_(len(params) > 1)
         # kill the process
         send_action('exit\n', zdrun_socket)
-        
+
 def send_action(action, sockname):
     """Send an action to the zdrun server and return the response.
 
