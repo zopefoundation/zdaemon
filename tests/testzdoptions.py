@@ -110,6 +110,28 @@ class TestZDOptions(unittest.TestCase):
         options.add("setting", None, "b", flag=2)
         self.check_exit_code(options, ["-a", "-b"])
 
+    def test_handler_simple(self):
+        # Test that a handler is called; use one that doesn't return None.
+        options = self.OptionsClass()
+        options.add("setting", None, "a:", handler=int)
+        options.realize(["-a2"])
+        self.assertEqual(options.setting, 2)
+
+    def test_handler_side_effect(self):
+        # Test that a handler is called and conflicts are not
+        # signalled when it returns None.
+        options = self.OptionsClass()
+        L = []
+        options.add("setting", None, "a:", "append=", handler=L.append)
+        options.realize(["-a2", "--append", "3"])
+        self.assert_(options.setting is None)
+        self.assertEqual(L, ["2", "3"])
+
+    def test_handler_with_bad_value(self):
+        options = self.OptionsClass()
+        options.add("setting", None, "a:", handler=int)
+        self.check_exit_code(options, ["-afoo"])
+
     def check_exit_code(self, options, args):
         save_sys_stderr = sys.stderr
         try:
