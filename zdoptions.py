@@ -28,6 +28,7 @@ class ZDOptions:
     schemadir = None
     schemafile = "schema.xml"
     schema = None
+    confighandlers = None
     configroot = None
 
     # Class variable to control automatic processing of an <eventlog>
