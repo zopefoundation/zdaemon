@@ -40,8 +40,6 @@ configuration option default_to_interactive is set to false).  Use the
 action "help" to find out about available actions.
 """
 
-from __future__ import nested_scopes
-
 import os
 import re
 import cmd
