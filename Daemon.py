@@ -57,14 +57,15 @@ def run(argv, pidfile=''):
                     signal.signal(sig, SignalPasser(pid))
                 pstamp('Started subprocess: pid %s' % pid, zLOG.INFO)
                 write_pidfile(pidfile)
-                p,s = wait(pid) # waitpid will block until child exit
+                p, s = wait(pid) # waitpid will block until child exit
+                log_pid(p, s)
                 if s:
                     # continue and restart because our child died
                     # with a nonzero exit code, meaning he bit it in
                     # an unsavory way (likely a segfault or something)
-                    log_pid(p, s)
                     continue
                 else:
+                    pstamp("zdaemon exiting")
                     # no need to restart, our child wanted to die.
                     raise DieNow
 
