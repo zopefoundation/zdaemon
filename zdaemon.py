@@ -56,9 +56,6 @@ but you want the daemon manager to keep trying.
 """
 XXX TO DO
 
-- Rethink client commands; maybe start/restart/stop make more sense?
-  (Still need a way to send an arbitrary signal)
-
 - Do the governor without actual sleeps, using event scheduling etc.
 
 - True OO design -- use multiple classes rather than folding
