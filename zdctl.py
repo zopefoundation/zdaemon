@@ -26,6 +26,8 @@ actions typed interactively is started.
 Use the action "help" to find out about available actions.
 """
 
+from __future__ import nested_scopes
+
 # XXX Related code lives in lib/python/Controller/ZctlLib.py on the
 # 'chrism-install-branch' branch.
 # The code there knows more about Zope and about Windows, but doesn't
