@@ -13,6 +13,8 @@ Options:
   -f -- run forever (by default, exit when the backoff limit is exceeded)
   -h -- print usage message and exit
   -s SOCKET -- Unix socket name for client communication (default "zdsock")
+  -x LIST -- list of fatal exit codes (default "0,2"; use "" to disable)
+  -z DIRECTORY -- directory to chdir into when using -d; default "/"
   program [program-arguments] -- an arbitrary application to run
 
 Client mode options:
@@ -34,10 +36,10 @@ it dies, and (when requested to do so with the -d option) it runs the
 application in the background, detached from the foreground tty
 session that started it (if any).
 
-Important: if at any point the application exits with exit status 0 or
-2, it is not restarted.  Any other form of termination (either being
-killed by a signal or exiting with an exit status other than 0 or 2)
-causes it to be restarted.
+Important: if at any point the application exits with an exit status
+listed by the -x option, it is not restarted.  Any other form of
+termination (either being killed by a signal or exiting with an exit
+status not listed in the -x option) causes it to be restarted.
 
 Backoff limit: when the application exits (nearly) immediately after a
 restart, the daemon manager starts slowing down by delaying between
@@ -50,7 +52,6 @@ persistent fault).  The -f (forever) option prevents this exit; use it
 when you expect that a temporary external problem (such as a network
 outage or an overfull disk) may prevent the application from starting
 but you want the daemon manager to keep trying.
-
 """
 
 """
@@ -81,11 +82,13 @@ import zLOG
 class Daemonizer:
 
     # Settable options
-    daemon = 0
-    forever = 0
-    backofflimit = 10
-    sockname = "zdsock"
-    isclient = 0
+    backofflimit = 10                   # -b SECONDS
+    isclient = 0                        # -c
+    daemon = 0                          # -d
+    forever = 0                         # -f
+    sockname = "zdsock"                 # -s SOCKET
+    exitcodes = [0, 2]                  # -x LIST
+    zdirectory = "/"                    # -z DIRECTORY
 
     def __init__(self):
         self.filename = None
@@ -100,7 +103,7 @@ class Daemonizer:
             args = sys.argv[1:]
         self.blather("args=%s" % repr(args))
         try:
-            opts, args = getopt.getopt(args, "b:cdfhs:")
+            opts, args = getopt.getopt(args, "b:cdfhs:x:z:")
         except getopt.error, msg:
             self.usage(str(msg))
         self.parseoptions(opts)
@@ -129,6 +132,16 @@ class Daemonizer:
                 self.exit()
             if o == "-s":
                 self.sockname = a
+            if o == "-x":
+                if a == "":
+                    self.exitcodes = []
+                else:
+                    try:
+                        self.exitcodes = map(int, a.split(","))
+                    except:
+                        self.usage("list of ints required: %r" % a)
+            if o == "-z":
+                self.zdirectory = a
 
     def setcommand(self, args):
         if not args:
@@ -277,7 +290,14 @@ class Daemonizer:
             os._exit(0)
         # Child
         self.info("daemonizing the process")
-        os.chdir("/")
+        if self.zdirectory:
+            try:
+                os.chdir(self.zdirectory)
+            except os.error, err:
+                self.problem("can't chdir into %r: %s" %
+                             (self.zdirectory, err))
+            else:
+                self.info("set current directory: %r" % self.zdirectory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
@@ -513,11 +533,9 @@ class Daemonizer:
         if os.WIFEXITED(sts):
             es = os.WEXITSTATUS(sts)
             msg = "pid %d: exit status %s" % (pid, es)
-            if es == 0:
+            if es in self.exitcodes:
+                msg = msg + "; exiting"
                 self.info(msg)
-                self.exit(0)
-            elif es == 2:
-                self.error(msg)
                 self.exit(es)
             else:
                 self.problem(msg)
