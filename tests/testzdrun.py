@@ -1,4 +1,4 @@
-"""Test suite for zdaemon.py (the program)."""
+"""Test suite for zdrun.py."""
 
 import os
 import sys
@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from StringIO import StringIO
 
-from zdaemon import zdaemon
+from zdaemon import zdrun
 
 class ZDaemonTests(unittest.TestCase):
 
@@ -19,8 +19,8 @@ class ZDaemonTests(unittest.TestCase):
     nokill = os.path.join(here, "nokill.py")
     assert os.path.exists(nokill)
     parent = os.path.dirname(here)
-    zdaemon = os.path.join(parent, "zdaemon.py")
-    assert os.path.exists(zdaemon)
+    zdrun = os.path.join(parent, "zdrun.py")
+    assert os.path.exists(zdrun)
 
     ppath = os.pathsep.join(sys.path)
 
@@ -55,16 +55,16 @@ class ZDaemonTests(unittest.TestCase):
         # Add quotes, in case some pathname contains spaces (e.g. Mac OS X)
         args = self.quoteargs(args)
         cmd = ('PYTHONPATH="%s" "%s" "%s" -d -s "%s" %s' %
-               (self.ppath, self.python, self.zdaemon, self.zdsock, args))
+               (self.ppath, self.python, self.zdrun, self.zdsock, args))
         os.system(cmd)
         # When the daemon crashes, the following may help debug it:
         ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
-        ##    (self.ppath, self.python, self.zdaemon, self.zdsock, args))
+        ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
     def run(self, args):
         if type(args) is type(""):
             args = args.split()
-        d = zdaemon.Daemonizer()
+        d = zdrun.Daemonizer()
         try:
             d.main(["-s", self.zdsock] + args)
         except SystemExit:
@@ -96,14 +96,14 @@ class ZDaemonTests(unittest.TestCase):
 
     def testHelp(self):
         self.run("-h")
-        self.expect = zdaemon.__doc__
+        self.expect = zdrun.__doc__
 
     def testOptionsSysArgv(self):
         # Check that options are parsed from sys.argv by default
         save_sys_argv = sys.argv
         try:
             sys.argv = ["A", "-c", "B", "C"]
-            options = zdaemon.Options()
+            options = zdrun.Options()
         finally:
             sys.argv = save_sys_argv
         self.assertEqual(options.options, [("-c", "")])
@@ -112,7 +112,7 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsBasic(self):
         # Check basic option parsing
-        options = zdaemon.Options(["-c", "B", "C"], "foo")
+        options = zdrun.Options(["-c", "B", "C"], "foo")
         self.assertEqual(options.options, [("-c", "")])
         self.assertEqual(options.isclient, 1)
         self.assertEqual(options.args, ["B", "C"])
@@ -121,12 +121,12 @@ class ZDaemonTests(unittest.TestCase):
     def testOptionsHelp(self):
         # Check that -h behaves properly
         try:
-            zdaemon.Options(["-h"])
+            zdrun.Options(["-h"])
         except SystemExit, err:
             self.failIf(err.code)
         else:
             self.fail("SystemExit expected")
-        self.expect = zdaemon.__doc__
+        self.expect = zdrun.__doc__
 
     def testOptionsError(self):
         # Check that we get an error for an unrecognized option
@@ -134,7 +134,7 @@ class ZDaemonTests(unittest.TestCase):
         try:
             sys.stderr = StringIO()
             try:
-                zdaemon.Options(["-/"])
+                zdrun.Options(["-/"])
             except SystemExit, err:
                 self.assertEqual(err.code, 2)
             else:
@@ -144,8 +144,8 @@ class ZDaemonTests(unittest.TestCase):
 
     def testSubprocessBasic(self):
         # Check basic subprocess management: spawn, kill, wait
-        options = zdaemon.Options([])
-        proc = zdaemon.Subprocess(options, ["sleep", "100"])
+        options = zdrun.Options([])
+        proc = zdrun.Subprocess(options, ["sleep", "100"])
         self.assertEqual(proc.pid, 0)
         pid = proc.spawn()
         self.assertEqual(proc.pid, pid)
