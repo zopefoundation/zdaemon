@@ -125,7 +125,7 @@ class Options:
         if progname:
             self.progname = progname
         try:
-            self.opts, self.args = getopt.getopt(args, "b:cdfhs:u:x:z:")
+            self.options, self.args = getopt.getopt(args, "b:cdfhs:u:x:z:")
         except getopt.error, msg:
             self.usage(str(msg))
         self._interpret_options()
@@ -137,7 +137,7 @@ class Options:
 
         When -h is detected, print the module docstring to stdout and exit(0).
         """
-        for o, a in self.opts:
+        for o, a in self.options:
             # Keep these in alphabetical order please!
             if o == "-b":
                 try:
@@ -182,17 +182,17 @@ class Subprocess:
     pid = 0 # Subprocess pid; 0 when not running
     lasttime = 0 # Last time the subprocess was started; 0 if never
 
-    def __init__(self, opts, args=None):
+    def __init__(self, options, args=None):
         """Constructor.
 
         Arguments are an Options instance and a list of program
         arguments; the latter's first item must be the program name.
         """
         if args is None:
-            args = opts.args
+            args = options.args
         if not args:
-            opts.usage("missing 'program' argument")
-        self.opts = opts
+            options.usage("missing 'program' argument")
+        self.options = options
         self.args = args
         self._set_filename(args[0])
 
@@ -203,7 +203,7 @@ class Subprocess:
             try:
                 st = os.stat(filename)
             except os.error:
-                self.opts.usage("can't stat program %r" % program)
+                self.options.usage("can't stat program %r" % program)
         else:
             path = get_path()
             for dir in path:
@@ -216,10 +216,10 @@ class Subprocess:
                 if mode & 0111:
                     break
             else:
-                self.opts.usage("can't find program %r on PATH %s" %
+                self.options.usage("can't find program %r on PATH %s" %
                                 (program, path))
         if not os.access(filename, os.X_OK):
-            self.opts.usage("no permission to run program %r" % filename)
+            self.options.usage("no permission to run program %r" % filename)
         self.filename = filename
 
     def spawn(self):
@@ -283,15 +283,15 @@ class Client:
 
     """A class representing the control client."""
 
-    def __init__(self, opts, args=None):
+    def __init__(self, options, args=None):
         """Constructor.
 
         Arguments are an Options instance and a list of program
         arguments representing the command to send to the server.
         """
-        self.opts = opts
+        self.options = options
         if args is None:
-            args = opts.args
+            args = options.args
         if not args:
             self.command = "status"
         else:
@@ -301,10 +301,10 @@ class Client:
         """Send the command to the server and write the results to stdout."""
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
-            sock.connect(self.opts.sockname)
+            sock.connect(self.options.sockname)
         except socket.error, msg:
             sys.stderr.write("Can't connect to %r: %s\n" %
-                             (self.opts.sockname, msg))
+                             (self.options.sockname, msg))
             sys.exit(1)
         sock.send(self.command + "\n")
         sock.shutdown(1) # We're not writing any more
@@ -324,50 +324,50 @@ class Client:
 class Daemonizer:
 
     def main(self, args=None):
-        self.opts = Options(args)
+        self.options = Options(args)
         self.set_uid()
-        if self.opts.isclient:
-            clt = Client(self.opts)
+        if self.options.isclient:
+            clt = Client(self.options)
             clt.doit()
         else:
             self.run()
 
     def set_uid(self):
-        if self.opts.user is None:
+        if self.options.user is None:
             return
         if os.name != "posix":
-            self.opts.usage("-u USER only supported on Unix")
+            self.options.usage("-u USER only supported on Unix")
         if os.geteuid() != 0:
-            self.opts.usage("only root can use -u USER")
+            self.options.usage("only root can use -u USER")
         import pwd
         try:
-            uid = int(self.opts.user)
+            uid = int(self.options.user)
         except: # int() can raise all sorts of errors
             try:
-                pwrec = pwd.getpwnam(self.opts.user)
+                pwrec = pwd.getpwnam(self.options.user)
             except KeyError:
-                self.opts.usage("username %r not found" % self.opts.user)
+                self.options.usage("username %r not found" % self.options.user)
             uid = pwrec[2]
         else:
             try:
                 pwrec = pwd.getpwuid(uid)
             except KeyError:
-                self.opts.usage("uid %r not found" % self.opts.user)
+                self.options.usage("uid %r not found" % self.options.user)
         gid = pwrec[3]
         os.setgid(gid)
         os.setuid(uid)
 
     def run(self):
-        self.proc = Subprocess(self.opts)
+        self.proc = Subprocess(self.options)
         self.opensocket()
         try:
             self.setsignals()
-            if self.opts.daemon:
+            if self.options.daemon:
                 self.daemonize()
             self.runforever()
         finally:
             try:
-                os.unlink(self.opts.sockname)
+                os.unlink(self.options.sockname)
             except os.error:
                 pass
 
@@ -377,14 +377,14 @@ class Daemonizer:
     def opensocket(self):
         self.checkopen()
         try:
-            os.unlink(self.opts.sockname)
+            os.unlink(self.options.sockname)
         except os.error:
             pass
         self.mastersocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         oldumask = None
         try:
             oldumask = os.umask(077)
-            self.mastersocket.bind(self.opts.sockname)
+            self.mastersocket.bind(self.options.sockname)
         finally:
             if oldumask is not None:
                 os.umask(oldumask)
@@ -394,7 +394,7 @@ class Daemonizer:
     def checkopen(self):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
-            s.connect(self.opts.sockname)
+            s.connect(self.options.sockname)
             s.send("status\n")
             data = s.recv(1000)
             s.close()
@@ -404,7 +404,7 @@ class Daemonizer:
             if not data.endswith("\n"):
                 data += "\n"
             msg = ("Another zdaemon is already up using socket %r:\n%s" %
-                   (self.opts.sockname, data))
+                   (self.options.sockname, data))
             sys.stderr.write(msg)
             critical(msg)
             sys.exit(1)
@@ -437,13 +437,14 @@ class Daemonizer:
             os._exit(0)
         # Child
         info("daemonizing the process")
-        if self.opts.zdirectory:
+        if self.options.zdirectory:
             try:
-                os.chdir(self.opts.zdirectory)
+                os.chdir(self.options.zdirectory)
             except os.error, err:
-                warn("can't chdir into %r: %s" % (self.opts.zdirectory, err))
+                warn("can't chdir into %r: %s" %
+                     (self.options.zdirectory, err))
             else:
-                info("set current directory: %r" % self.opts.zdirectory)
+                info("set current directory: %r" % self.options.zdirectory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         os.close(1)
@@ -470,14 +471,14 @@ class Daemonizer:
             r, w, x = [self.mastersocket], [], []
             if self.commandsocket:
                 r.append(self.commandsocket)
-            timeout = self.opts.backofflimit
+            timeout = self.options.backofflimit
             if self.delay:
                 timeout = max(0, min(timeout, self.delay - time.time()))
                 if timeout <= 0:
                     self.delay = 0
                     if self.killing and self.proc.pid:
                         self.proc.kill(signal.SIGKILL)
-                        self.delay = time.time() + self.opts.backofflimit
+                        self.delay = time.time() + self.options.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
             except select.error, err:
@@ -516,7 +517,7 @@ class Daemonizer:
             else:
                 self.governor()
             self.proc.setstatus(sts)
-            if es in self.opts.exitcodes:
+            if es in self.options.exitcodes:
                 msg = msg + "; exiting now"
                 info(msg)
                 sys.exit(es)
@@ -529,12 +530,12 @@ class Daemonizer:
         now = time.time()
         if not self.proc.lasttime:
             pass
-        elif now - self.proc.lasttime < self.opts.backofflimit:
+        elif now - self.proc.lasttime < self.options.backofflimit:
             # Exited rather quickly; slow down the restarts
             self.backoff += 1
-            if self.backoff >= self.opts.backofflimit:
-                if self.opts.forever:
-                    self.backoff = self.opts.backofflimit
+            if self.backoff >= self.options.backofflimit:
+                if self.options.forever:
+                    self.backoff = self.options.backofflimit
                 else:
                     critical("restarting too frequently; quit")
                     sys.exit(1)
@@ -604,7 +605,7 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
             self.killing = 1
-            self.delay = time.time() + self.opts.backofflimit
+            self.delay = time.time() + self.options.backofflimit
         else:
             self.sendreply("Application already stopped")
 
@@ -617,7 +618,7 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
             self.killing = 1
-            self.delay = time.time() + self.opts.backofflimit
+            self.delay = time.time() + self.options.backofflimit
         else:
             self.proc.spawn()
             self.sendreply("Application started")
@@ -631,7 +632,7 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will exit later")
             self.killing = 1
-            self.delay = time.time() + self.opts.backofflimit
+            self.delay = time.time() + self.options.backofflimit
         else:
             self.sendreply("Exiting now")
             info("Exiting")
@@ -668,7 +669,7 @@ class Daemonizer:
                        "lasttime=%r\n" % self.proc.lasttime +
                        "application=%r\n" % self.proc.pid +
                        "manager=%r\n" % os.getpid() + 
-                       "backofflimit=%r\n" % self.opts.backofflimit +
+                       "backofflimit=%r\n" % self.options.backofflimit +
                        "filename=%r\n" % self.proc.filename +
                        "args=%r\n" % self.proc.args)
 

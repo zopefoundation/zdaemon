@@ -97,20 +97,20 @@ class ZDaemonTests(unittest.TestCase):
         save_sys_argv = sys.argv
         try:
             sys.argv = ["A", "-c", "B", "C"]
-            opts = zdaemon.Options()
+            options = zdaemon.Options()
         finally:
             sys.argv = save_sys_argv
-        self.assertEqual(opts.opts, [("-c", "")])
-        self.assertEqual(opts.isclient, 1)
-        self.assertEqual(opts.args, ["B", "C"])
+        self.assertEqual(options.options, [("-c", "")])
+        self.assertEqual(options.isclient, 1)
+        self.assertEqual(options.args, ["B", "C"])
 
     def testOptionsBasic(self):
         # Check basic option parsing
-        opts = zdaemon.Options(["-c", "B", "C"], "foo")
-        self.assertEqual(opts.opts, [("-c", "")])
-        self.assertEqual(opts.isclient, 1)
-        self.assertEqual(opts.args, ["B", "C"])
-        self.assertEqual(opts.progname, "foo")
+        options = zdaemon.Options(["-c", "B", "C"], "foo")
+        self.assertEqual(options.options, [("-c", "")])
+        self.assertEqual(options.isclient, 1)
+        self.assertEqual(options.args, ["B", "C"])
+        self.assertEqual(options.progname, "foo")
 
     def testOptionsHelp(self):
         # Check that -h behaves properly
@@ -138,8 +138,8 @@ class ZDaemonTests(unittest.TestCase):
 
     def testSubprocessBasic(self):
         # Check basic subprocess management: spawn, kill, wait
-        opts = zdaemon.Options([])
-        proc = zdaemon.Subprocess(opts, ["sleep", "100"])
+        options = zdaemon.Options([])
+        proc = zdaemon.Subprocess(options, ["sleep", "100"])
         self.assertEqual(proc.pid, 0)
         pid = proc.spawn()
         self.assertEqual(proc.pid, pid)
