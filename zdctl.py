@@ -201,8 +201,8 @@ class ZDCmd(cmd.Cmd):
             args += self._get_override("-f", "forever", flag=1)
             args += self._get_override("-s", "sockname")
             args += self._get_override("-u", "user")
-            args += self._get_override("-x", "exitcodes",
-                                       ",".join(map(str, self.options.exitcodes)))
+            args += self._get_override(
+                "-x", "exitcodes", ",".join(map(str, self.options.exitcodes)))
             args += self._get_override("-z", "directory")
             args.extend(self.options.program)
             if self.options.daemon:
@@ -415,6 +415,33 @@ class ZDCmd(cmd.Cmd):
         print "                   Without a command, start an interactive sh."
         print "An alias for this command is ! [command]"
 
+    def do_reload(self, arg):
+        if arg:
+            args = arg.split()
+            if self.options.configfile:
+                args = ["-C", self.options.configfile] + args
+        else:
+            args = None
+        options = ZDCtlOptions()
+        options.positional_args_allowed = 0
+        try:
+            options.realize(args)
+        except SystemExit:
+            print "Configuration not reloaded"
+        else:
+            self.options = options
+            if self.options.configfile:
+                print "Configuration reloaded from", self.options.configfile
+            else:
+                print "Configuration reloaded without a config file"
+
+    def help_reload(self):
+        print "reload [options] -- Reload the configuration."
+        print "    Without options, this reparses the command line."
+        print "    With options, this substitutes 'options' for the"
+        print "    command line, except that if no -C option is given,"
+        print "    the last configuration file is used."
+
     def do_quit(self, arg):
         self.get_status()
         if not self.zd_up:
@@ -429,8 +456,9 @@ class ZDCmd(cmd.Cmd):
 
     def help_quit(self):
         print "quit -- Exit the zdctl shell."
-        print ("        If the daemon process is not running, "
-               "stop the daemon manager.")
+        print "        If the daemon process is not running,"
+        print "        stop the daemon manager."
+
 
 def main(args=None):
     options = ZDCtlOptions()
