@@ -13,7 +13,6 @@
 ##############################################################################
 
 import os, sys, time, signal
-from ZDaemonLogging import pstamp
 import zLOG
 
 pyth = sys.executable
@@ -146,3 +145,6 @@ def get_signal_name(n):
             if startswith('SIG') and not startswith('SIG_'):
                 _signals[v] = k
     return _signals.get(n, 'unknown')
+
+def pstamp(message, sev):
+    zLOG.LOG("zdaemon", sev, message)
