@@ -96,6 +96,18 @@ def run(argv, pidfile=''):
                             signame = get_signal_name(signum)
                             msg = "terminated by signal %s(%s)" % (signame,
                                                                   signum)
+                            # We'd like to report whether a core file
+                            # was produced, but there isn't a standard
+                            # way to check.  It seems that some
+                            # (many?) Unixes use bit 0x80 in the wait
+                            # status, but how to tell?  A simple
+                            # alternative is to assume that no core
+                            # file was produced if the wait status is
+                            # exactly equal to the signal.  Otherwise,
+                            # there might be a core file and it's
+                            # useful to print the wait status.
+                            if signum != s:
+                                msg += ", wait status: %s" % signum
                         else:
                             # XXX what should we do here?
                             signum = os.WSTOPSIG(s)
