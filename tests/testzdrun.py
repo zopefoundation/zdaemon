@@ -9,6 +9,7 @@ import unittest
 from StringIO import StringIO
 
 from zdaemon import zdrun
+from zdaemon import zdoptions
 
 class ZDaemonTests(unittest.TestCase):
 
@@ -96,14 +97,18 @@ class ZDaemonTests(unittest.TestCase):
 
     def testHelp(self):
         self.run("-h")
-        self.expect = zdrun.__doc__
+        import __main__
+        self.expect = __main__.__doc__
 
     def testOptionsSysArgv(self):
         # Check that options are parsed from sys.argv by default
+        options = zdoptions.ZDOptions()
+        options.positional_args_allowed = 1
+        options.add("isclient", None, "c", flag=1)
         save_sys_argv = sys.argv
         try:
             sys.argv = ["A", "-c", "B", "C"]
-            options = zdrun.Options()
+            options.realize()
         finally:
             sys.argv = save_sys_argv
         self.assertEqual(options.options, [("-c", "")])
@@ -112,7 +117,10 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsBasic(self):
         # Check basic option parsing
-        options = zdrun.Options(["-c", "B", "C"], "foo")
+        options = zdoptions.ZDOptions()
+        options.positional_args_allowed = 1
+        options.add("isclient", None, "c", flag=1)
+        options.realize(["-c", "B", "C"], "foo")
         self.assertEqual(options.options, [("-c", "")])
         self.assertEqual(options.isclient, 1)
         self.assertEqual(options.args, ["B", "C"])
@@ -120,21 +128,24 @@ class ZDaemonTests(unittest.TestCase):
 
     def testOptionsHelp(self):
         # Check that -h behaves properly
+        options = zdoptions.ZDOptions()
         try:
-            zdrun.Options(["-h"])
+            options.realize(["-h"])
         except SystemExit, err:
             self.failIf(err.code)
         else:
             self.fail("SystemExit expected")
-        self.expect = zdrun.__doc__
+        import __main__
+        self.expect = __main__.__doc__
 
     def testOptionsError(self):
         # Check that we get an error for an unrecognized option
         save_sys_stderr = sys.stderr
         try:
             sys.stderr = StringIO()
+            options = zdoptions.ZDOptions()
             try:
-                zdrun.Options(["-/"])
+                options.realize(["-/"])
             except SystemExit, err:
                 self.assertEqual(err.code, 2)
             else:
@@ -144,7 +155,8 @@ class ZDaemonTests(unittest.TestCase):
 
     def testSubprocessBasic(self):
         # Check basic subprocess management: spawn, kill, wait
-        options = zdrun.Options([])
+        options = zdoptions.ZDOptions()
+        options.realize([])
         proc = zdrun.Subprocess(options, ["sleep", "100"])
         self.assertEqual(proc.pid, 0)
         pid = proc.spawn()
