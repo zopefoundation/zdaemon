@@ -16,6 +16,11 @@ class ZDOptions:
     schema = None
     configroot = None
 
+    # Class variable to control automatic processing of a <logger>
+    # section.  This should be the (possibly dotted) name of something
+    # accessible from configroot, typically "logger".
+    logsectionname = None
+
     # Class variable deciding whether positional arguments are allowed.
     # If you want positional arguments, set this to 1 in your subclass.
     positional_args_allowed = 0
@@ -242,6 +247,30 @@ class ZDOptions:
         for name, message in self.required_map.items():
             if getattr(self, name) is None:
                 self.usage(message)
+
+        if self.logsectionname:
+            self.load_logconf(self.logsectionname)
+
+    def load_logconf(self, sectname="logger"):
+        parts = sectname.split(".")
+        obj = self.configroot
+        for p in parts:
+            if obj == None:
+                break
+            obj = getattr(obj, p)
+        self.config_logger = obj
+        if obj is not None:
+            import zLOG
+            zLOG.set_initializer(self.log_initializer)
+            zLOG.initialize()
+
+    def log_initializer(self):
+        from zLOG import EventLogger
+        logger = self.config_logger()
+        for handler in logger.handlers:
+            if hasattr(handler, "reopen"):
+                handler.reopen()
+        EventLogger.event_logger.logger = logger
 
 
 def _test():
