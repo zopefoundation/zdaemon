@@ -15,12 +15,24 @@
 import os, sys, time, signal
 from ZDaemonLogging import pstamp
 import zLOG
-from SignalPasser import SignalPasser
 
 pyth = sys.executable
 
 class DieNow(Exception):
     pass
+
+class SignalPasser:
+    """ A class used for passing signal that the daemon receives along to
+    its child """
+    def __init__(self, pid):
+        self.pid = pid
+
+    def __call__(self, signum, frame):
+        # send the signal to our child
+        os.kill(self.pid, signum)
+        # we want to die ourselves if we're signaled with SIGTERM or SIGINT
+        if signum in [signal.SIGTERM, signal.SIGINT]:
+            raise DieNow
 
 def run(argv, pidfile=''):
     if os.environ.has_key('ZDAEMON_MANAGED'):
@@ -42,7 +54,7 @@ def run(argv, pidfile=''):
                 interesting = [1, 2, 3, 10, 12, 15]
                 # ie. HUP, INT, QUIT, USR1, USR2, TERM
                 for sig in interesting:
-                    signal.signal(sig, SignalPasser(sig))
+                    signal.signal(sig, SignalPasser(pid))
                 pstamp('Houston, we have forked: pid %s' % pid, zLOG.INFO)
                 write_pidfile(pidfile)
                 p,s = wait(pid) # waitpid will block until child exit
@@ -79,7 +91,7 @@ def detach():
 def write_pidfile(pidfile):
     if pidfile:
         pf = open(pidfile, 'w+')
-        pf.write(("%s" % os.getpid()))
+        pf.write(("%s\n" % os.getpid()))
         pf.close()
 
 def wait(pid):
@@ -121,8 +133,7 @@ def log_pid(p, s):
         signame = get_signal_name(signum)
         msg = "stopped by signal %s(%s)" % (signame,
                                             signum)
-    pstamp('Aiieee! Process %s %s' % (p, msg),
-           zLOG.ERROR)
+    pstamp('Aieeee!  Process %s %s' % (p, msg), zLOG.ERROR)
 
 _signals = None
 
