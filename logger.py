@@ -14,6 +14,7 @@
 """Abbreviated PEP 282 logger that uses zLOG."""
 
 import os
+import sys
 
 import zLOG
 
