@@ -1,0 +1,13 @@
+<schema>
+
+  <description>
+    Schema for zdctl.
+  </description>
+
+  <sectiontype name="zdctl">
+    <key name="program" datatype="string" required="yes" />
+  </sectiontype>
+
+  <section name="*" type="zdctl" attribute="zdctl" required="yes" />
+
+</schema>

@@ -46,6 +46,7 @@ if __name__ == "__main__":
     from os.path import dirname, abspath, normpath
     sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
 
+import ZConfig
 from ZEO.runsvr import Options
 
 
@@ -74,20 +75,26 @@ class ZDOptions(Options):
     # Program (and arguments) for zdaemon
     program = None
 
+    def load_schema(self):
+        schemafile = os.path.join(self._dir, "schema.xml")
+        self.schema = ZConfig.loadSchema(schemafile)
+
     def load_configuration(self):
         Options.load_configuration(self) # Sets self.rootconf
         if not self.rootconf:
             self.usage("a configuration file is required; use -C")
         # XXX Should allow overriding more zdaemon options here
         if self.program is None:
-            self.program = self.rootconf.getlist("program")
+            program = self.rootconf.zdctl.program
+            if program:
+                self.program = program.split()
         if self.program is None:
             self.usage("no program specified in configuration")
 
 
 class ZDCmd(cmd.Cmd):
 
-    prompt = "(zdctl) "
+    prompt = "zdctl> "
 
     def __init__(self, options):
         self.options = options
@@ -154,6 +161,10 @@ class ZDCmd(cmd.Cmd):
     def help_help(self):
         print "help          -- Print a list of available actions."
         print "help <action> -- Print help for <action>."
+
+    def do_EOF(self, arg):
+        print
+        return 1
 
     def do_start(self, arg):
         self.get_status()
@@ -258,6 +269,43 @@ class ZDCmd(cmd.Cmd):
     def help_status(self):
         print "status [-l] -- Print status for the daemon process."
         print "               With -l, show raw status output as well."
+
+    def do_show(self, arg):
+        if not arg:
+            args = ["config"]
+        else:
+            args = arg.split()
+        methods = []
+        for arg in args:
+            try:
+                method = getattr(self, "show_" + arg)
+            except AttributeError:
+                self.help_show()
+                return
+            methods.append(method)
+        for method in methods:
+            method()
+
+    def show_config(self):
+        print "Show config"
+
+    def help_show(self):
+        print "show config -- show general configuration info"
+        print "show python -- show Python version and details"
+
+    def complete_show(self, text, *ignored):
+        options = ["config", "python"]
+        return [x for x in options if x.startswith(text)]
+
+    def show_python(self):
+        print "Version:   ", sys.version
+        print "Platform:  ", sys.platform
+        print "Executable:", sys.executable
+        print "Arguments: ", sys.argv
+        print "Directory: ", os.getcwd()
+        print "Path:"
+        for dir in sys.path:
+            print "    " + str(dir)
 
     def do_logreopen(self, arg):
         self.do_kill(str(signal.SIGUSR2))
