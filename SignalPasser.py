@@ -13,17 +13,16 @@
 
 """ A module used for passing signals to children """
 
+import os, sys, signal
+
 class SignalPasser:
     def __init__(self, pid):
         self.pid = pid
 
     def __call__(self, signum, frame):
-        import os, sys, signal
+        # send the signal to our child
         os.kill(self.pid, signum)
+        # we want to die ourselves if we're signaled with SIGTERM or SIGINT
         if signum in [signal.SIGTERM, signal.SIGINT]:
             sys.exit(0)
 
-def pass_signals_to_process(pid, signals):
-    import signal
-    for s in signals:
-        signal.signal(s, SignalPasser(pid))
