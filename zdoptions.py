@@ -48,8 +48,10 @@ class ZDOptions:
         self.default_map = {}
         self.required_map = {}
         self.environ_map = {}
+        self.zconfig_options = []
         self.add(None, None, "h", "help", self.help)
         self.add("configfile", None, "C:", "configure=")
+        self.add(None, None, "X:", handler=self.zconfig_options.append)
 
     def help(self, dummy):
         """Print a long help message (self.doc) to stdout and exit(0).
@@ -247,6 +249,9 @@ class ZDOptions:
                 if name and value is not None:
                     setattr(self, name, value)
 
+        if self.zconfig_options and self.configfile is None:
+            self.usage("configuration overrides (-X) cannot be used"
+                       " without a configuration file")
         if self.configfile is not None:
             # Process config file
             self.load_schema()
@@ -294,7 +299,8 @@ class ZDOptions:
 
     def load_configfile(self):
         self.configroot, self.confighandlers = \
-            ZConfig.loadConfig(self.schema, self.configfile)
+            ZConfig.loadConfig(self.schema, self.configfile,
+                               self.zconfig_options)
 
     def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
