@@ -217,7 +217,7 @@ class Subprocess:
                     break
             else:
                 self.options.usage("can't find program %r on PATH %s" %
-                                (program, path))
+                                   (program, path))
         if not os.access(filename, os.X_OK):
             self.options.usage("no permission to run program %r" % filename)
         self.filename = filename
