@@ -18,8 +18,8 @@ Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
 
 Options:
--C/--configfile URL -- configuration file or URL
--S/--schemafile XML Schema -- XML schema for configuration file
+-C/--configure URL -- configuration file or URL
+-S/--schema XML Schema -- XML schema for configuration file
 -h/--help -- print usage message and exit
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
@@ -72,7 +72,8 @@ class ZDCtlOptions(RunnerOptions):
 
     def __init__(self):
         RunnerOptions.__init__(self)
-        self.add("schemafile", short="S:", default="schema.xml",
+        self.add("schemafile", short="S:", long="schema=",
+                 default="schema.xml",
                  handler=self.set_schemafile)
         self.add("interactive", None, "i", "interactive", flag=1)
         self.add("default_to_interactive", "runner.default_to_interactive",
