@@ -13,5 +13,3 @@
 #
 ##############################################################################
 """zdaemon -- a package to manage a daemon application."""
-
-from Daemon import run
