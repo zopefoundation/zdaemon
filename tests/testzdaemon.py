@@ -45,15 +45,20 @@ class ZDaemonTests(unittest.TestCase):
         output = self.new_stdout.getvalue()
         self.assertEqual(self.expect, output)
 
+    def quoteargs(self, args):
+        for i in range(len(args)):
+            if " " in args[i]:
+                args[i] = '"%s"' % args[i]
+        return " ".join(args)
+
     def rundaemon(self, args):
-        if type(args) is type([]):
-            args = " ".join(args)
+        args = self.quoteargs(args)
         cmd = ("PYTHONPATH=%s %s %s -d -s %s %s" %
                (self.ppath, self.python, self.zdaemon, self.zdsock, args))
         os.system(cmd)
         # When the daemon crashes, the following may help debug it:
         ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
-        ##          (self.ppath, self.python, self.zdaemon, self.zdsock, args))
+        ##    (self.ppath, self.python, self.zdaemon, self.zdsock, args))
 
     def run(self, args):
         if type(args) is type(""):
@@ -65,7 +70,7 @@ class ZDaemonTests(unittest.TestCase):
             pass
 
     def testSystem(self):
-        self.rundaemon("echo -n")
+        self.rundaemon(["echo", "-n"])
         self.expect = ""
 
     def testInvoke(self):
@@ -73,7 +78,7 @@ class ZDaemonTests(unittest.TestCase):
         self.expect = ""
 
     def testControl(self):
-        self.rundaemon("sleep 1000")
+        self.rundaemon(["sleep", "1000"])
         time.sleep(1)
         self.run("-c stop")
         time.sleep(1)
