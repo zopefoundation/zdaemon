@@ -16,6 +16,10 @@ class ZDOptions:
     schema = None
     configroot = None
 
+    # Class variable deciding whether positional arguments are allowed.
+    # If you want positional arguments, set this to 1 in your subclass.
+    positional_args_allowed = 0
+
     def __init__(self):
         self.names_list = []
         self.short_options = []
@@ -43,6 +47,36 @@ class ZDOptions:
         sys.stderr.write("For help, use %s -h\n" % self.progname)
         sys.exit(2)
 
+    def remove(self,
+               name=None,               # attribute name on self
+               confname=None,           # name in ZConfig (may be dotted)
+               short=None,              # short option name
+               long=None,               # long option name
+               ):
+        """Remove all traces of name, confname, short and/or long."""
+        if name:
+            for n, cn in self.names_list[:]:
+                if n == name:
+                    self.names_list.remove((n, cn))
+            if self.default_map.has_key(name):
+                del self.default_map[name]
+            if self.required_map.has_key(name):
+                del self.required_map[name]
+        if confname:
+            for n, cn in self.names_list[:]:
+                if cn == confname:
+                    self.names_list.remove((n, cn))
+        if short:
+            key = "-" + short[0]
+            if self.options_map.has_key(key):
+                del self.options_map[key]
+        if long:
+            key = "--" + long
+            if key[-1] == "=":
+                key = key[:-1]
+            if self.options_map.has_key(key):
+                del self.options_map[key]
+
     def add(self,
             name=None,                  # attribute name on self
             confname=None,              # name in ZConfig (may be dotted)
@@ -51,6 +85,7 @@ class ZDOptions:
             handler=None,               # handler (defaults to string)
             default=None,               # default value
             required=None,              # message if not provided
+            flag=None,                  # if not None, flag value
             ):
         """Add information about a configuration option.
 
@@ -69,7 +104,19 @@ class ZDOptions:
 
         default=...  -- if not None, the default value
         required=... -- if nonempty, an error message if no value provided
-       """
+        flag=...     -- if not None, flag value for command line option
+        """
+
+        if flag is not None:
+            if handler is not None:
+                raise ValueError, "use at most one of flag= and handler="
+            if not long and not short:
+                raise ValueError, "flag= requires a command line flag"
+            if short and short.endswith(":"):
+                raise ValueError, "flag= requires a command line flag"
+            if long and long.endswith("="):
+                raise ValueError, "flag= requires a command line flag"
+            handler = lambda arg, flag=flag: flag
 
         if short and long:
             if short.endswith(":") != long.endswith("="):
@@ -140,6 +187,10 @@ class ZDOptions:
         except getopt.error, msg:
             self.usage(msg)
 
+        # Check for positional args
+        if self.args and not self.positional_args_allowed:
+            self.usage("positional arguments are not supported")
+
         # Process options returned by getopt
         for opt, arg in self.options:
             name, handler = self.options_map[opt]
@@ -149,6 +200,8 @@ class ZDOptions:
                 except ValueError, msg:
                     self.usage("invalid value for %s %r: %s" % (opt, arg, msg))
             if name and arg is not None:
+                if getattr(self, name) is not None:
+                    self.usage("conflicting command line option %r" % opt)
                 setattr(self, name, arg)
 
         if self.configfile is not None:
