@@ -48,14 +48,16 @@ if __name__ == "__main__":
     sys.path.append(dirname(dirname(normpath(abspath(sys.argv[0])))))
 
 import ZConfig
-import zdoptions
+from zdaemon.zdoptions import ZDOptions
 
 
 def string_list(arg):
     return arg.split()
 
 
-class ZDOptions(zdoptions.ZDOptions):
+class ZDCtlOptions(ZDOptions):
+
+    positional_args_allowed = 1
 
     # Where's python?
     python = sys.executable
@@ -67,7 +69,7 @@ class ZDOptions(zdoptions.ZDOptions):
         _file = __file__
     _file = os.path.normpath(os.path.abspath(_file))
     _dir = os.path.dirname(_file)
-    zdaemon = os.path.join(_dir, "zdaemon.py")
+    zdaemon = os.path.join(_dir, "zdrun.py")
 
     # Options for zdaemon
     backofflimit = 10                   # -b SECONDS
@@ -78,7 +80,7 @@ class ZDOptions(zdoptions.ZDOptions):
     zdirectory = "/"                    # -z DIRECTORY
 
     def __init__(self):
-        zdoptions.ZDOptions.__init__(self)
+        ZDOptions.__init__(self)
         self.add("program", "zdctl.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
@@ -337,7 +339,7 @@ class ZDCmd(cmd.Cmd):
                "stop the daemon manager.")
 
 def main(args=None):
-    options = ZDOptions()
+    options = ZDCtlOptions()
     options.realize(args)
     c = ZDCmd(options)
     if options.args:
