@@ -84,7 +84,7 @@ class ZDCtlOptions(RunnerOptions):
         self.add("logfile", "runner.logfile", "l:", "logfile=")
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
-        programname = sys.argv[0]
+        programname = os.path.basename(sys.argv[0])
         base, ext = os.path.splitext(programname)
         if ext == ".py":
             programname = base
