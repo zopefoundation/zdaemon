@@ -348,7 +348,7 @@ class Daemonizer:
         # parent terminal window to escape from a logtail command.
         # To disassociate ourselves from our parent's session group we use
         # os.setsid.  It means "set session id", which has the effect of
-        # disassociating a process from is current session and process group
+        # disassociating a process from its current session and process group
         # and setting itself up as a new session leader.
         #
         # Unfortunately we cannot call setsid if we're already a session group
