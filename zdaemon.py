@@ -574,9 +574,10 @@ class Daemonizer:
         self.waitstatus = None
         if pid == self.appid:
             self.appid = 0
+            if not self.killing:
+                self.governor()
             self.killing = 0
             self.delay = 0
-            self.governor()
         if os.WIFEXITED(sts):
             es = os.WEXITSTATUS(sts)
             msg = "pid %d: exit status %s" % (pid, es)
@@ -592,7 +593,7 @@ class Daemonizer:
             if hasattr(os, "WCOREDUMP"):
                 iscore = os.WCOREDUMP(sts)
             else:
-                iscore = s & 0x80
+                iscore = sts & 0x80
             if iscore:
                 msg += " (core dumped)"
             self.problem(msg)
