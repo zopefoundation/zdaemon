@@ -18,8 +18,8 @@ Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
 
 Options:
--C/--configuration URL -- configuration file or URL
--S/--configuration XML Schema -- XML schema for configuration file
+-C/--configfile URL -- configuration file or URL
+-S/--schemafile XML Schema -- XML schema for configuration file
 -h/--help -- print usage message and exit
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
