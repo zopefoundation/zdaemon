@@ -233,7 +233,10 @@ class ZDaemonTests(unittest.TestCase):
         # With umask 666, we should create a file that we aren't able
         # to write.  If access says no, assume that umask works.
         try:
-            self.rundaemon(["-m", "666", "/bin/touch", path])
+            touch_cmd = "/bin/touch"
+            if not os.path.exists(touch_cmd):
+                touch_cmd = "/usr/bin/touch" # Mac OS X
+            self.rundaemon(["-m", "666", touch_cmd, path])
             for i in range(5):
                 if not os.path.exists(path):
                     time.sleep(0.1)
