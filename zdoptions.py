@@ -251,8 +251,7 @@ class ZDOptions:
             # Process config file
             self.load_schema()
             try:
-                self.configroot, xxx = ZConfig.loadConfig(self.schema,
-                                                          self.configfile)
+                self.load_configfile()
             except ZConfig.ConfigurationError, msg:
                 self.usage(str(msg))
 
@@ -292,6 +291,10 @@ class ZDOptions:
                 self.schemadir = os.path.dirname(__file__)
             self.schemafile = os.path.join(self.schemadir, self.schemafile)
             self.schema = ZConfig.loadSchema(self.schemafile)
+
+    def load_configfile(self):
+        self.configroot, xxx = ZConfig.loadConfig(self.schema,
+                                                  self.configfile)
 
     def load_logconf(self, sectname="eventlog"):
         parts = sectname.split(".")
