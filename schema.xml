@@ -231,6 +231,13 @@
       </description>
     </key>
 
+    <key name="prompt" datatype="string"
+         required="no" default="zdctl>">
+       <description>
+         The prompt shown by the controller program.
+       </description>
+    </key>
+
   </sectiontype>
 
   <section name="*" type="runner" attribute="runner" required="yes" />

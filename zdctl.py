@@ -86,6 +86,7 @@ class ZDCtlOptions(RunnerOptions):
         self.add("logfile", "runner.logfile", "l:", "logfile=")
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
+        self.add("prompt", "runner.prompt")
 
     def realize(self, *args, **kwds):
         RunnerOptions.realize(self, *args, **kwds)
@@ -113,10 +114,9 @@ class ZDCtlOptions(RunnerOptions):
 
 class ZDCmd(cmd.Cmd):
 
-    prompt = "zdctl> "
-
     def __init__(self, options):
         self.options = options
+        self.prompt = self.options.prompt + ' '
         cmd.Cmd.__init__(self)
         self.get_status()
         if self.zd_status:
