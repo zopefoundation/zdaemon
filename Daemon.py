@@ -33,14 +33,14 @@ class SignalPasser:
         if signum in [signal.SIGTERM, signal.SIGINT]:
             raise DieNow
 
-PASSED_SIGNALS = (
-    signal.SIGHUP,
-    signal.SIGINT,
-    signal.SIGQUIT,
-    signal.SIGUSR1,
-    signal.SIGUSR2,
-    signal.SIGTERM,
-    )
+
+PASSED_SIGNALS = ()
+
+for signame in ("SIGHUP", "SIGINT", "SIGQUIT",
+                "SIGUSR1", "SIGUSR2", "SIGTERM"):
+    if hasattr(signal, signame):
+        PASSED_SIGNALS += (getattr(signal, signame),)
+
 
 def run(argv, pidfile=''):
     if os.environ.has_key('ZDAEMON_MANAGED'):
