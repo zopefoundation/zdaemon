@@ -390,7 +390,7 @@ class ZDCmd(cmd.Cmd):
         if not arg:
             arg = self.options.logfile
             if not arg:
-                print "No default log file specified; use -l or -C"
+                print "No default log file specified; use logtail <logfile>"
                 return
         try:
             os.system("tail -f %s" % arg)
