@@ -52,8 +52,9 @@ class ZDaemonTests(unittest.TestCase):
         return " ".join(args)
 
     def rundaemon(self, args):
+        # Add quotes, in case some pathname contains spaces (e.g. Mac OS X)
         args = self.quoteargs(args)
-        cmd = ("PYTHONPATH=%s %s %s -d -s %s %s" %
+        cmd = ('PYTHONPATH="%s" "%s" "%s" -d -s "%s" %s' %
                (self.ppath, self.python, self.zdaemon, self.zdsock, args))
         os.system(cmd)
         # When the daemon crashes, the following may help debug it:
