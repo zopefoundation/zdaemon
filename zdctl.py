@@ -467,22 +467,21 @@ class ZDCmd(cmd.Cmd):
             print "To run the program in the foreground, please stop it first."
             return
         program = " ".join(self.options.program)
-        program = "\n".join (["export EVENT_LOG_FILE",
-                              "EVENT_LOG_FILE=",
-                              program])
         print program
         try:
             os.system(program)
         except KeyboardInterrupt:
             print
 
-    do_fg = do_foreground
+    def do_fg(self, arg):
+        self.do_foreground(arg)
 
     def help_foreground(self):
         print "foreground -- Run the program in the forground."
         print "fg -- an alias for foreground."
 
-    help_fg = help_foreground
+    def help_fg(self):
+        self.help_foreground()
 
     def do_quit(self, arg):
         self.get_status()
