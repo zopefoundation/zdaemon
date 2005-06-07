@@ -213,7 +213,9 @@ class ZDCmd(cmd.Cmd):
             args += self._get_override("-f", "forever", flag=1)
             args += self._get_override("-s", "sockname")
             args += self._get_override("-u", "user")
-            args += self._get_override("-m", "umask", oct(self.options.umask))
+            if self.options.umask:
+                args += self._get_override("-m", "umask",
+                                           oct(self.options.umask))
             args += self._get_override(
                 "-x", "exitcodes", ",".join(map(str, self.options.exitcodes)))
             args += self._get_override("-z", "directory")
@@ -366,7 +368,11 @@ class ZDCmd(cmd.Cmd):
         print "sockname:    ", repr(self.options.sockname)
         print "exitcodes:   ", repr(self.options.exitcodes)
         print "user:        ", repr(self.options.user)
-        print "umask:       ", oct(self.options.umask)
+        umask = self.options.umask
+        if not umask:
+            umask = os.umask(0777)
+            os.umask(umask)
+        print "umask:       ", oct(umask)
         print "directory:   ", repr(self.options.directory)
         print "logfile:     ", repr(self.options.logfile)
         print "hang_around: ", repr(self.options.hang_around)
