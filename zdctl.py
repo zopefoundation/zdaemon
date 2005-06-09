@@ -370,6 +370,7 @@ class ZDCmd(cmd.Cmd):
         print "user:        ", repr(self.options.user)
         umask = self.options.umask
         if not umask:
+            # Here we're just getting the current umask so we can report it:
             umask = os.umask(0777)
             os.umask(umask)
         print "umask:       ", oct(umask)
