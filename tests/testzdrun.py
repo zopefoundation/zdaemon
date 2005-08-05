@@ -245,6 +245,17 @@ class ZDaemonTests(unittest.TestCase):
         send_action('exit\n', zdrun_socket)
 
     def testUmask(self):
+        # people have a strange tendency to run the tests as root
+        if os.getuid() == 0 :
+            self.fail("""
+I am root!
+Do not run the tests as root.
+Testing proper umask handling cannot be done as root.
+Furthermore, it is not a good idea and strongly discouraged to run zope, the 
+build system (configure, make) or the tests as root.
+In general do not run anything as root unless absolutely necessary.
+""" )
+
         path = tempfile.mktemp()
         # With umask 666, we should create a file that we aren't able
         # to write.  If access says no, assume that umask works.
