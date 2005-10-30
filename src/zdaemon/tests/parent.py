@@ -2,16 +2,28 @@ import time
 import os
 import sys
 
+donothing_contents = """\
+#!/bin/sh
+while [ "1" -ne "2" ]; do
+   sleep 10
+done
+"""
+
 def main():
     # dummy zdctl startup of zdrun
     shutup()
     file = os.path.normpath(os.path.abspath(sys.argv[0]))
+    tmp = sys.argv[1]
     dir = os.path.dirname(file)
     zctldir = os.path.dirname(dir)
     zdrun = os.path.join(zctldir, 'zdrun.py')
+    donothing = os.path.join(tmp, 'donothing.sh')
+    fd = os.open(donothing, os.O_WRONLY|os.O_CREAT, 0700)
+    os.write(fd, donothing_contents)
+    os.close(fd)
     args = [sys.executable, zdrun]
-    args += ['-d', '-b', '10', '-s', os.path.join(dir, 'testsock'),
-             '-x', '0,2', '-z', dir, os.path.join(dir, 'donothing.sh')]
+    args += ['-d', '-b', '10', '-s', os.path.join(tmp, 'testsock'),
+             '-x', '0,2', '-z', dir, donothing]
     flag = os.P_NOWAIT
     #cmd = ' '.join([sys.executable] + args)
     #print cmd

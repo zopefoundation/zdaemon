@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import shutil
 import signal
 import tempfile
 import unittest
@@ -218,31 +219,36 @@ class ZDaemonTests(unittest.TestCase):
         # We make sure that the zdrun process is still running even if
         # its parent process receives an interrupt signal (it should
         # not be passed to zdrun).
-        zdrun_socket = os.path.join(self.here, 'testsock')
-        zdctlpid = os.spawnvp(
-            os.P_NOWAIT,
-            sys.executable,
-            [sys.executable, os.path.join(self.here, 'parent.py')]
-            )
-        # Wait for it to start, but no longer than a minute.
-        deadline = time.time() + 60
-        is_started = False
-        while time.time() < deadline:
-             response = send_action('status\n', zdrun_socket)
-             if response is None:
-                 time.sleep(0.05)
-             else:
-                 is_started = True
-                 break
-        self.assert_(is_started, "spawned process failed to start in a minute")
-        # Kill it, and wait a little to ensure it's dead.
-        os.kill(zdctlpid, signal.SIGINT)
-        time.sleep(0.25)
-        # Make sure the child is still responsive.
-        response = send_action('status\n', zdrun_socket)
-        self.assert_(response is not None and '\n' in response)
-        # Kill the process.
-        send_action('exit\n', zdrun_socket)
+        tmp = tempfile.mkdtemp()
+        zdrun_socket = os.path.join(tmp, 'testsock')
+        try:
+            zdctlpid = os.spawnvp(
+                os.P_NOWAIT,
+                sys.executable,
+                [sys.executable, os.path.join(self.here, 'parent.py'), tmp]
+                )
+            # Wait for it to start, but no longer than a minute.
+            deadline = time.time() + 60
+            is_started = False
+            while time.time() < deadline:
+                 response = send_action('status\n', zdrun_socket)
+                 if response is None:
+                     time.sleep(0.05)
+                 else:
+                     is_started = True
+                     break
+            self.assert_(is_started,
+                         "spawned process failed to start in a minute")
+            # Kill it, and wait a little to ensure it's dead.
+            os.kill(zdctlpid, signal.SIGINT)
+            time.sleep(0.25)
+            # Make sure the child is still responsive.
+            response = send_action('status\n', zdrun_socket)
+            self.assert_(response is not None and '\n' in response)
+            # Kill the process.
+            send_action('exit\n', zdrun_socket)
+        finally:
+            shutil.rmtree(tmp)
 
     def testUmask(self):
         # people have a strange tendency to run the tests as root
