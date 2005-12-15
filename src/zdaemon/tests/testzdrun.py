@@ -258,7 +258,7 @@ class ZDaemonTests(unittest.TestCase):
             # unlinking it before shutil gets to it (there's more
             # than one process here).  So, in effect, we code a
             # 1-level rmtree inline here, suppressing errors.
-            for fname in os.listdir('.'):
+            for fname in os.listdir(tmp):
                 try:
                     os.unlink(os.path.join(tmp, fname))
                 except os.error:
