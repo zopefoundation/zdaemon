@@ -248,7 +248,22 @@ class ZDaemonTests(unittest.TestCase):
             # Kill the process.
             send_action('exit\n', zdrun_socket)
         finally:
-            shutil.rmtree(tmp)
+            # Remove the tmp directory.
+            # Caution:  this is delicate.  The code here used to do
+            # shutil.rmtree(tmp), but that suffers a sometimes-fatal
+            # race with zdrun.py.  The 'testsock' socket is created
+            # by zdrun in the tmp directory, and zdrun tries to
+            # unlink it.  If shutil.rmtree sees 'testsock' too, it
+            # will also try to unlink it, but zdrun may complete
+            # unlinking it before shutil gets to it (there's more
+            # than one process here).  So, in effect, we code a
+            # 1-level rmtree inline here, suppressing errors.
+            for fname in os.listdir('.'):
+                try:
+                    os.unlink(os.path.join(tmp, fname))
+                except os.error:
+                    pass
+            os.rmdir(tmp)
 
     def testUmask(self):
         # people have a strange tendency to run the tests as root
