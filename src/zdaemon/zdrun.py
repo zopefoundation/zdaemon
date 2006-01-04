@@ -83,6 +83,14 @@ if __name__ == "__main__":
     scriptdir = dirname(normpath(abspath(sys.argv[0])))
     if basename(scriptdir).lower() == "zdaemon":
         sys.path.append(dirname(scriptdir))
+    here = os.path.dirname(os.path.realpath(__file__))
+    swhome = os.path.dirname(here)
+    for parts in [("src",), ("lib", "python"), ("Lib", "site-packages")]:
+        d = os.path.join(swhome, *(parts + ("zdaemon",)))
+        if os.path.isdir(d):
+            d = os.path.join(swhome, *parts)
+            sys.path.insert(0, d)
+            break
 
 from zdaemon.zdoptions import RunnerOptions
 
