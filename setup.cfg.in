@@ -1,0 +1,6 @@
+[development]
+depends = zope.testing ZConfig
+
+[egg_info]
+tag_build = .dev
+tag_svn_revision = 1
