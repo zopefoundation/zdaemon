@@ -4,6 +4,8 @@ zdaemon Changelog
 After zdaemon 1.1
 -----------------
 
+ - Added support for distributing 'zdaemon' as a Python egg.
+
  - Updated test 'testRunIgnoresParentSignals':
   
   o Use 'mkdtemp' to create a temporary directory to hold the test socket
