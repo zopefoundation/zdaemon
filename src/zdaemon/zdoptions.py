@@ -60,7 +60,9 @@ class ZDOptions:
         Occurrences of "%s" in self.doc are replaced by self.progname.
         """
         doc = self.doc
-        if doc.find("%s") > 0:
+        if not doc:
+            doc = "No help available."
+        elif doc.find("%s") > 0:
             doc = doc.replace("%s", self.progname)
         print doc,
         sys.exit(0)

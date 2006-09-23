@@ -138,6 +138,14 @@ class ZDaemonTests(unittest.TestCase):
         self._run("-h")
         self.expect = __main__.__doc__
 
+    def testNoHelp(self):
+        # XXX We shouldn't mutate and leave our change in!
+        import __main__
+        if __main__.__doc__:
+            __main__.__doc__ = None
+        self._run("-h")
+        self.expect = "No help available."
+
     def testOptionsSysArgv(self):
         # Check that options are parsed from sys.argv by default
         options = zdrun.ZDRunOptions()

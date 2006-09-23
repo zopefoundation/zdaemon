@@ -81,8 +81,7 @@ class TestZDOptions(ZDOptionsTestBase):
     def test_help(self):
         # __main__.__doc__ is used as the default source of the help
         # text; specific text can also be provided in the `doc`
-        # keyword arg to `realize()`.  It must be provided in one of
-        # those places.
+        # keyword arg to `realize()`.
         import __main__
         old_doc = __main__.__doc__
         __main__.__doc__ = "Example help text 1."
@@ -105,6 +104,29 @@ class TestZDOptions(ZDOptionsTestBase):
                         self.fail("%s didn't call sys.exit()" % repr(arg))
                     helptext = self.stdout.getvalue()
                     self.assertEqual(helptext, doc or __main__.__doc__)
+        finally:
+            __main__.__doc__ = old_doc
+
+    def test_no_help(self):
+        # Test that zdoptions doesn't die when __main__.__doc__ is None.
+        import __main__
+        old_doc = __main__.__doc__
+        __main__.__doc__ = None
+        try:
+            for arg in "-h", "--h", "--help":
+                options = self.OptionsClass()
+                try:
+                    self.save_streams()
+                    try:
+                        options.realize([arg])
+                    finally:
+                        self.restore_streams()
+                except SystemExit, err:
+                    self.assertEqual(err.code, 0)
+                else:
+                    self.fail("%s didn't call sys.exit()" % repr(arg))
+                helptext = self.stdout.getvalue()
+                self.assertEqual(helptext, "No help available.")
         finally:
             __main__.__doc__ = old_doc
 

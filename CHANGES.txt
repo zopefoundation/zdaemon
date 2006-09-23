@@ -1,6 +1,12 @@
 zdaemon Changelog
 =================
 
+After some unknown release(???)
+-------------------------------
+
+ - Made 'zdaemon.zdoptions' not fail for --help when __main__.__doc__
+   is None.
+
 After zdaemon 1.1
 -----------------
 
@@ -31,6 +37,6 @@ After zdaemon 1.1
 zdaemon 1.1 (2005/06/09)
 ------------------------
 
- - SVN tag:  svn+ssh://svn.zope.org/repos/main/zdaemon/tags/zdaemon-1.1
+ - SVN tag:  svn://svn.zope.org/repos/main/zdaemon/tags/zdaemon-1.1
 
  - Tagged to make better 'svn:externals' linkage possible.
