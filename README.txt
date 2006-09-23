@@ -1,5 +1,5 @@
-zdaemon Package REZDME
-======================
+``zdaemon`` process controller
+==============================
 
 Overview
 --------

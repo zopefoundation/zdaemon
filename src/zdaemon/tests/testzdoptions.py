@@ -79,18 +79,34 @@ class TestZDOptions(ZDOptionsTestBase):
             self.assertEqual(options.configfile, configfile)
 
     def test_help(self):
-        for arg in "-h", "--h", "--help":
-            options = self.OptionsClass()
-            try:
-                self.save_streams()
-                try:
-                    options.realize([arg])
-                finally:
-                    self.restore_streams()
-            except SystemExit, err:
-                self.assertEqual(err.code, 0)
-            else:
-                self.fail("%s didn't call sys.exit()" % repr(arg))
+        # __main__.__doc__ is used as the default source of the help
+        # text; specific text can also be provided in the `doc`
+        # keyword arg to `realize()`.  It must be provided in one of
+        # those places.
+        import __main__
+        old_doc = __main__.__doc__
+        __main__.__doc__ = "Example help text 1."
+        try:
+            for arg in "-h", "--h", "--help":
+                for doc in (None, "Example help text 2."):
+                    options = self.OptionsClass()
+                    try:
+                        self.save_streams()
+                        try:
+                            if doc:
+                                options.realize([arg], doc=doc)
+                            else:
+                                options.realize([arg])
+                        finally:
+                            self.restore_streams()
+                    except SystemExit, err:
+                        self.assertEqual(err.code, 0)
+                    else:
+                        self.fail("%s didn't call sys.exit()" % repr(arg))
+                    helptext = self.stdout.getvalue()
+                    self.assertEqual(helptext, doc or __main__.__doc__)
+        finally:
+            __main__.__doc__ = old_doc
 
     def test_unrecognized(self):
         # Check that we get an error for an unrecognized option

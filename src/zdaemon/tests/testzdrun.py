@@ -131,8 +131,11 @@ class ZDaemonTests(unittest.TestCase):
 ##         self.expect = "Sent SIGTERM\nSent SIGTERM; will exit later\n"
 
     def testHelp(self):
-        self._run("-h")
+        # XXX We shouldn't mutate and leave our change in!
         import __main__
+        if not __main__.__doc__:
+            __main__.__doc__ = "Example help text."
+        self._run("-h")
         self.expect = __main__.__doc__
 
     def testOptionsSysArgv(self):
