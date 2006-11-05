@@ -2,7 +2,6 @@ entry_points = """
 [console_scripts]
 zdctl = zdaemon.zdctl:main
 zdrun = zdaemon.zdrun:main
-include_package_data=True,
 """
 
 def read(*rnames):
@@ -21,7 +20,7 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="1.4",
+    version="1.4a1",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description="Daemon process control library and tools",
@@ -40,4 +39,5 @@ setup(
     package_dir={"": "src"},
     install_requires=["ZConfig"],
     tests_require=["zope.testing"],
-    )
+    
+    **setuptools_options)

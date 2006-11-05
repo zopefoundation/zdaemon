@@ -1,8 +1,8 @@
 zdaemon Changelog
 =================
 
-zdaemon 1.4 (2005/11/??)
-------------------------
+zdaemon 1.4a1 (2005/11/05)
+--------------------------
 
 First semi-formal release.
 
