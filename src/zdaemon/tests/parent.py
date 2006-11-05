@@ -27,7 +27,9 @@ def main():
     flag = os.P_NOWAIT
     #cmd = ' '.join([sys.executable] + args)
     #print cmd
-    os.spawnvp(flag, args[0], args)
+    os.spawnvpe(flag, args[0], args,
+                dict(os.environ, PYTHONPATH=':'.join(sys.path)),
+                )
     while 1:
         # wait to be signaled
         time.sleep(1)

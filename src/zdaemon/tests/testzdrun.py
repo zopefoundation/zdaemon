@@ -233,13 +233,16 @@ class ZDaemonTests(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         zdrun_socket = os.path.join(tmp, 'testsock')
         try:
-            zdctlpid = os.spawnvp(
+            zdctlpid = os.spawnvpe(
                 os.P_NOWAIT,
                 sys.executable,
-                [sys.executable, os.path.join(self.here, 'parent.py'), tmp]
+                [sys.executable, os.path.join(self.here, 'parent.py'), tmp],
+                dict(os.environ,
+                     PYTHONPATH=":".join(sys.path),
+                     )
                 )
             # Wait for it to start, but no longer than a minute.
-            deadline = time.time() + 60
+            deadline = time.time() + 6000
             is_started = False
             while time.time() < deadline:
                  response = send_action('status\n', zdrun_socket)
