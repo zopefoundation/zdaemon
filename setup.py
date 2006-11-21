@@ -1,3 +1,19 @@
+##############################################################################
+#
+# Copyright (c) 2006 Zope Corporation and Contributors.
+# All Rights Reserved.
+#
+# This software is subject to the provisions of the Zope Public License,
+# Version 2.1 (ZPL).  A copy of the ZPL should accompany this distribution.
+# THIS SOFTWARE IS PROVIDED "AS IS" AND ANY AND ALL EXPRESS OR IMPLIED
+# WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
+# FOR A PARTICULAR PURPOSE.
+#
+##############################################################################
+
+import os
+
 entry_points = """
 [console_scripts]
 zdctl = zdaemon.zdctl:main
@@ -12,6 +28,7 @@ try:
     setuptools_options = dict(
         zip_safe=False,
         entry_points=entry_points,
+        include_package_data = True,
         )
 except ImportError:
     from distutils.core import setup
@@ -20,7 +37,7 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="1.4a1",
+    version="1.4a2",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description="Daemon process control library and tools",
