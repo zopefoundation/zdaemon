@@ -93,7 +93,7 @@
 
     <key name="daemon" datatype="boolean"
          required="no"
-         default="false">
+         default="on">
       <description>
         Command-line option: -d or --daemon.
 

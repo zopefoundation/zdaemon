@@ -76,7 +76,7 @@ def string_list(arg):
 
 class ZDCtlOptions(RunnerOptions):
 
-    positional_args_allowed = 1
+    positional_args_allowed = True
 
     def __init__(self):
         RunnerOptions.__init__(self)
@@ -111,16 +111,6 @@ class ZDCtlOptions(RunnerOptions):
         if not self.python:
             self.python = sys.executable
 
-        # Where's zdrun?
-        if not self.zdrun:
-            if __name__ == "__main__":
-                file = sys.argv[0]
-            else:
-                file = __file__
-            file = os.path.normpath(os.path.abspath(file))
-            dir = os.path.dirname(file)
-            self.zdrun = os.path.join(dir, "zdrun.py")
-
     def set_schemafile(self, file):
         self.schemafile = file
 
@@ -138,9 +128,10 @@ class ZDCmd(cmd.Cmd):
             if m:
                 s = m.group(1)
                 args = eval(s, {"__builtins__": {}})
-                if args != self.options.program:
+                program = self.options.program 
+                if args[:len(program)] != program:
                     print "WARNING! zdrun is managing a different program!"
-                    print "our program   =", self.options.program
+                    print "our program   =", program
                     print "daemon's args =", args
 
     def emptyline(self):
@@ -175,22 +166,27 @@ class ZDCmd(cmd.Cmd):
         self.zd_status = None
         resp = self.send_action("status")
         if not resp:
-            return
+            return resp
         m = re.search("(?m)^application=(\d+)$", resp)
         if not m:
-            return
+            return resp
         self.zd_up = 1
         self.zd_pid = int(m.group(1))
         self.zd_status = resp
+        return resp
 
     def awhile(self, cond, msg):
+        n = 0
         try:
             self.get_status()
             while not cond():
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
-                self.get_status()
+                n += 1
+                if not self.get_status() and n > 10:
+                    print "\nDaemon manager not running."
+                    return
         except KeyboardInterrupt:
             print "^C"
         else:
@@ -210,14 +206,14 @@ class ZDCmd(cmd.Cmd):
     def do_start(self, arg):
         self.get_status()
         if not self.zd_up:
-            args = [
-                self.options.python,
-                self.options.zdrun,
-                ]
+            if self.options.zdrun:
+                args = [self.options.python, self.options.zdrun]
+            else:
+                args = [self.options.python, sys.argv[0], '--zdrun']
+                
             args += self._get_override("-S", "schemafile")
             args += self._get_override("-C", "configfile")
             args += self._get_override("-b", "backofflimit")
-            args += self._get_override("-d", "daemon", flag=1)
             args += self._get_override("-f", "forever", flag=1)
             args += self._get_override("-s", "sockname")
             args += self._get_override("-u", "user")
@@ -228,6 +224,7 @@ class ZDCmd(cmd.Cmd):
                 "-x", "exitcodes", ",".join(map(str, self.options.exitcodes)))
             args += self._get_override("-z", "directory")
             args.extend(self.options.program)
+            args.extend(self.options.args[1:])
             if self.options.daemon:
                 flag = os.P_NOWAIT
             else:
@@ -238,8 +235,9 @@ class ZDCmd(cmd.Cmd):
         else:
             print "daemon process already running; pid=%d" % self.zd_pid
             return
-        self.awhile(lambda: self.zd_pid,
-                    "daemon process started, pid=%(zd_pid)d")
+        if self.options.daemon:
+            self.awhile(lambda: self.zd_pid,
+                        "daemon process started, pid=%(zd_pid)d")
 
     def _get_override(self, opt, name, svalue=None, flag=0):
         value = getattr(self.options, name)
@@ -486,10 +484,12 @@ class ZDCmd(cmd.Cmd):
         if pid:
             print "To run the program in the foreground, please stop it first."
             return
-        program = " ".join(self.options.program)
-        print program
+
+        program = self.options.program + self.options.args[1:]
+        print " ".join(program)
+        sys.stdout.flush()
         try:
-            os.system(program)
+            os.spawnlp(os.P_WAIT, program[0], *program)
         except KeyboardInterrupt:
             print
 
@@ -580,6 +580,12 @@ class TailHelper:
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
 
 def main(args=None, options=None, cmdclass=ZDCmd):
+    if args is None:
+        args = sys.argv[1:]
+    if args[0] == '--zdrun':
+        import zdaemon.zdrun
+        return zdaemon.zdrun.main(args[1:])
+        
     if options is None:
         options = ZDCtlOptions()
     options.realize(args)
