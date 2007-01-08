@@ -27,6 +27,10 @@ foreground or fg
 kill signal
     Send a signal to the daemon process
 
+reopen_transcript
+    Reopen the transcript log. See the discussion of the transacriot
+    log below.
+
 help command
     Get help on a command
 
@@ -137,15 +141,12 @@ option. We can also provide options on the command line:
     >>> system("./zdaemon -Cconf stop")
     daemon process stopped
 
-
-
 Environment Variables
 ---------------------
 
 Sometimes, it is necessary to set environment variables before running
 a program.  Perhaps the most common case for this is setting
 LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
-
 
     >>> open('conf', 'w').write(
     ... '''
@@ -154,13 +155,24 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
     ...   socket-name /tmp/demo.zdsock
     ... </runner>
     ... <environment>
-    ...   LD_LIBRARY_PATH = /home/foo/lib
-    ...   HOME = /home/foo
+    ...   LD_LIBRARY_PATH /home/foo/lib
+    ...   HOME /home/foo
     ... </environment>
     ... ''')
 
     >>> system("./zdaemon -Cconf fg")
-
+    env
+    USER=jim
+    HOME=/home/foo
+    LOGNAME=jim
+    USERNAME=jim
+    TERM=dumb
+    PATH=/home/jim/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin
+    EMACS=t
+    LANG=en_US.UTF-8
+    SHELL=/bin/bash
+    EDITOR=emacs
+    LD_LIBRARY_PATH=/home/foo/lib
 
 Reference Documentation
 -----------------------

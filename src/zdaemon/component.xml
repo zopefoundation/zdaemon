@@ -272,7 +272,7 @@
 
   </sectiontype>
 
-  <sectiontype name="environment">
+  <sectiontype name="environment" keytype="string">
     <key name="+"
          attribute="mapping"
          required="no"
