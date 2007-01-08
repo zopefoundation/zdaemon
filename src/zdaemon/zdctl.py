@@ -177,16 +177,22 @@ class ZDCmd(cmd.Cmd):
 
     def awhile(self, cond, msg):
         n = 0
+        was_running = True
         try:
-            self.get_status()
+            if self.get_status():
+                was_running = True
+                
             while not cond():
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
                 n += 1
-                if not self.get_status() and n > 10:
+                if self.get_status():
+                    was_running = True
+                elif was_running or n > 10:
                     print "\nDaemon manager not running."
                     return
+
         except KeyboardInterrupt:
             print "^C"
         else:

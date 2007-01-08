@@ -31,6 +31,44 @@ else:
     zconfig_loc = pkg_resources.working_set.find(
         pkg_resources.Requirement.parse('ZConfig')).location
 
+
+def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
+    """
+    The whole awhile bit that waits for a program to start
+    whouldn't be used on non-daemopn mode.
+
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program sleep 1
+    ...   daemon off
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+
+    """
+
+def dont_hang_when_program_doesnt_start():
+    """
+    If a program doesn't start, we don't want to wait for ever.
+
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program sleep
+    ...   backoff-limit 2
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . . 
+    Daemon manager not running.
+
+    """
+    
+
+
 def setUp(test):
     test.globs['_td'] = td = []
     here = os.getcwd()
@@ -60,8 +98,15 @@ def system(command, input=''):
     print o.read(),
 
 
+
 def test_suite():
     return unittest.TestSuite((
+        doctest.DocTestSuite(
+            setUp=setUp, tearDown=tearDown,
+            checker=renormalizing.RENormalizing([
+                (re.compile('pid=\d+'), 'pid=NNN'),
+                ])
+        ),
         doctest.DocFileSuite(
             '../README.txt',
             setUp=setUp, tearDown=tearDown,

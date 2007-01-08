@@ -4,12 +4,6 @@ zdaemon Changelog
 To-Dos
 ======
 
-Tests:
-
-- non-daemon mode
-
-- no infinite loop when program fails on start
-
 More docs:
 
 - Document/demonstrate some important features, such as:
@@ -17,9 +11,6 @@ More docs:
   - transcript log
 
   - working directory
-
-- Reference docs
-
 
 Features
 

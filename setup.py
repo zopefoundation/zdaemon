@@ -16,8 +16,7 @@ import os
 
 entry_points = """
 [console_scripts]
-zdctl = zdaemon.zdctl:main
-zdrun = zdaemon.zdrun:main
+zdaemon = zdaemon.zdctl:main
 """
 
 def read(*rnames):
@@ -29,6 +28,8 @@ try:
         zip_safe=False,
         entry_points=entry_points,
         include_package_data = True,
+        install_requires=["ZConfig"],
+        tests_require=["zope.testing"],
         )
 except ImportError:
     from distutils.core import setup
@@ -37,10 +38,11 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="1.4a2",
+    version="2.0a1",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
-    description="Daemon process control library and tools",
+    description=
+    "Daemon process control library and tools for Unix-bases systems",
     author="Zope Corporation and Contributors",
     author_email="zope3-dev@zope.org",
     long_description=(
@@ -48,13 +50,16 @@ setup(
         + '\n' +
         read('CHANGES.txt')
         + '\n' +
+        'Detailed Documentation\n'
+        '**********************\n'
+        + '\n' +
+        read('src', 'zdaemon', 'README.txt')
+        + '\n' +
         'Download\n'
         '**********************\n'
         ),
 
     packages=["zdaemon", "zdaemon.tests"],
     package_dir={"": "src"},
-    install_requires=["ZConfig"],
-    tests_require=["zope.testing"],
     
     **setuptools_options)
