@@ -272,4 +272,11 @@
 
   </sectiontype>
 
+  <sectiontype name="environment">
+    <key name="+"
+         attribute="mapping"
+         required="no"
+         />
+  </sectiontype>
+
 </component>

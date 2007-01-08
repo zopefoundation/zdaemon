@@ -134,6 +134,13 @@ class ZDCmd(cmd.Cmd):
                     print "our program   =", program
                     print "daemon's args =", args
 
+        if (options.configroot is not None
+            and
+            options.configroot.environment is not None
+            ):
+            for k, v in options.configroot.environment.mapping.items():
+                os.environ[k] = v
+
     def emptyline(self):
         # We don't want a blank line to repeat the last command.
         # Showing status is a nice alternative.

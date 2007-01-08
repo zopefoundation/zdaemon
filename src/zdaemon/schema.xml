@@ -21,6 +21,8 @@
 
   <section name="*" type="runner" attribute="runner" required="yes" />
 
+  <section name="*" type="environment" attribute="environment" required="no" />
+
   <section name="*" type="eventlog" attribute="eventlog" required="no" />
 
 </schema>
