@@ -74,6 +74,7 @@ import logging
 import socket
 import select
 import signal
+import threading
 from stat import ST_MODE
 
 if __name__ == "__main__":
@@ -349,6 +350,8 @@ class Daemonizer:
         if pid:
             self.waitstatus = pid, sts
 
+    transcript = None
+
     def daemonize(self):
 
         # To daemonize, we need to become the leader of our own session
@@ -390,10 +393,7 @@ class Daemonizer:
                                  % self.options.directory)
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
-        os.close(1)
-        sys.stdout = sys.__stdout__ = open(self.options.transcript, "a", 0)
-        os.close(2)
-        sys.stderr = sys.__stderr__ = open(self.options.transcript, "a", 0)
+        self.transcript = Transcript(self.options.transcript)
         os.setsid()
         os.umask(self.options.umask)
         # XXX Stevens, in his Advanced Unix book, section 13.3 (page
@@ -626,6 +626,10 @@ class Daemonizer:
                        "filename=%r\n" % self.proc.filename +
                        "args=%r\n" % self.proc.args)
 
+    def cmd_reopen_transcript(self, args):
+        if self.transcript is not None:
+            self.transcript.reopen()
+
     def cmd_help(self, args):
         self.sendreply(
             "Available commands:\n"
@@ -654,6 +658,40 @@ class Daemonizer:
         except socket.error, msg:
             self.logger.warn("Error sending reply: %s" % str(msg))
 
+
+class Transcript:
+
+    def __init__(self, filename):
+        self.read_from, w = os.pipe()
+        os.dup2(w, 1)
+        sys.stdout = sys.__stdout__ = os.fdopen(1, "a", 0)
+        os.dup2(w, 2)
+        sys.stderr = sys.__stderr__ = os.fdopen(2, "a", 0)
+        self.filename = filename
+        self.file = open(filename, 'a', 0)
+        self.write = self.file.write
+        self.lock = threading.Lock()
+        thread = threading.Thread(target=self.copy)
+        thread.setDaemon(True)
+        thread.start()
+
+    def copy(self):
+        lock = self.lock
+        i = [self.read_from]
+        o = e = []
+        while 1:
+            ii, oo, ee = select.select(i, o, e)
+            lock.acquire()
+            for fd in ii:
+                self.write(os.read(fd, 8192))
+            lock.release()
+            
+    def reopen(self):
+        self.lock.acquire()
+        self.file.close()
+        self.file = open(self.filename, 'a', 0)
+        self.write = self.file.write
+        self.lock.release()
 
 # Helpers for dealing with signals and exit status
 

@@ -174,6 +174,84 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
     EDITOR=emacs
     LD_LIBRARY_PATH=/home/foo/lib
 
+Transcript log
+---------------
+
+When zdaemon run a program in daemon mode, it disconnects the
+program's standard input, standard output, and standard error from the
+controlling terminal.  It can optionally redirect the output to
+standard error and standard output to a file.  This is done with the
+transcript option.  This is, of course, useful for logging output from
+long-running applications.  
+
+Let's look at an example. We'll have a long-running process that
+simple tails a data file:
+
+    >>> f = open('data', 'w', 0)
+    >>> import os
+    >>> f.write('rec 1\n'); os.fsync(f.fileno())
+
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program tail -f data
+    ...   transcript log
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . daemon process started, pid=7963
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> import time
+    >>> time.sleep(0.1)
+
+Now, if we look at the log file, it contains the tail output:
+
+    >>> open('log').read()
+    'rec 1\n'
+    
+We can rotate the transcript log by renaming it and telling zdaemon to
+reopen it:
+
+    >>> import os
+    >>> os.rename('log', 'log.1')
+
+If we generate more output:
+
+    >>> f.write('rec 2\n'); os.fsync(f.fileno())
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> time.sleep(1)
+
+The output will appear in the old file, because zdaemon still has it
+open:
+
+    >>> open('log.1').read()
+    'rec 1\nrec 2\n'
+
+Now, if we tell zdaemon to reopen the file:
+
+    >>> system("./zdaemon -Cconf reopen_transcript")
+
+and generate some output:
+
+    >>> f.write('rec 3\n'); os.fsync(f.fileno())
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> time.sleep(1)
+
+the output will show up in the new file, not the old:
+
+    >>> open('log').read()
+    'rec 3\n'
+
+    >>> open('log.1').read()
+    'rec 1\nrec 2\n'
+
 Reference Documentation
 -----------------------
 
