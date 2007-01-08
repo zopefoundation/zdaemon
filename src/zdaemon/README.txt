@@ -7,7 +7,7 @@ POSIX-complient systems.
 
 Using zdaemon requires specifying a number of options, which can be
 given in a configuration file, or as command-line options.  It also
-accepts commands teling it what do do.  The commants are:
+accepts commands teling it what do do.  The commands are:
 
 start
     Start a process as a daemon
@@ -28,7 +28,7 @@ kill signal
     Send a signal to the daemon process
 
 reopen_transcript
-    Reopen the transcript log. See the discussion of the transacriot
+    Reopen the transcript log.  See the discussion of the transcript
     log below.
 
 help command
