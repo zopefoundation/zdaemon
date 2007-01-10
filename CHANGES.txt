@@ -1,7 +1,16 @@
 zdaemon Changelog
 *****************
 
-zdaemon 2.0a2 (2007/01/08)
+zdaemon 2.0a3 (2007/01/10)
+==========================
+
+Bugs Fixed
+----------
+
+- Added extra checks to deal with programs that extend zdaemon
+  and copy the schema and thus don't see updates to the ZConfig schema.
+
+zdaemon 2.0a2 (2007/01/10)
 ==========================
 
 New Features

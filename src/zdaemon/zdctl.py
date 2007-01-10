@@ -136,7 +136,7 @@ class ZDCmd(cmd.Cmd):
 
         if (options.configroot is not None
             and
-            options.configroot.environment is not None
+            getattr(options.configroot, 'environment', None) is not None
             ):
             for k, v in options.configroot.environment.mapping.items():
                 os.environ[k] = v
