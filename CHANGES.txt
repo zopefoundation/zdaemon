@@ -1,6 +1,15 @@
 zdaemon Changelog
 *****************
 
+zdaemon 2.0a4 (2007/01/10)
+==========================
+
+Bugs Fixed
+----------
+
+- The new (2.0) mechanism used by zdaemon to start the daemon manager
+  broke some applications that extended zdaemon.
+
 zdaemon 2.0a3 (2007/01/10)
 ==========================
 

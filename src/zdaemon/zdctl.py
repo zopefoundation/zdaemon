@@ -222,7 +222,8 @@ class ZDCmd(cmd.Cmd):
             if self.options.zdrun:
                 args = [self.options.python, self.options.zdrun]
             else:
-                args = [self.options.python, sys.argv[0], '--zdrun']
+                args = [self.options.python, sys.argv[0]]
+                os.environ['ZDAEMON_MODE'] = '1'
                 
             args += self._get_override("-S", "schemafile")
             args += self._get_override("-C", "configfile")
@@ -603,9 +604,10 @@ class TailHelper:
 def main(args=None, options=None, cmdclass=ZDCmd):
     if args is None:
         args = sys.argv[1:]
-    if args[0] == '--zdrun':
+
+    if os.environ.get('ZDAEMON_MODE'):
         import zdaemon.zdrun
-        return zdaemon.zdrun.main(args[1:])
+        return zdaemon.zdrun.main(args)
         
     if options is None:
         options = ZDCtlOptions()
