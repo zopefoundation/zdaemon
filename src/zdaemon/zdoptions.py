@@ -246,6 +246,10 @@ class ZDOptions:
                     self.usage("invalid value for %s %r: %s" % (opt, arg, msg))
             if name and arg is not None:
                 if getattr(self, name) is not None:
+                    if getattr(self, name) == arg:
+                        # Repeated option, but we don't mind because it
+                        # just reinforces what we have.
+                        continue
                     self.usage("conflicting command line option %r" % opt)
                 setattr(self, name, arg)
 

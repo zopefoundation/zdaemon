@@ -63,7 +63,28 @@ def dont_hang_when_program_doesnt_start():
 
     """
     
+def allow_duplicate_arguments():
+    """
+    
+Wrapper scripts will often embed configuration arguments. This could
+cause a problem when zdaemon reinvokes itself, passing it's own set of
+configuration arguments.  To deal with this, we'll allow duplicate
+arguments that have the same values.
 
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program sleep 10
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf -Cconf -Cconf start")
+    . daemon process started, pid=21446
+
+    >>> system("./zdaemon -Cconf -Cconf -Cconf stop")
+    daemon process stopped
+
+"""
 
 def setUp(test):
     test.globs['_td'] = td = []

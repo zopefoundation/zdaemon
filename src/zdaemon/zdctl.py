@@ -223,7 +223,7 @@ class ZDCmd(cmd.Cmd):
                 args = [self.options.python, self.options.zdrun]
             else:
                 args = [self.options.python, sys.argv[0]]
-                os.environ['ZDAEMON_MODE'] = '1'
+                os.environ['DAEMON_MANAGER_MODE'] = '1'
                 
             args += self._get_override("-S", "schemafile")
             args += self._get_override("-C", "configfile")
@@ -605,7 +605,7 @@ def main(args=None, options=None, cmdclass=ZDCmd):
     if args is None:
         args = sys.argv[1:]
 
-    if os.environ.get('ZDAEMON_MODE'):
+    if os.environ.get('DAEMON_MANAGER_MODE'):
         import zdaemon.zdrun
         return zdaemon.zdrun.main(args)
         
