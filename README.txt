@@ -1,11 +1,10 @@
-****************************************************
-``zdaemon`` process controller for Unix-ased systems
-****************************************************
+*****************************************************
+``zdaemon`` process controller for Unix-based systems
+*****************************************************
 
-Overview
-********
+.. contents::
 
-'zdaemon' is a Python package which provides APIs for managing spplications
+'zdaemon' is a Python package which provides APIs for managing applications
 run as daemons.  Its principal use to date has been to manage the application
 server and storage server daemons for Zope / ZEO, although it is not limited
 to running Python-based applications (for instance, it has been used to

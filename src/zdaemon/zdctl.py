@@ -134,6 +134,13 @@ class ZDCmd(cmd.Cmd):
                     print "our program   =", program
                     print "daemon's args =", args
 
+        if (options.configroot is not None
+            and
+            options.configroot.environment is not None
+            ):
+            for k, v in options.configroot.environment.mapping.items():
+                os.environ[k] = v
+
     def emptyline(self):
         # We don't want a blank line to repeat the last command.
         # Showing status is a nice alternative.
@@ -285,6 +292,14 @@ class ZDCmd(cmd.Cmd):
         else:
             self.send_action("stop")
             self.awhile(lambda: not self.zd_pid, "daemon process stopped")
+
+    def do_reopen_transcript(self, arg):
+        if not self.zd_up:
+            print "daemon manager not running"
+        elif not self.zd_pid:
+            print "daemon process not running"
+        else:
+            self.send_action("reopen_transcript")
 
     def help_stop(self):
         print "stop -- Stop the daemon process."

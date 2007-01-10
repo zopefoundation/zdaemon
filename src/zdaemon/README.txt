@@ -7,7 +7,7 @@ POSIX-complient systems.
 
 Using zdaemon requires specifying a number of options, which can be
 given in a configuration file, or as command-line options.  It also
-accepts commands teling it what do do.  The commants are:
+accepts commands teling it what do do.  The commands are:
 
 start
     Start a process as a daemon
@@ -26,6 +26,10 @@ foreground or fg
 
 kill signal
     Send a signal to the daemon process
+
+reopen_transcript
+    Reopen the transcript log.  See the discussion of the transcript
+    log below.
 
 help command
     Get help on a command
@@ -136,6 +140,117 @@ option. We can also provide options on the command line:
 
     >>> system("./zdaemon -Cconf stop")
     daemon process stopped
+
+Environment Variables
+---------------------
+
+Sometimes, it is necessary to set environment variables before running
+a program.  Perhaps the most common case for this is setting
+LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
+
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program env
+    ...   socket-name /tmp/demo.zdsock
+    ... </runner>
+    ... <environment>
+    ...   LD_LIBRARY_PATH /home/foo/lib
+    ...   HOME /home/foo
+    ... </environment>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf fg")
+    env
+    USER=jim
+    HOME=/home/foo
+    LOGNAME=jim
+    USERNAME=jim
+    TERM=dumb
+    PATH=/home/jim/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin
+    EMACS=t
+    LANG=en_US.UTF-8
+    SHELL=/bin/bash
+    EDITOR=emacs
+    LD_LIBRARY_PATH=/home/foo/lib
+
+Transcript log
+---------------
+
+When zdaemon run a program in daemon mode, it disconnects the
+program's standard input, standard output, and standard error from the
+controlling terminal.  It can optionally redirect the output to
+standard error and standard output to a file.  This is done with the
+transcript option.  This is, of course, useful for logging output from
+long-running applications.  
+
+Let's look at an example. We'll have a long-running process that
+simple tails a data file:
+
+    >>> f = open('data', 'w', 0)
+    >>> import os
+    >>> f.write('rec 1\n'); os.fsync(f.fileno())
+
+    >>> open('conf', 'w').write(
+    ... '''
+    ... <runner>
+    ...   program tail -f data
+    ...   transcript log
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . daemon process started, pid=7963
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> import time
+    >>> time.sleep(0.1)
+
+Now, if we look at the log file, it contains the tail output:
+
+    >>> open('log').read()
+    'rec 1\n'
+    
+We can rotate the transcript log by renaming it and telling zdaemon to
+reopen it:
+
+    >>> import os
+    >>> os.rename('log', 'log.1')
+
+If we generate more output:
+
+    >>> f.write('rec 2\n'); os.fsync(f.fileno())
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> time.sleep(1)
+
+The output will appear in the old file, because zdaemon still has it
+open:
+
+    >>> open('log.1').read()
+    'rec 1\nrec 2\n'
+
+Now, if we tell zdaemon to reopen the file:
+
+    >>> system("./zdaemon -Cconf reopen_transcript")
+
+and generate some output:
+
+    >>> f.write('rec 3\n'); os.fsync(f.fileno())
+
+.. Wait a little bit to make sure tail has a chance to work
+
+    >>> time.sleep(1)
+
+the output will show up in the new file, not the old:
+
+    >>> open('log').read()
+    'rec 3\n'
+
+    >>> open('log.1').read()
+    'rec 1\nrec 2\n'
 
 Reference Documentation
 -----------------------
@@ -321,8 +436,3 @@ that specified one or more logfile subsections::
 In this example, log output is sent to a file and to standard out.
 Log output from zdaemon usually isn't very interesting but can be
 handy for debugging.
-
-
-
-
-

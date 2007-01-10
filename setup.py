@@ -29,7 +29,6 @@ try:
         entry_points=entry_points,
         include_package_data = True,
         install_requires=["ZConfig"],
-        tests_require=["zope.testing"],
         )
 except ImportError:
     from distutils.core import setup
@@ -38,7 +37,7 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="2.0a1",
+    version="2.0a2",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description=
@@ -53,7 +52,7 @@ setup(
         'Detailed Documentation\n'
         '**********************\n'
         + '\n' +
-        read('src', 'zdaemon', 'README.txt')
+        read('src/zdaemon/README.txt')
         + '\n' +
         'Download\n'
         '**********************\n'
@@ -61,5 +60,13 @@ setup(
 
     packages=["zdaemon", "zdaemon.tests"],
     package_dir={"": "src"},
+    classifiers = [
+       'Development Status :: 3 - Alpha',
+       'Intended Audience :: Developers',
+       'Intended Audience :: System Administrators',
+       'License :: OSI Approved :: Zope Public License',
+       'Topic :: Utilities',
+       'Operating System :: POSIX',
+       ],
     
     **setuptools_options)

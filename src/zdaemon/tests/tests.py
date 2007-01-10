@@ -11,10 +11,6 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-"""XXX short summary goes here.
-
-$Id$
-"""
 
 import os, re, shutil, sys, tempfile, unittest
 import ZConfig, zdaemon
@@ -98,6 +94,11 @@ def system(command, input=''):
     print o.read(),
 
 
+def checkenv(match):
+    match = [a for a in match.group(1).split('\n')[:-1]
+             if a.split('=')[0] in ('HOME', 'LD_LIBRARY_PATH')]
+    match.sort()
+    return '\n'.join(match) + '\n'
 
 def test_suite():
     return unittest.TestSuite((
@@ -112,6 +113,7 @@ def test_suite():
             setUp=setUp, tearDown=tearDown,
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
+                (re.compile('^env\n((\w+=[^\n]*\n)+)$'), checkenv),
                 ])
         ),
         ))

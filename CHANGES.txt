@@ -1,27 +1,17 @@
 zdaemon Changelog
 *****************
 
-To-Dos
-======
+zdaemon 2.0a2 (2007/01/08)
+==========================
 
-More docs:
+New Features
+------------
 
-- Document/demonstrate some important features, such as:
+- Added support for setting environment variables in the configuration
+  file.  This is useful when zdaemon is used to run programs that need
+  environment variables set (e.g. LD_LIBRARY_PATH).
 
-  - transcript log
-
-  - working directory
-
-Features
-
-- environment variables
-
-- transcript log rotation
-
-Bugs 
-
-- help command
-
+- Added a command to rotate the transcript log.
 
 zdaemon 2.0a1 (2006/12/21)
 ==========================
@@ -105,3 +95,16 @@ zdaemon 1.1 (2005/06/09)
  - SVN tag:  svn://svn.zope.org/repos/main/zdaemon/tags/zdaemon-1.1
 
  - Tagged to make better 'svn:externals' linkage possible.
+
+To-Dos
+======
+
+More docs:
+
+- Document/demonstrate some important features, such as:
+
+  - working directory
+
+Bugs 
+
+- help command
