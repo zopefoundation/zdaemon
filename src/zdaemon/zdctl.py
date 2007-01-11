@@ -141,6 +141,17 @@ class ZDCmd(cmd.Cmd):
             for k, v in options.configroot.environment.mapping.items():
                 os.environ[k] = v
 
+        self.set_uid()
+
+    def set_uid(self):
+        if self.options.uid is None:
+            return
+        uid = os.geteuid()
+        if uid != 0 and uid != self.options.uid:
+            self.options.usage("only root can use -u USER to change users")
+        os.setgid(self.options.gid)
+        os.setuid(self.options.uid)
+
     def emptyline(self):
         # We don't want a blank line to repeat the last command.
         # Showing status is a nice alternative.

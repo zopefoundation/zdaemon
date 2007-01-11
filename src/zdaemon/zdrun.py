@@ -248,17 +248,7 @@ class Daemonizer:
         self.options = ZDRunOptions()
         self.options.realize(args)
         self.logger = self.options.logger
-        self.set_uid()
         self.run()
-
-    def set_uid(self):
-        if self.options.uid is None:
-            return
-        uid = os.geteuid()
-        if uid != 0 and uid != self.options.uid:
-            self.options.usage("only root can use -u USER to change users")
-        os.setgid(self.options.gid)
-        os.setuid(self.options.uid)
 
     def run(self):
         self.proc = Subprocess(self.options)
