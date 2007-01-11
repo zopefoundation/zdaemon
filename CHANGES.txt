@@ -1,20 +1,22 @@
 zdaemon Changelog
 *****************
 
-zdaemon 2.0a4, 2.0a5 (2007/01/10)
-=================================
+zdaemon 2.0a6 (2007/01/11)
+==========================
+
+Bugs Fixed
+----------
+
+- When the user option was used, it only affected running the daemon.
+
+zdaemon 2.0a3, 2.0a4, 2.0a5 (2007/01/10)
+========================================
 
 Bugs Fixed
 ----------
 
 - The new (2.0) mechanism used by zdaemon to start the daemon manager
   broke some applications that extended zdaemon.
-
-zdaemon 2.0a3 (2007/01/10)
-==========================
-
-Bugs Fixed
-----------
 
 - Added extra checks to deal with programs that extend zdaemon
   and copy the schema and thus don't see updates to the ZConfig schema.
