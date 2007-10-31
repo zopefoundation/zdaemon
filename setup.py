@@ -68,5 +68,5 @@ setup(
        'Topic :: Utilities',
        'Operating System :: POSIX',
        ],
-    
+
     **setuptools_options)

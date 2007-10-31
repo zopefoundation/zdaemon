@@ -134,7 +134,7 @@ def test_suite():
             setUp=setUp, tearDown=tearDown,
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
-                (re.compile('^env\n((\w+=[^\n]*\n)+)$'), checkenv),
+                (re.compile('^env\n((?:.*\n)+)$'), checkenv),
                 ])
         ),
         ))

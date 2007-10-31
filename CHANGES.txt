@@ -1,6 +1,15 @@
 zdaemon Changelog
 *****************
 
+zdaemon 2.0.1 (2007/10/31)
+==========================
+
+Bugs Fixed
+----------
+
+Fixed test renormalizer that did not work in certain cases where the
+environment was complex.
+
 zdaemon 2.0.0 (2007/07/19)
 ==========================
 
