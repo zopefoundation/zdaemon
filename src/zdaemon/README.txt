@@ -53,10 +53,11 @@ a slightly more complex example.  We'll run the sleep command as a
 daemon :)
 
     >>> system("./zdaemon -p 'sleep 100' start")
-    . daemon process started, pid=819
+    . .
+    daemon process started, pid=819
 
 This ran the sleep deamon.  We can check whether it ran with the
-status command:  
+status command:
 
     >>> system("./zdaemon -p 'sleep 100' status")
     program running; pid=819
@@ -64,6 +65,7 @@ status command:
 We can stop it with the stop command:
 
     >>> system("./zdaemon -p 'sleep 100' stop")
+    . .
     daemon process stopped
 
     >>> system("./zdaemon -p 'sleep 100' status")
@@ -82,7 +84,8 @@ a typical configuration file:
 Now, we can run with the -C option to read the configuration file:
 
     >>> system("./zdaemon -Cconf start")
-    . daemon process started, pid=1136
+    . .
+    daemon process started, pid=1136
 
 If we list the directory:
 
@@ -96,6 +99,7 @@ socket used internally by ZDaemon.  We'll normally want to control
 where this goes.
 
     >>> system("./zdaemon -Cconf stop")
+    . .
     daemon process stopped
 
     >>> open('conf', 'w').write(
@@ -108,7 +112,8 @@ where this goes.
 
 
     >>> system("./zdaemon -Cconf start")
-    . daemon process started, pid=1139
+    . .
+    daemon process started, pid=1139
 
     >>> system("ls")
     conf
@@ -119,6 +124,7 @@ where this goes.
     True
 
     >>> system("./zdaemon -Cconf stop")
+    . .
     daemon process stopped
 
 In the example, we included a command-line argument in the program
@@ -133,12 +139,14 @@ option. We can also provide options on the command line:
     ... ''')
 
     >>> system("./zdaemon -Cconf start 100")
-    . daemon process started, pid=1149
+    . .
+    daemon process started, pid=1149
 
     >>> system("./zdaemon -Cconf status")
     program running; pid=1149
 
     >>> system("./zdaemon -Cconf stop")
+    . .
     daemon process stopped
 
 Environment Variables
@@ -182,7 +190,7 @@ program's standard input, standard output, and standard error from the
 controlling terminal.  It can optionally redirect the output to
 standard error and standard output to a file.  This is done with the
 transcript option.  This is, of course, useful for logging output from
-long-running applications.  
+long-running applications.
 
 Let's look at an example. We'll have a long-running process that
 simple tails a data file:
@@ -200,7 +208,8 @@ simple tails a data file:
     ... ''')
 
     >>> system("./zdaemon -Cconf start")
-    . daemon process started, pid=7963
+    . .
+    daemon process started, pid=7963
 
 .. Wait a little bit to make sure tail has a chance to work
 
@@ -211,7 +220,7 @@ Now, if we look at the log file, it contains the tail output:
 
     >>> open('log').read()
     'rec 1\n'
-    
+
 We can rotate the transcript log by renaming it and telling zdaemon to
 reopen it:
 

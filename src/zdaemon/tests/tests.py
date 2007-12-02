@@ -31,7 +31,7 @@ else:
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
     The whole awhile bit that waits for a program to start
-    whouldn't be used on non-daemopn mode.
+    whouldn't be used on non-daemon mode.
 
     >>> open('conf', 'w').write(
     ... '''
@@ -58,14 +58,14 @@ def dont_hang_when_program_doesnt_start():
     ... ''')
 
     >>> system("./zdaemon -Cconf start")
-    . . 
-    Daemon manager not running.
+    . .
+    daemon manager not running
 
     """
-    
+
 def allow_duplicate_arguments():
     """
-    
+
 Wrapper scripts will often embed configuration arguments. This could
 cause a problem when zdaemon reinvokes itself, passing it's own set of
 configuration arguments.  To deal with this, we'll allow duplicate
@@ -79,9 +79,11 @@ arguments that have the same values.
     ... ''')
 
     >>> system("./zdaemon -Cconf -Cconf -Cconf start")
-    . daemon process started, pid=21446
+    . .
+    daemon process started, pid=21446
 
     >>> system("./zdaemon -Cconf -Cconf -Cconf stop")
+    . .
     daemon process stopped
 
 """
@@ -127,6 +129,7 @@ def test_suite():
             setUp=setUp, tearDown=tearDown,
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
+                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
                 ])
         ),
         doctest.DocFileSuite(
@@ -134,6 +137,7 @@ def test_suite():
             setUp=setUp, tearDown=tearDown,
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
+                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
                 (re.compile('^env\n((?:.*\n)+)$'), checkenv),
                 ])
         ),

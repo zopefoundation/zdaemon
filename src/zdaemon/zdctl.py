@@ -128,7 +128,7 @@ class ZDCmd(cmd.Cmd):
             if m:
                 s = m.group(1)
                 args = eval(s, {"__builtins__": {}})
-                program = self.options.program 
+                program = self.options.program
                 if args[:len(program)] != program:
                     print "WARNING! zdrun is managing a different program!"
                     print "our program   =", program
@@ -194,27 +194,25 @@ class ZDCmd(cmd.Cmd):
         return resp
 
     def awhile(self, cond, msg):
-        n = 0
-        was_running = True
+        was_running = False
         try:
-            if self.get_status():
-                was_running = True
-                
-            while not cond():
+            for n in range(10):
+                if self.get_status(): # running?
+                    was_running = True
+                elif was_running: # no longer running?
+                    break
+                if cond(): # condition fulfilled?
+                    break
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
-                n += 1
-                if self.get_status():
-                    was_running = True
-                elif was_running or n > 10:
-                    print "\nDaemon manager not running."
-                    return
 
         except KeyboardInterrupt:
             print "^C"
-        else:
-            print msg % self.__dict__
+
+        if not cond():
+            msg = "daemon manager not running"
+        print "\n" + msg % self.__dict__
 
     def help_help(self):
         print "help          -- Print a list of available actions."
@@ -235,7 +233,7 @@ class ZDCmd(cmd.Cmd):
             else:
                 args = [self.options.python, sys.argv[0]]
                 os.environ['DAEMON_MANAGER_MODE'] = '1'
-                
+
             args += self._get_override("-S", "schemafile")
             args += self._get_override("-C", "configfile")
             args += self._get_override("-b", "backofflimit")
@@ -619,7 +617,7 @@ def main(args=None, options=None, cmdclass=ZDCmd):
     if os.environ.get('DAEMON_MANAGER_MODE'):
         import zdaemon.zdrun
         return zdaemon.zdrun.main(args)
-        
+
     if options is None:
         options = ZDCtlOptions()
     options.realize(args)
