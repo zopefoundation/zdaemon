@@ -194,25 +194,27 @@ class ZDCmd(cmd.Cmd):
         return resp
 
     def awhile(self, cond, msg):
+        n = 0
         was_running = False
         try:
-            for n in range(10):
-                if self.get_status(): # running?
-                    was_running = True
-                elif was_running: # no longer running?
-                    break
-                if cond(): # condition fulfilled?
-                    break
+            if self.get_status():
+                was_running = True
+
+            while not cond():
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
+                n += 1
+                if self.get_status():
+                    was_running = True
+                elif (was_running or n > 10) and not cond():
+                    print "\ndaemon manager not running"
+                    return
 
         except KeyboardInterrupt:
             print "^C"
-
-        if not cond():
-            msg = "daemon manager not running"
         print "\n" + msg % self.__dict__
+
 
     def help_help(self):
         print "help          -- Print a list of available actions."
