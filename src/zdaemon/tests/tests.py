@@ -18,14 +18,13 @@ from zope.testing import doctest, renormalizing
 
 try:
     import pkg_resources
-except ImportError:
-    zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
-    zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
-else:
     zdaemon_loc = pkg_resources.working_set.find(
         pkg_resources.Requirement.parse('zdaemon')).location
     zconfig_loc = pkg_resources.working_set.find(
         pkg_resources.Requirement.parse('ZConfig')).location
+except (ImportError, AttributeError):
+    zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
+    zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
 
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
