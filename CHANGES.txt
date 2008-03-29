@@ -1,6 +1,14 @@
 zdaemon Changelog
 *****************
 
+zdaemon 2.0.2 (unreleased)
+==========================
+
+Bugs Fixed
+----------
+
+Fixed backwards incompatible change in handling of environment option.
+
 zdaemon 2.0.1 (2007/10/31)
 ==========================
 

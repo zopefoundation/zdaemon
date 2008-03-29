@@ -134,12 +134,15 @@ class ZDCmd(cmd.Cmd):
                     print "our program   =", program
                     print "daemon's args =", args
 
-        if (options.configroot is not None
-            and
-            getattr(options.configroot, 'environment', None) is not None
-            ):
-            for k, v in options.configroot.environment.mapping.items():
-                os.environ[k] = v
+        if options.configroot is not None:
+            env = getattr(options.configroot, 'environment', None)
+            if env is not None:
+                if getattr(env, 'mapping', None) is not None:
+                    for k, v in env.mapping.items():
+                        os.environ[k] = v
+                elif type(env) is type({}):
+                    for k, v in env.items():
+                        os.environ[k] = v
 
         self.set_uid()
 
