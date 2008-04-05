@@ -1,7 +1,7 @@
 zdaemon Changelog
 *****************
 
-zdaemon 2.0.2 (unreleased)
+zdaemon 2.0.2 (2008/04/05)
 ==========================
 
 Bugs Fixed
