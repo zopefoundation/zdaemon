@@ -31,15 +31,33 @@ ez['use_setuptools'](to_dir=tmpeggs, download_delay=0)
 
 import pkg_resources
 
+is_jython = sys.platform.startswith('java')
+
+if is_jython:
+    import subprocess
+
 ws = pkg_resources.working_set
-assert os.spawnle(
-    os.P_WAIT, sys.executable, sys.executable,
-    '-c', 'from setuptools.command.easy_install import main; main()',
-    '-mqNxd', tmpeggs, 'zc.buildout',
-    {'PYTHONPATH':
-     ws.find(pkg_resources.Requirement.parse('setuptools')).location
-     },
-    ) == 0
+
+if is_jython:
+    assert subprocess.Popen(
+           [sys.executable] + ['-c', 
+           'from setuptools.command.easy_install import main; main()',
+           '-mqNxd', tmpeggs, 'zc.buildout'],
+           env = dict(
+                PYTHONPATH = 
+                ws.find(pkg_resources.Requirement.parse('setuptools')).location
+           ),
+    ).wait() == 0
+
+else:
+    assert os.spawnle(
+        os.P_WAIT, sys.executable, sys.executable,
+        '-c', 'from setuptools.command.easy_install import main; main()',
+        '-mqNxd', tmpeggs, 'zc.buildout',
+        {'PYTHONPATH':
+        ws.find(pkg_resources.Requirement.parse('setuptools')).location
+        },
+        ) == 0
 
 ws.add_entry(tmpeggs)
 ws.require('zc.buildout')
