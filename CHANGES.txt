@@ -4,6 +4,8 @@ zdaemon Changelog
 zdaemon 2.0.3 (unreleased)
 ==========================
 
+- Added support to bootstrap on Jython.
+
 Bugs Fixed
 ----------
 
