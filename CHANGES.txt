@@ -9,6 +9,10 @@ zdaemon 2.0.3 (unreleased)
 Bugs Fixed
 ----------
 
+- No longer uses a hardcoded filename (/tmp/demo.zdsock) in unit tests.
+  This lets you run the tests on Python 2.4 and 2.5 simultaneously without
+  spurious errors.
+
 
 zdaemon 2.0.2 (2008/04/05)
 ==========================

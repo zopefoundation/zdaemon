@@ -91,6 +91,9 @@ def setUp(test):
     test.globs['_td'] = td = []
     here = os.getcwd()
     td.append(lambda : os.chdir(here))
+    tmpdir = tempfile.mkdtemp()
+    td.append(lambda : shutil.rmtree(tmpdir))
+    test.globs['tmpdir'] = tmpdir
     workspace = tempfile.mkdtemp()
     td.append(lambda : shutil.rmtree(workspace))
     os.chdir(workspace)

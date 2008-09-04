@@ -108,7 +108,7 @@ where this goes.
     ...   program sleep 100
     ...   socket-name /tmp/demo.zdsock
     ... </runner>
-    ... ''')
+    ... '''.replace('/tmp', tmpdir))
 
 
     >>> system("./zdaemon -Cconf start")
@@ -120,7 +120,7 @@ where this goes.
     zdaemon
 
     >>> import os
-    >>> os.path.exists("/tmp/demo.zdsock")
+    >>> os.path.exists("/tmp/demo.zdsock".replace('/tmp', tmpdir))
     True
 
     >>> system("./zdaemon -Cconf stop")
@@ -136,7 +136,7 @@ option. We can also provide options on the command line:
     ...   program sleep
     ...   socket-name /tmp/demo.zdsock
     ... </runner>
-    ... ''')
+    ... '''.replace('/tmp', tmpdir))
 
     >>> system("./zdaemon -Cconf start 100")
     . .
@@ -166,7 +166,7 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
     ...   LD_LIBRARY_PATH /home/foo/lib
     ...   HOME /home/foo
     ... </environment>
-    ... ''')
+    ... '''.replace('/tmp', tmpdir))
 
     >>> system("./zdaemon -Cconf fg")
     env
