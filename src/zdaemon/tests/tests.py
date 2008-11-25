@@ -12,7 +12,7 @@
 #
 ##############################################################################
 
-import os, re, shutil, sys, tempfile, unittest
+import os, re, shutil, sys, tempfile, unittest, subprocess
 import ZConfig, zdaemon
 from zope.testing import doctest, renormalizing
 
@@ -112,7 +112,10 @@ def tearDown(test):
         f()
 
 def system(command, input=''):
-    i, o = os.popen4(command)
+    PIPE = subprocess.PIPE
+    p = subprocess.Popen(command, shell=True, bufsize=0,
+              stdin=PIPE, stdout=PIPE, close_fds=True)
+    (i, o) = (p.stdin, p.stdout)
     if input:
         i.write(input)
     i.close()
