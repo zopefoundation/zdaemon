@@ -355,7 +355,7 @@ class RunnerOptions(ZDOptions):
         self.add("forever", "runner.forever", "f", "forever",
                  flag=1, default=0)
         self.add("sockname", "runner.socket_name", "s:", "socket-name=",
-                 ZConfig.datatypes.existing_dirpath, default="zdsock")
+                 existing_parent_dirpath, default="zdsock")
         self.add("exitcodes", "runner.exit_codes", "x:", "exit-codes=",
                  list_of_ints, default=[0, 2])
         self.add("user", "runner.user", "u:", "user=")
@@ -407,6 +407,19 @@ def existing_parent_directory(arg):
     if os.path.isdir(parent):
         return path
     raise ValueError('%s is not an existing directory' % arg)
+
+
+def existing_parent_dirpath(arg):
+    path = os.path.expanduser(arg)
+    dir = os.path.dirname(path)
+    if not dir:
+        # relative pathname with no directory component
+        return path
+    parent, tail = os.path.split(dir)
+    if os.path.isdir(parent):
+        return path
+    raise ValueError('The directory named as part of the path %s '
+                     'does not exist.' % arg)
 
 
 def _test():

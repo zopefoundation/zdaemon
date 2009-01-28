@@ -43,6 +43,7 @@ action "help" to find out about available actions.
 """
 
 import os
+import os.path
 import re
 import cmd
 import sys
@@ -145,14 +146,24 @@ class ZDCmd(cmd.Cmd):
                         os.environ[k] = v
 
         self.create_rundir()
+        self.create_socket_dir()
         self.set_uid()
 
     def create_rundir(self):
         if self.options.directory is None:
             return
-        if os.path.isdir(self.options.directory):
+        self.create_directory(self.options.directory)
+
+    def create_socket_dir(self):
+        dir = os.path.dirname(self.options.sockname)
+        if not dir:
             return
-        os.mkdir(self.options.directory)
+        self.create_directory(dir)
+
+    def create_directory(self, directory):
+        if os.path.isdir(directory):
+            return
+        os.mkdir(directory)
         uid = os.geteuid()
         if uid == 0 and uid != self.options.uid:
             # Change owner of directory to target

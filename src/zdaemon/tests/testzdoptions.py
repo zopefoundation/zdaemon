@@ -24,7 +24,8 @@ from StringIO import StringIO
 import ZConfig
 import zdaemon
 from zdaemon.zdoptions import (
-    ZDOptions, RunnerOptions, existing_parent_directory)
+    ZDOptions, RunnerOptions,
+    existing_parent_directory, existing_parent_dirpath)
 
 class ZDOptionsTestBase(unittest.TestCase):
 
@@ -340,16 +341,23 @@ class TestRunnerDirectory(ZDOptionsTestBase):
         options = self.OptionsClass()
         path = os.path.join(self.root, 'does-not-exist', 'really-not')
         self.check_exit_code(options, ["-z", path])
+        socket = os.path.join(path, 'socket')
+        self.check_exit_code(options, ["-s", socket])
 
     def test_existing_directory(self):
         options = self.OptionsClass()
         options.realize(["-z", self.root])
+        socket = os.path.join(self.root, 'socket')
+        self.check_exit_code(options, ["-s", socket])
 
     def test_parent_is_created(self):
         options = self.OptionsClass()
         path = os.path.join(self.root, 'will-be-created')
         options.realize(["-z", path])
         self.assertEquals(path, options.directory)
+        socket = os.path.join(path, 'socket')
+        options = self.OptionsClass()
+        options.realize(["-s", socket])
         # Directory will be created when zdaemon runs, not when the
         # configuration is read
         self.assertFalse(os.path.exists(path))
@@ -361,6 +369,15 @@ class TestRunnerDirectory(ZDOptionsTestBase):
         self.assertRaises(
             ValueError, existing_parent_directory,
             os.path.join(self.root, 'not-there', 'this-also-not'))
+
+    def test_existing_parent_dirpath(self):
+        self.assertTrue(existing_parent_dirpath(
+            os.path.join(self.root, 'sock')))
+        self.assertTrue(existing_parent_dirpath(
+            os.path.join(self.root, 'not-there', 'sock')))
+        self.assertRaises(
+            ValueError, existing_parent_dirpath,
+            os.path.join(self.root, 'not-there', 'this-also-not', 'sock'))
 
 
 def test_suite():
