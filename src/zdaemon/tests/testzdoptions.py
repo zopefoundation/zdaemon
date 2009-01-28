@@ -341,7 +341,7 @@ class TestRunnerDirectory(ZDOptionsTestBase):
         path = os.path.join(self.root, 'does-not-exist', 'really-not')
         self.check_exit_code(options, ["-z", path])
 
-    def test_existing_director(self):
+    def test_existing_directory(self):
         options = self.OptionsClass()
         options.realize(["-z", self.root])
 
