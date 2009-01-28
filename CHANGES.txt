@@ -6,6 +6,9 @@ zdaemon 2.0.3 (unreleased)
 
 - Added support to bootstrap on Jython.
 
+- If the run directory does not exist it will be created. This allow to use
+  `/var/run/mydaemon` as run directory when /var/run is a tmpfs (LP #318118).
+
 Bugs Fixed
 ----------
 

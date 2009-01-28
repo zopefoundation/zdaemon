@@ -144,7 +144,19 @@ class ZDCmd(cmd.Cmd):
                     for k, v in env.items():
                         os.environ[k] = v
 
+        self.create_rundir()
         self.set_uid()
+
+    def create_rundir(self):
+        if self.options.directory is None:
+            return
+        if os.path.isdir(self.options.directory):
+            return
+        os.mkdir(self.options.directory)
+        uid = os.geteuid()
+        if uid == 0 and uid != self.options.uid:
+            # Change owner of directory to target
+            os.chown(self.options.uid, self.options.gid)
 
     def set_uid(self):
         if self.options.uid is None:

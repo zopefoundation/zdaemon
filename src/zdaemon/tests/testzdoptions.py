@@ -17,12 +17,14 @@
 import os
 import sys
 import tempfile
+import shutil
 import unittest
 from StringIO import StringIO
 
 import ZConfig
 import zdaemon
-from zdaemon.zdoptions import ZDOptions
+from zdaemon.zdoptions import (
+    ZDOptions, RunnerOptions, existing_parent_directory)
 
 class ZDOptionsTestBase(unittest.TestCase):
 
@@ -320,11 +322,53 @@ class TestCommandLineOverrides(EnvironmentOptions):
                              ["-Xunknown=foo"])
 
 
+
+class TestRunnerDirectory(ZDOptionsTestBase):
+
+    OptionsClass = RunnerOptions
+
+    def setUp(self):
+        super(TestRunnerDirectory, self).setUp()
+        # Create temporary directory to work in
+        self.root = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+        super(TestRunnerDirectory, self).tearDown()
+
+    def test_not_existing_directory(self):
+        options = self.OptionsClass()
+        path = os.path.join(self.root, 'does-not-exist', 'really-not')
+        self.check_exit_code(options, ["-z", path])
+
+    def test_existing_director(self):
+        options = self.OptionsClass()
+        options.realize(["-z", self.root])
+
+    def test_parent_is_created(self):
+        options = self.OptionsClass()
+        path = os.path.join(self.root, 'will-be-created')
+        options.realize(["-z", path])
+        self.assertEquals(path, options.directory)
+        # Directory will be created when zdaemon runs, not when the
+        # configuration is read
+        self.assertFalse(os.path.exists(path))
+
+    def test_existing_parent_directory(self):
+        self.assertTrue(existing_parent_directory(self.root))
+        self.assertTrue(existing_parent_directory(
+            os.path.join(self.root, 'not-there')))
+        self.assertRaises(
+            ValueError, existing_parent_directory,
+            os.path.join(self.root, 'not-there', 'this-also-not'))
+
+
 def test_suite():
     suite = unittest.TestSuite()
     for cls in [TestBasicFunctionality,
                 TestZDOptionsEnvironment,
-                TestCommandLineOverrides]:
+                TestCommandLineOverrides,
+                TestRunnerDirectory]:
         suite.addTest(unittest.makeSuite(cls))
     return suite
 

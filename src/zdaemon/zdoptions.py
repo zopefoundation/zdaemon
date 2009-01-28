@@ -362,7 +362,7 @@ class RunnerOptions(ZDOptions):
         self.add("umask", "runner.umask", "m:", "umask=", octal_type,
                  default=022)
         self.add("directory", "runner.directory", "z:", "directory=",
-                 ZConfig.datatypes.existing_directory)
+                 existing_parent_directory)
         self.add("hang_around", "runner.hang_around", default=0)
 
     def realize(self, *args, **kwds):
@@ -399,6 +399,14 @@ def list_of_ints(arg):
 
 def octal_type(arg):
     return int(arg, 8)
+
+
+def existing_parent_directory(arg):
+    path = os.path.expanduser(arg)
+    parent, tail = os.path.split(path)
+    if os.path.isdir(parent):
+        return path
+    raise ValueError('%s is not an existing directory' % arg)
 
 
 def _test():

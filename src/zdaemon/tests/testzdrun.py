@@ -308,6 +308,46 @@ In general do not run anything as root unless absolutely necessary.
             if os.path.exists(path):
                 os.remove(path)
 
+
+class TestRunnerDirectory(unittest.TestCase):
+
+    def setUp(self):
+        super(TestRunnerDirectory, self).setUp()
+        self.root = tempfile.mkdtemp()
+        self.save_stdout = sys.stdout
+        self.save_stderr = sys.stderr
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+
+    def tearDown(self):
+        shutil.rmtree(self.root)
+        sys.stdout = self.save_stdout
+        sys.stderr = self.save_stderr
+        super(TestRunnerDirectory, self).tearDown()
+
+    def run_ctl(self, path):
+        true_cmd = "/bin/true"
+        if not os.path.exists(true_cmd):
+            true_cmd = "/usr/bin/true"  # Mac OS X
+        options = zdctl.ZDCtlOptions()
+        options.realize(['-z', path, '-p', 'sleep 1', 'fg'])
+        self.expect = 'sleep 1\n'
+        proc = zdctl.ZDCmd(options)
+        proc.onecmd(" ".join(options.args))
+
+    def testCtlRunDirectoryCreation(self):
+        path = os.path.join(self.root, 'rundir')
+        self.run_ctl(path)
+        self.assert_(os.path.exists(path))
+
+    def testCtlRunDirectoryCreationOnlyOne(self):
+        path = os.path.join(self.root, 'rundir', 'not-created')
+        self.run_ctl(path)
+        self.assertFalse(os.path.exists(path))
+        self.assertTrue(sys.stdout.getvalue().startswith(
+            'Error: invalid value for -z'))
+
+
 def send_action(action, sockname):
     """Send an action to the zdrun server and return the response.
 
@@ -338,6 +378,7 @@ def test_suite():
     suite = unittest.TestSuite()
     if os.name == "posix":
         suite.addTest(unittest.makeSuite(ZDaemonTests))
+        suite.addTest(unittest.makeSuite(TestRunnerDirectory))
     return suite
 
 if __name__ == '__main__':
