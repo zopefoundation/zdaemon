@@ -167,7 +167,7 @@ class ZDCmd(cmd.Cmd):
         uid = os.geteuid()
         if uid == 0 and uid != self.options.uid:
             # Change owner of directory to target
-            os.chown(self.options.uid, self.options.gid)
+            os.chown(directory, self.options.uid, self.options.gid)
 
     def set_uid(self):
         if self.options.uid is None:

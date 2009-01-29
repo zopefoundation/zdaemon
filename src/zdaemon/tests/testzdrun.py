@@ -392,6 +392,30 @@ class TestRunnerDirectory(unittest.TestCase):
         open(config_file, 'w').write(config)
         return config_file
 
+    def testDirectoryChown(self):
+        path = os.path.join(self.root, 'foodir')
+        options = zdctl.ZDCtlOptions()
+        options.realize(['-p', self.cmd])
+        cmd = zdctl.ZDCmd(options)
+        options.uid = 27
+        options.gid = 28
+        # Patch chown and geteuid, because we're not root
+        chown = os.chown
+        geteuid = os.geteuid
+        calls = []
+        def my_chown(*args):
+            calls.append(('chown',) + args)
+        def my_geteuid():
+            return 0
+        try:
+            os.chown = my_chown
+            os.geteuid = my_geteuid
+            cmd.create_directory(path)
+        finally:
+            os.chown = chown
+            os.geteuid = geteuid
+        self.assertEqual([('chown', path, 27, 28)], calls)
+
 
 def send_action(action, sockname):
     """Send an action to the zdrun server and return the response.
