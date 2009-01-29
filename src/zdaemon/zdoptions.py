@@ -403,6 +403,9 @@ def octal_type(arg):
 
 def existing_parent_directory(arg):
     path = os.path.expanduser(arg)
+    if os.path.isdir(path):
+        # If the directory exists, that's fine.
+        return path
     parent, tail = os.path.split(path)
     if os.path.isdir(parent):
         return path

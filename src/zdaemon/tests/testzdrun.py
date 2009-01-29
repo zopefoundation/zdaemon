@@ -319,6 +319,9 @@ class TestRunnerDirectory(unittest.TestCase):
         sys.stdout = StringIO()
         sys.stderr = StringIO()
         self.expect = ''
+        self.cmd = "/bin/true"
+        if not os.path.exists(self.cmd):
+            self.cmd = "/usr/bin/true"  # Mac OS X
 
     def tearDown(self):
         shutil.rmtree(self.root)
@@ -332,23 +335,30 @@ class TestRunnerDirectory(unittest.TestCase):
         super(TestRunnerDirectory, self).tearDown()
 
     def run_ctl(self, opts):
-        true_cmd = "/bin/true"
-        if not os.path.exists(true_cmd):
-            true_cmd = "/usr/bin/true"  # Mac OS X
         options = zdctl.ZDCtlOptions()
-        options.realize(opts + ['-p', 'sleep 1', 'fg'])
-        self.expect = 'sleep 1\n'
+        options.realize(opts + ['fg'])
+        self.expect = self.cmd + '\n'
         proc = zdctl.ZDCmd(options)
         proc.onecmd(" ".join(options.args))
 
     def testCtlRunDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir')
-        self.run_ctl(['-z', path])
+        self.run_ctl(['-z', path, '-p', self.cmd])
+        self.assert_(os.path.exists(path))
+
+    def testCtlRunDirectoryCreationFromConfigFile(self):
+        path = os.path.join(self.root, 'rundir')
+        options = ['directory ' + path,
+                   'program ' + self.cmd]
+        config = self.writeConfig(
+            '<runner>\n%s\n</runner>' % '\n'.join(options))
+        self.run_ctl(['-C', config])
         self.assert_(os.path.exists(path))
 
     def testCtlRunDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created')
-        self.assertRaises(SystemExit, self.run_ctl, ['-z', path])
+        self.assertRaises(SystemExit,
+                          self.run_ctl, ['-z', path, '-p', self.cmd])
         self.assertFalse(os.path.exists(path))
         got = sys.stderr.getvalue().strip()
         sys.stderr = StringIO()
@@ -356,17 +366,31 @@ class TestRunnerDirectory(unittest.TestCase):
 
     def testCtlSocketDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir', 'sock')
-        self.run_ctl(['-s', path])
+        self.run_ctl(['-s', path, '-p', self.cmd])
         self.assert_(os.path.exists(os.path.dirname(path)))
-
 
     def testCtlSocketDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created', 'sock')
-        self.assertRaises(SystemExit, self.run_ctl, ['-s', path])
+        self.assertRaises(SystemExit,
+                          self.run_ctl, ['-s', path, '-p', self.cmd])
         self.assertFalse(os.path.exists(path))
         got = sys.stderr.getvalue().strip()
         sys.stderr = StringIO()
         self.assertTrue(got.startswith('Error: invalid value for -s'))
+
+    def testCtlSocketDirectoryCreationFromConfigFile(self):
+        path = os.path.join(self.root, 'rundir')
+        options = ['socket-name %s/sock' % path,
+                   'program ' + self.cmd]
+        config = self.writeConfig(
+            '<runner>\n%s\n</runner>' % '\n'.join(options))
+        self.run_ctl(['-C', config])
+        self.assert_(os.path.exists(path))
+
+    def writeConfig(self, config):
+        config_file = os.path.join(self.root, 'config')
+        open(config_file, 'w').write(config)
+        return config_file
 
 
 def send_action(action, sockname):

@@ -78,7 +78,8 @@
       </description>
     </key>
 
-    <key name="socket-name" datatype="existing-dirpath"
+    <key name="socket-name"
+         datatype="zdaemon.zdoptions.existing_parent_dirpath"
          required="no"
          default="zdsock">
       <description>
@@ -113,7 +114,8 @@
       </description>
     </key>
 
-    <key name="directory" datatype="existing-directory"
+    <key name="directory"
+         datatype="zdaemon.zdoptions.existing_parent_directory"
          required="no">
       <description>
         Command-line option: -z or --directory.
