@@ -1,0 +1,47 @@
+zdaemon Changelog
+=================
+
+zdaemon 1.4a1 (2005/11/05)
+--------------------------
+
+First semi-formal release.
+
+After some unknown release(???)
+-------------------------------
+
+ - Made 'zdaemon.zdoptions' not fail for --help when __main__.__doc__
+   is None.
+
+After zdaemon 1.1
+-----------------
+
+ - Updated test 'testRunIgnoresParentSignals':
+  
+  o Use 'mkdtemp' to create a temporary directory to hold the test socket
+    rather than creating the test socket in the test directory.
+    Hopefully this will be more robust.  Sometimes the test directory
+    has a path so long that the test socket can't be created.
+  
+  o Changed management of 'donothing.sh'.  This script is now created by
+    the test in the temporarary directory with the necessary
+    permissions. This is to avoids possible mangling of permissions
+    leading to spurious test failures.  It also avoids management of a
+    file in the source tree, which is a bonus.
+
+ - Rearranged source tree to conform to more usual zpkg-based layout:
+   
+   o Python package lives under 'src'.
+
+   o Dependencies added to 'src' as 'svn:externals'.
+
+   o Unit tests can now be run from a checkout.
+
+ - Made umask-based test failures due to running as root emit a more
+   forceful warning.
+
+zdaemon 1.1 (2005/06/09)
+------------------------
+
+ - SVN tag:  svn://svn.zope.org/repos/main/zdaemon/tags/zdaemon-1.1
+
+ - Tagged to make better 'svn:externals' linkage possible.
