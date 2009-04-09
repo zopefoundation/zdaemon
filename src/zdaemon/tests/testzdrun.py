@@ -110,26 +110,6 @@ class ZDaemonTests(unittest.TestCase):
         self.rundaemon(["echo", "-n"])
         self.expect = ""
 
-##     def testInvoke(self):
-##         self._run("echo -n")
-##         self.expect = ""
-
-##     def testControl(self):
-##         self.rundaemon(["sleep", "1000"])
-##         time.sleep(1)
-##         self._run("stop")
-##         time.sleep(1)
-##         self._run("exit")
-##         self.expect = "Sent SIGTERM\nExiting now\n"
-
-##     def testStop(self):
-##         self.rundaemon([self.python, self.nokill])
-##         time.sleep(1)
-##         self._run("stop")
-##         time.sleep(1)
-##         self._run("exit")
-##         self.expect = "Sent SIGTERM\nSent SIGTERM; will exit later\n"
-
     def testHelp(self):
         # XXX We shouldn't mutate and leave our change in!
         import __main__
