@@ -54,18 +54,6 @@ outage or an overfull disk) may prevent the application from starting
 but you want the daemon manager to keep trying.
 """
 
-"""
-XXX TO DO
-
-- Finish OO design -- use multiple classes rather than folding
-  everything into one class.
-
-- Add unit tests.
-
-- Add doc strings.
-
-"""
-
 import os
 import sys
 import time
