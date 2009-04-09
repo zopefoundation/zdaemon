@@ -61,7 +61,6 @@ setup(
     packages=["zdaemon", "zdaemon.tests"],
     package_dir={"": "src"},
     classifiers = [
-       'Development Status :: 3 - Alpha',
        'Intended Audience :: Developers',
        'Intended Audience :: System Administrators',
        'License :: OSI Approved :: Zope Public License',
