@@ -100,6 +100,9 @@ class ZDCtlOptions(RunnerOptions):
         self.add("prompt", "runner.prompt", default=(programname + ">"))
 
     def realize(self, *args, **kwds):
+        
+        kwds['doc']=kwds.get('doc',__doc__)
+        
         RunnerOptions.realize(self, *args, **kwds)
 
         # Maybe the config file requires -i or positional args
