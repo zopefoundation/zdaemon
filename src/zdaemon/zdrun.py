@@ -86,6 +86,8 @@ from zdaemon.zdoptions import RunnerOptions
 
 class ZDRunOptions(RunnerOptions):
 
+    __doc__ = __doc__
+    
     positional_args_allowed = 1
     logsectionname = "runner.eventlog"
     program = None

@@ -76,7 +76,9 @@ def string_list(arg):
 
 
 class ZDCtlOptions(RunnerOptions):
-
+    
+    __doc__ = __doc__
+    
     positional_args_allowed = True
 
     def __init__(self):
@@ -100,8 +102,6 @@ class ZDCtlOptions(RunnerOptions):
         self.add("prompt", "runner.prompt", default=(programname + ">"))
 
     def realize(self, *args, **kwds):
-        
-        kwds['doc']=kwds.get('doc',__doc__)
         
         RunnerOptions.realize(self, *args, **kwds)
 

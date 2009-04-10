@@ -81,57 +81,63 @@ class TestZDOptions(ZDOptionsTestBase):
             options.realize([arg, configfile])
             self.assertEqual(options.configfile, configfile)
 
-    def test_help(self):
-        # __main__.__doc__ is used as the default source of the help
-        # text; specific text can also be provided in the `doc`
-        # keyword arg to `realize()`.
-        import __main__
-        old_doc = __main__.__doc__
-        __main__.__doc__ = "Example help text 1."
-        try:
-            for arg in "-h", "--h", "--help":
-                for doc in (None, "Example help text 2."):
-                    options = self.OptionsClass()
-                    try:
-                        self.save_streams()
-                        try:
-                            if doc:
-                                options.realize([arg], doc=doc)
-                            else:
-                                options.realize([arg])
-                        finally:
-                            self.restore_streams()
-                    except SystemExit, err:
-                        self.assertEqual(err.code, 0)
-                    else:
-                        self.fail("%s didn't call sys.exit()" % repr(arg))
-                    helptext = self.stdout.getvalue()
-                    self.assertEqual(helptext, doc or __main__.__doc__)
-        finally:
-            __main__.__doc__ = old_doc
+    # The original intent was that the docstring of whatever module is
+    # __main__ would be used as help documentation.
+    # Because of the way buildout generates scripts, this will always
+    # be an empty string.
+    # So, we now use the __doc__ of the options class being used.
+
+    def help_test_helper(self,optionsclass,kw,expected):
+        for arg in "-h", "--h", "--help":
+            options = optionsclass()
+            try:
+                self.save_streams()
+                try:
+                    options.realize([arg],**kw)
+                finally:
+                    self.restore_streams()
+            except SystemExit, err:
+                self.assertEqual(err.code, 0)
+            else:
+                self.fail("%s didn't call sys.exit()" % repr(arg))
+            helptext = self.stdout.getvalue()
+            self.assertEqual(helptext, expected)
+        
+    def test_default_help(self):
+        # test what happens when the subclass doesn't do anything
+        # with __doc__
+        self.help_test_helper(self.OptionsClass,{},'No help available.')
+
+    def test_default_help_with_doc_kw(self):
+        # test what happens when the subclass doesn't do anything
+        # with __doc__, but doc is supplied to realize
+        self.help_test_helper(self.OptionsClass,{'doc':'Example help'},'Example help')
 
     def test_no_help(self):
-        # Test that zdoptions doesn't die when __main__.__doc__ is None.
-        import __main__
-        old_doc = __main__.__doc__
-        __main__.__doc__ = None
-        try:
-            for arg in "-h", "--h", "--help":
-                options = self.OptionsClass()
-                try:
-                    self.save_streams()
-                    try:
-                        options.realize([arg])
-                    finally:
-                        self.restore_streams()
-                except SystemExit, err:
-                    self.assertEqual(err.code, 0)
-                else:
-                    self.fail("%s didn't call sys.exit()" % repr(arg))
-                helptext = self.stdout.getvalue()
-                self.assertEqual(helptext, "No help available.")
-        finally:
-            __main__.__doc__ = old_doc
+        # test what happens when the subclass has None for __doc__
+        class NoHelp(self.OptionsClass):
+            __doc__ = None
+        self.help_test_helper(NoHelp,{},'No help available.')
+        
+    def test_no_help_with_doc_kw(self):
+        # test what happens when the subclass has None for __doc__,
+        # but doc is supplied to realize
+        class NoHelp(self.OptionsClass):
+            __doc__ = None
+        self.help_test_helper(NoHelp,{'doc':'Example help'},'Example help')
+
+    def test_help(self):
+        # test what happens when the subclass has None for __doc__
+        class HasHelp(self.OptionsClass):
+            __doc__ = 'Some help'
+        self.help_test_helper(HasHelp,{},'Some help')
+        
+    def test_no_help_with_doc_kw(self):
+        # test what happens when the subclass has None for __doc__,
+        # but doc is supplied to realize
+        class HasHelp(self.OptionsClass):
+            __doc__ = 'Some help'
+        self.help_test_helper(HasHelp,{'doc':'Example help'},'Example help')
 
     def test_unrecognized(self):
         # Check that we get an error for an unrecognized option

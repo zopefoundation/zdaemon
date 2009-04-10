@@ -91,11 +91,14 @@ class ZDaemonTests(unittest.TestCase):
         ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
         ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
-    def _run(self, args, cmdclass=None):
+    def _run(self, args, cmdclass=None, module=zdctl):
         if type(args) is type(""):
             args = args.split()
+        kw = {}
+        if cmdclass:
+            kw['cmdclass']=cmdclass
         try:
-            zdctl.main(["-s", self.zdsock] + args, cmdclass=cmdclass)
+            module.main(["-s", self.zdsock] + args, **kw)
         except SystemExit:
             pass
 
@@ -110,21 +113,13 @@ class ZDaemonTests(unittest.TestCase):
         self.rundaemon(["echo", "-n"])
         self.expect = ""
 
-    def testHelp(self):
-        # XXX We shouldn't mutate and leave our change in!
-        import __main__
-        if not __main__.__doc__:
-            __main__.__doc__ = "Example help text."
-        self._run("-h")
-        self.expect = __main__.__doc__
+    def test_help_zdrun(self):
+        self._run("-h",module=zdrun)
+        self.expect = zdrun.__doc__
 
-    def testNoHelp(self):
-        # XXX We shouldn't mutate and leave our change in!
-        import __main__
-        if __main__.__doc__:
-            __main__.__doc__ = None
+    def test_help_zdctl(self):
         self._run("-h")
-        self.expect = "No help available."
+        self.expect = zdctl.__doc__
 
     def testOptionsSysArgv(self):
         # Check that options are parsed from sys.argv by default

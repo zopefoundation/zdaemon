@@ -199,7 +199,7 @@ class ZDOptions:
 
         progname -- the program name (default is sys.argv[0])
 
-        doc      -- usage message (default is __main__.__doc__)
+        doc      -- usage message (default is __doc__ of the options class)
         """
 
          # Provide dynamic default method arguments
@@ -215,11 +215,8 @@ class ZDOptions:
             except (AttributeError, IndexError):
                 progname = 'zope'
 
-        if doc is None:
-            import __main__
-            doc = __main__.__doc__
         self.progname = progname
-        self.doc = doc
+        self.doc = doc or self.__doc__
 
         self.options = []
         self.args = []
