@@ -104,9 +104,17 @@ class TestZDOptions(ZDOptionsTestBase):
             self.assertEqual(helptext, expected)
         
     def test_default_help(self):
+        # test what happens if OptionsClass is used directly.
+        # Not sure this ever happens :-S
+        self.help_test_helper(self.OptionsClass,{},self.OptionsClass.__doc__ or 'No help available.')
+
+    def test_default_subclass_help(self):
         # test what happens when the subclass doesn't do anything
         # with __doc__
-        self.help_test_helper(self.OptionsClass,{},'No help available.')
+        class SubClass(self.OptionsClass):
+            pass
+        # __doc__ isn't inherited :-( 
+        self.help_test_helper(SubClass,{},'No help available.')
 
     def test_default_help_with_doc_kw(self):
         # test what happens when the subclass doesn't do anything
