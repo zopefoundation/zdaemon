@@ -16,7 +16,7 @@
 
 Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
-
+ 
 Options:
 -C/--configure URL -- configuration file or URL
 -S/--schema XML Schema -- XML schema for configuration file

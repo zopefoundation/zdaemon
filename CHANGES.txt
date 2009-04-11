@@ -1,7 +1,7 @@
 zdaemon Changelog
 *****************
 
-zdaemon 2.0.3 (unreleased)
+zdaemon 2.0.3 (2009/04/11)
 ==========================
 
 - Added support to bootstrap on Jython.
@@ -16,6 +16,9 @@ Bugs Fixed
   This lets you run the tests on Python 2.4 and 2.5 simultaneously without
   spurious errors.
 
+- make -h work again for both runner and control scripts.
+  Help is now taken from the __doc__ of the options class users by
+  the zdaemon script being run.
 
 zdaemon 2.0.2 (2008/04/05)
 ==========================

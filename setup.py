@@ -37,7 +37,7 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="2.0.3dev",
+    version="2.0.3",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description=
