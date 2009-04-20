@@ -1,5 +1,6 @@
-Using zdaemon
-=============
+===============
+ Using zdaemon
+===============
 
 zdaemon provides a script, zdaemon, that can be used to running other
 programs as POSIX (Unix) daemons. (Of course, it is only usable on
@@ -150,7 +151,7 @@ option. We can also provide options on the command line:
     daemon process stopped
 
 Environment Variables
----------------------
+=====================
 
 Sometimes, it is necessary to set environment variables before running
 a program.  Perhaps the most common case for this is setting
@@ -183,7 +184,7 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
     LD_LIBRARY_PATH=/home/foo/lib
 
 Transcript log
----------------
+==============
 
 When zdaemon run a program in daemon mode, it disconnects the
 program's standard input, standard output, and standard error from the
@@ -262,7 +263,7 @@ the output will show up in the new file, not the old:
     'rec 1\nrec 2\n'
 
 Reference Documentation
------------------------
+=======================
 
 The following options are available for use in the runner section of
 configuration files and as command-line options.

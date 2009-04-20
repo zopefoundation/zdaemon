@@ -49,13 +49,11 @@ setup(
         + '\n' +
         read('CHANGES.txt')
         + '\n' +
-        'Detailed Documentation\n'
-        '**********************\n'
-        + '\n' +
         read('src/zdaemon/README.txt')
         + '\n' +
-        'Download\n'
-        '**********************\n'
+        '========\n' +
+        'Download\n' +
+        '========\n'
         ),
 
     packages=["zdaemon", "zdaemon.tests"],

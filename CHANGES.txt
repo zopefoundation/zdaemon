@@ -1,8 +1,16 @@
-zdaemon Changelog
-*****************
+===========
+ Changelog
+===========
 
-zdaemon 2.0.3 (2009/04/11)
-==========================
+
+2.0.4 (unreleased)
+==================
+
+- Fixed change log format, made table of contents nicer.
+
+
+2.0.3 (2009-04-11)
+==================
 
 - Added support to bootstrap on Jython.
 
@@ -20,16 +28,16 @@ Bugs Fixed
   Help is now taken from the __doc__ of the options class users by
   the zdaemon script being run.
 
-zdaemon 2.0.2 (2008/04/05)
-==========================
+2.0.2 (2008-04-05)
+==================
 
 Bugs Fixed
 ----------
 
 Fixed backwards incompatible change in handling of environment option.
 
-zdaemon 2.0.1 (2007/10/31)
-==========================
+2.0.1 (2007-10-31)
+==================
 
 Bugs Fixed
 ----------
@@ -37,21 +45,21 @@ Bugs Fixed
 Fixed test renormalizer that did not work in certain cases where the
 environment was complex.
 
-zdaemon 2.0.0 (2007/07/19)
-==========================
+2.0.0 (2007-07-19)
+==================
 
 Final release for 2.0.0.
 
-zdaemon 2.0a6 (2007/01/11)
-==========================
+2.0a6 (2007-01-11)
+==================
 
 Bugs Fixed
 ----------
 
 - When the user option was used, it only affected running the daemon.
 
-zdaemon 2.0a3, 2.0a4, 2.0a5 (2007/01/10)
-========================================
+2.0a3, 2.0a4, 2.0a5 (2007-01-10)
+================================
 
 Bugs Fixed
 ----------
@@ -62,8 +70,8 @@ Bugs Fixed
 - Added extra checks to deal with programs that extend zdaemon
   and copy the schema and thus don't see updates to the ZConfig schema.
 
-zdaemon 2.0a2 (2007/01/10)
-==========================
+2.0a2 (2007-01-10)
+==================
 
 New Features
 ------------
@@ -74,8 +82,8 @@ New Features
 
 - Added a command to rotate the transcript log.
 
-zdaemon 2.0a1 (2006/12/21)
-==========================
+2.0a1 (2006-12-21)
+==================
 
 Bugs Fixed
 ----------
@@ -107,13 +115,13 @@ New Features
   there. The old -d option is kept for backward compatibility, but is
   a no-op.
 
-zdaemon 1.4a1 (2005/11/21)
-==========================
+1.4a1 (2005-11-21)
+==================
 
 Fixed a bug in the distribution setup file.
 
-zdaemon 1.4a1 (2005/11/05)
-==========================
+1.4a1 (2005-11-05)
+==================
 
 First semi-formal release.
 
@@ -123,16 +131,16 @@ After some unknown release(???)
  - Made 'zdaemon.zdoptions' not fail for --help when __main__.__doc__
    is None.
 
-After zdaemon 1.1
-=================
+After 1.1
+=========
 
  - Updated test 'testRunIgnoresParentSignals':
-  
+
   o Use 'mkdtemp' to create a temporary directory to hold the test socket
     rather than creating the test socket in the test directory.
     Hopefully this will be more robust.  Sometimes the test directory
     has a path so long that the test socket can't be created.
-  
+
   o Changed management of 'donothing.sh'.  This script is now created by
     the test in the temporarary directory with the necessary
     permissions. This is to avoids possible mangling of permissions
@@ -140,7 +148,7 @@ After zdaemon 1.1
     file in the source tree, which is a bonus.
 
  - Rearranged source tree to conform to more usual zpkg-based layout:
-   
+
    o Python package lives under 'src'.
 
    o Dependencies added to 'src' as 'svn:externals'.
@@ -150,8 +158,8 @@ After zdaemon 1.1
  - Made umask-based test failures due to running as root emit a more
    forceful warning.
 
-zdaemon 1.1 (2005/06/09)
-========================
+1.1 (2005-06-09)
+================
 
  - SVN tag:  svn://svn.zope.org/repos/main/zdaemon/tags/zdaemon-1.1
 
@@ -166,6 +174,6 @@ More docs:
 
   - working directory
 
-Bugs 
+Bugs
 
 - help command
