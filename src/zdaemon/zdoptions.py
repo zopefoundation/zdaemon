@@ -35,7 +35,7 @@ class ZDOptions:
     configuration option default_to_interactive is set to false).  Use the
     action "help" to find out about available actions.
     """
-    
+
     doc = None
     progname = None
     configfile = None
@@ -450,10 +450,10 @@ def existing_parent_directory(arg):
 def existing_parent_dirpath(arg):
     path = os.path.expanduser(arg)
     dir = os.path.dirname(path)
-    if not dir:
-        # relative pathname with no directory component
-        return path
     parent, tail = os.path.split(dir)
+    if not parent:
+        # relative pathname
+        return path
     if os.path.isdir(parent):
         return path
     raise ValueError('The directory named as part of the path %s '

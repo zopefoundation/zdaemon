@@ -102,7 +102,7 @@ class TestZDOptions(ZDOptionsTestBase):
                 self.fail("%s didn't call sys.exit()" % repr(arg))
             helptext = self.stdout.getvalue()
             self.assertEqual(helptext, expected)
-        
+
     def test_default_help(self):
         # test what happens if OptionsClass is used directly.
         # Not sure this ever happens :-S
@@ -113,7 +113,7 @@ class TestZDOptions(ZDOptionsTestBase):
         # with __doc__
         class SubClass(self.OptionsClass):
             pass
-        # __doc__ isn't inherited :-( 
+        # __doc__ isn't inherited :-(
         self.help_test_helper(SubClass,{},'No help available.')
 
     def test_default_help_with_doc_kw(self):
@@ -126,7 +126,7 @@ class TestZDOptions(ZDOptionsTestBase):
         class NoHelp(self.OptionsClass):
             __doc__ = None
         self.help_test_helper(NoHelp,{},'No help available.')
-        
+
     def test_no_help_with_doc_kw(self):
         # test what happens when the subclass has None for __doc__,
         # but doc is supplied to realize
@@ -139,7 +139,7 @@ class TestZDOptions(ZDOptionsTestBase):
         class HasHelp(self.OptionsClass):
             __doc__ = 'Some help'
         self.help_test_helper(HasHelp,{},'Some help')
-        
+
     def test_no_help_with_doc_kw(self):
         # test what happens when the subclass has None for __doc__,
         # but doc is supplied to realize
@@ -389,6 +389,8 @@ class TestRunnerDirectory(ZDOptionsTestBase):
             os.path.join(self.root, 'sock')))
         self.assertTrue(existing_parent_dirpath(
             os.path.join(self.root, 'not-there', 'sock')))
+        self.assertTrue(existing_parent_dirpath(
+            os.path.join('not-there', 'sock')))
         self.assertRaises(
             ValueError, existing_parent_dirpath,
             os.path.join(self.root, 'not-there', 'this-also-not', 'sock'))

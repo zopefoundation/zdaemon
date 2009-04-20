@@ -261,7 +261,7 @@ class ZDaemonTests(unittest.TestCase):
 I am root!
 Do not run the tests as root.
 Testing proper umask handling cannot be done as root.
-Furthermore, it is not a good idea and strongly discouraged to run zope, the 
+Furthermore, it is not a good idea and strongly discouraged to run zope, the
 build system (configure, make) or the tests as root.
 In general do not run anything as root unless absolutely necessary.
 """ )
@@ -344,6 +344,12 @@ class TestRunnerDirectory(unittest.TestCase):
         self.run_ctl(['-s', path, '-p', self.cmd])
         self.assert_(os.path.exists(os.path.dirname(path)))
 
+    def testCtlSocketDirectoryCreationRelativePath(self):
+        path = os.path.join('rundir', 'sock')
+        self.run_ctl(['-s', path, '-p', self.cmd])
+        self.assert_(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
+                                                                 path))))
+
     def testCtlSocketDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created', 'sock')
         self.assertRaises(SystemExit,
@@ -361,6 +367,15 @@ class TestRunnerDirectory(unittest.TestCase):
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
         self.assert_(os.path.exists(path))
+
+    def testCtlSocketDirectoryCreationFromConfigFileRelativePath(self):
+        path = 'rel-rundir'
+        options = ['socket-name %s/sock' % path,
+                   'program ' + self.cmd]
+        config = self.writeConfig(
+            '<runner>\n%s\n</runner>' % '\n'.join(options))
+        self.run_ctl(['-C', config])
+        self.assert_(os.path.exists(os.path.join(os.getcwd(), path)))
 
     def writeConfig(self, config):
         config_file = os.path.join(self.root, 'config')
