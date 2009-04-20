@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Copyright (c) 2006 Zope Corporation and Contributors.
+# Copyright (c) 2006-2009 Zope Corporation and Contributors.
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
@@ -37,13 +37,13 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version="2.0.3",
+    version="2.0.4dev",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description=
-    "Daemon process control library and tools for Unix-bases systems",
+    "Daemon process control library and tools for Unix-based systems",
     author="Zope Corporation and Contributors",
-    author_email="zope3-dev@zope.org",
+    author_email="zope-dev@zope.org",
     long_description=(
         read('README.txt')
         + '\n' +
@@ -55,7 +55,6 @@ setup(
         'Download\n' +
         '========\n'
         ),
-
     packages=["zdaemon", "zdaemon.tests"],
     package_dir={"": "src"},
     classifiers = [

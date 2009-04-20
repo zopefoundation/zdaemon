@@ -6,7 +6,13 @@
 2.0.4 (unreleased)
 ==================
 
+- Version 2.0.3 broke support for relative paths to the socket (``-s``
+  option and ``socket-name`` parameter), now relative paths work again
+  as in version 2.0.2.
+
 - Fixed change log format, made table of contents nicer.
+
+- Fixed author's email address.
 
 - Removed zpkg stuff.
 
