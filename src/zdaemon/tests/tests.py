@@ -12,9 +12,17 @@
 #
 ##############################################################################
 
-import os, re, shutil, sys, tempfile, unittest
-import ZConfig, zdaemon
-from zope.testing import doctest, renormalizing
+import doctest
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+import ZConfig
+import zdaemon
+from zope.testing import renormalizing
 
 try:
     import pkg_resources
@@ -112,12 +120,16 @@ def tearDown(test):
         f()
 
 def system(command, input=''):
-    i, o = os.popen4(command)
+    p = subprocess.Popen(
+        command, shell=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT)
     if input:
-        i.write(input)
-    i.close()
-    print o.read(),
-
+        p.stdin.write(input)
+    p.stdin.close()
+    print p.stdout.read(),
+    p.wait()
 
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]
