@@ -2,9 +2,9 @@
  Using zdaemon
 ===============
 
-zdaemon provides a script, zdaemon, that can be used to running other
+zdaemon provides a script, zdaemon, that can be used to run other
 programs as POSIX (Unix) daemons. (Of course, it is only usable on
-POSIX-complient systems.
+POSIX-complient systems.)
 
 Using zdaemon requires specifying a number of options, which can be
 given in a configuration file, or as command-line options.  It also
@@ -42,9 +42,10 @@ interactive interpreter.
 Let's start with a simple example.  We'll use command-line options to
 run the echo command:
 
-    >>> system("./zdaemon -p 'echo hello world' fg")
+    sh> ./zdaemon -p 'echo hello world' fg
     echo hello world
     hello world
+
 
 Here we used the -p option to specify a program to run.  We can
 specify a program name and command-line options in the program
@@ -53,44 +54,45 @@ primitive.  Quotes and spaces aren't handled correctly.  Let's look at
 a slightly more complex example.  We'll run the sleep command as a
 daemon :)
 
-    >>> system("./zdaemon -p 'sleep 100' start")
+    sh> ./zdaemon -p 'sleep 100' start
     . .
     daemon process started, pid=819
 
 This ran the sleep deamon.  We can check whether it ran with the
 status command:
 
-    >>> system("./zdaemon -p 'sleep 100' status")
+    sh> ./zdaemon -p 'sleep 100' status
     program running; pid=819
 
 We can stop it with the stop command:
 
-    >>> system("./zdaemon -p 'sleep 100' stop")
+    sh> ./zdaemon -p 'sleep 100' stop
     . .
     daemon process stopped
 
-    >>> system("./zdaemon -p 'sleep 100' status")
+    sh> ./zdaemon -p 'sleep 100' status
     daemon manager not running
 
 Normally, we control zdaemon using a configuration file.  Let's create
-a typical configuration file:
+a typical configuration file::
 
-    >>> open('conf', 'w').write(
-    ... '''
-    ... <runner>
-    ...   program sleep 100
-    ... </runner>
-    ... ''')
+    <runner>
+      program sleep 100
+    </runner>
+
+.. -> text
+
+    >>> open('conf', 'w').write(text)
 
 Now, we can run with the -C option to read the configuration file:
 
-    >>> system("./zdaemon -Cconf start")
+    sh> ./zdaemon -Cconf start
     . .
     daemon process started, pid=1136
 
 If we list the directory:
 
-    >>> system("ls")
+    sh> ls
     conf
     zdaemon
     zdsock
@@ -99,54 +101,65 @@ We'll see that a file, zdsock, was created.  This is a unix-domain
 socket used internally by ZDaemon.  We'll normally want to control
 where this goes.
 
-    >>> system("./zdaemon -Cconf stop")
+    sh> ./zdaemon -Cconf stop
     . .
     daemon process stopped
 
-    >>> open('conf', 'w').write(
-    ... '''
-    ... <runner>
-    ...   program sleep 100
-    ...   socket-name /tmp/demo.zdsock
-    ... </runner>
-    ... '''.replace('/tmp', tmpdir))
+Here's an updated configuration::
 
+    <runner>
+      program sleep 100
+      socket-name /tmp/demo.zdsock
+    </runner>
 
-    >>> system("./zdaemon -Cconf start")
+.. -> text
+
+    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+
+Now, when we run zdaemon:
+
+    sh> ./zdaemon -Cconf start
     . .
     daemon process started, pid=1139
 
-    >>> system("ls")
+    sh> ls
     conf
     zdaemon
+
+.. test
 
     >>> import os
     >>> os.path.exists("/tmp/demo.zdsock".replace('/tmp', tmpdir))
     True
 
-    >>> system("./zdaemon -Cconf stop")
+The socket file is created in the given directory.
+
+    sh> ./zdaemon -Cconf stop
     . .
     daemon process stopped
 
 In the example, we included a command-line argument in the program
-option. We can also provide options on the command line:
+option. We can also provide options on the command line::
 
-    >>> open('conf', 'w').write(
-    ... '''
-    ... <runner>
-    ...   program sleep
-    ...   socket-name /tmp/demo.zdsock
-    ... </runner>
-    ... '''.replace('/tmp', tmpdir))
+    <runner>
+      program sleep
+      socket-name /tmp/demo.zdsock
+    </runner>
 
-    >>> system("./zdaemon -Cconf start 100")
+.. -> text
+
+    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+
+Then we can pass the program argument on the command line:
+
+    sh> ./zdaemon -Cconf start 100
     . .
     daemon process started, pid=1149
 
-    >>> system("./zdaemon -Cconf status")
+    sh> ./zdaemon -Cconf status
     program running; pid=1149
 
-    >>> system("./zdaemon -Cconf stop")
+    sh> ./zdaemon -Cconf stop
     . .
     daemon process stopped
 
@@ -157,19 +170,24 @@ Sometimes, it is necessary to set environment variables before running
 a program.  Perhaps the most common case for this is setting
 LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
 
-    >>> open('conf', 'w').write(
-    ... '''
-    ... <runner>
-    ...   program env
-    ...   socket-name /tmp/demo.zdsock
-    ... </runner>
-    ... <environment>
-    ...   LD_LIBRARY_PATH /home/foo/lib
-    ...   HOME /home/foo
-    ... </environment>
-    ... '''.replace('/tmp', tmpdir))
+::
 
-    >>> system("./zdaemon -Cconf fg")
+    <runner>
+      program env
+      socket-name /tmp/demo.zdsock
+    </runner>
+    <environment>
+      LD_LIBRARY_PATH /home/foo/lib
+      HOME /home/foo
+    </environment>
+
+.. -> text
+
+    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+
+Now, when we run the command, we'll see out environment settings reflected:
+
+    sh> ./zdaemon -Cconf fg
     env
     USER=jim
     HOME=/home/foo
@@ -200,15 +218,20 @@ simple tails a data file:
     >>> import os
     >>> f.write('rec 1\n'); os.fsync(f.fileno())
 
-    >>> open('conf', 'w').write(
-    ... '''
-    ... <runner>
-    ...   program tail -f data
-    ...   transcript log
-    ... </runner>
-    ... ''')
+Now, here's out zdaemon configuration::
 
-    >>> system("./zdaemon -Cconf start")
+    <runner>
+      program tail -f data
+      transcript log
+    </runner>
+
+.. -> text
+
+    >>> open('conf', 'w').write(text)
+
+Now we'll start:
+
+    sh> ./zdaemon -Cconf start
     . .
     daemon process started, pid=7963
 
@@ -217,7 +240,7 @@ simple tails a data file:
     >>> import time
     >>> time.sleep(0.1)
 
-Now, if we look at the log file, it contains the tail output:
+After waiting a bit, if we look at the log file, it contains the tail output:
 
     >>> open('log').read()
     'rec 1\n'
@@ -244,7 +267,7 @@ open:
 
 Now, if we tell zdaemon to reopen the file:
 
-    >>> system("./zdaemon -Cconf reopen_transcript")
+    sh> ./zdaemon -Cconf reopen_transcript
 
 and generate some output:
 

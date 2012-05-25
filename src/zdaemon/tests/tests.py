@@ -13,6 +13,9 @@
 ##############################################################################
 
 import doctest
+import manuel.capture
+import manuel.doctest
+import manuel.testing
 import os
 import re
 import shutil
@@ -21,6 +24,7 @@ import sys
 import tempfile
 import unittest
 import ZConfig
+import zc.customdoctests
 import zdaemon
 from zope.testing import renormalizing
 
@@ -137,27 +141,6 @@ def checkenv(match):
     match.sort()
     return '\n'.join(match) + '\n'
 
-def test_suite():
-    return unittest.TestSuite((
-        doctest.DocTestSuite(
-            setUp=setUp, tearDown=tearDown,
-            checker=renormalizing.RENormalizing([
-                (re.compile('pid=\d+'), 'pid=NNN'),
-                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                ])
-        ),
-        doctest.DocFileSuite(
-            '../README.txt',
-            setUp=setUp, tearDown=tearDown,
-            checker=renormalizing.RENormalizing([
-                (re.compile('pid=\d+'), 'pid=NNN'),
-                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                (re.compile('^env\n((?:.*\n)+)$'), checkenv),
-                ])
-        ),
-        ))
-
-
 zdaemon_template = """#!%(python)s
 
 import sys
@@ -171,3 +154,34 @@ import zdaemon.zdctl
 if __name__ == '__main__':
     zdaemon.zdctl.main()
 """
+
+def test_suite():
+    README_checker = renormalizing.RENormalizing([
+        (re.compile('pid=\d+'), 'pid=NNN'),
+        (re.compile('(\. )+\.?'), '<BLANKLINE>'),
+        (re.compile('^env\n((?:.*\n)+)$'), checkenv),
+        ])
+
+    return unittest.TestSuite((
+        doctest.DocTestSuite(
+            setUp=setUp, tearDown=tearDown,
+            checker=renormalizing.RENormalizing([
+                (re.compile('pid=\d+'), 'pid=NNN'),
+                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
+                ])
+        ),
+        manuel.testing.TestSuite(
+            manuel.doctest.Manuel(
+                parser=zc.customdoctests.DocTestParser(
+                    ps1='sh>',
+                    transform=lambda s: 'system("%s")\n' % s.rstrip()
+                    ),
+                checker=README_checker,
+                ) +
+            manuel.doctest.Manuel(checker=README_checker) +
+            manuel.capture.Manuel(),
+            '../README.txt',
+            setUp=setUp, tearDown=tearDown,
+            ),
+        ))
+
