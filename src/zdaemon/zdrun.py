@@ -54,16 +54,16 @@ outage or an overfull disk) may prevent the application from starting
 but you want the daemon manager to keep trying.
 """
 
-import os
-import sys
-import time
+from stat import ST_MODE
 import errno
 import logging
-import socket
+import os
 import select
 import signal
+import socket
+import sys
 import threading
-from stat import ST_MODE
+import time
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
