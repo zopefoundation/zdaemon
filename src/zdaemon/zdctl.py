@@ -444,7 +444,6 @@ class ZDCmd(cmd.Cmd):
         print "umask:       ", oct(umask)
         print "directory:   ", repr(self.options.directory)
         print "logfile:     ", repr(self.options.logfile)
-        print "hang_around: ", repr(self.options.hang_around)
 
     def show_python(self):
         print "Python info:"

@@ -403,7 +403,6 @@ class RunnerOptions(ZDOptions):
                  default=022)
         self.add("directory", "runner.directory", "z:", "directory=",
                  existing_parent_directory)
-        self.add("hang_around", "runner.hang_around", default=0)
 
     def realize(self, *args, **kwds):
         ZDOptions.realize(self, *args, **kwds)

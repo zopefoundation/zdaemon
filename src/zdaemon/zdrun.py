@@ -382,16 +382,15 @@ class Daemonizer:
         # additionally recommends ignoring SIGHUP and forking again
         # after the setsid() call, for obscure SVR4 reasons.
 
-    mood = 1 # 1: up, 0: down, -1: suicidal
+    should_be_up = True
     delay = 0 # If nonzero, delay starting or killing until this time
     killing = 0 # If true, send SIGKILL when delay expires
     proc = None # Subprocess instance
 
     def runforever(self):
         self.logger.info("daemon manager started")
-        min_mood = not self.options.hang_around
-        while self.mood >= min_mood or self.proc.pid:
-            if self.mood > 0 and not self.proc.pid and not self.delay:
+        while self.should_be_up or self.proc.pid:
+            if self.should_be_up and not self.proc.pid and not self.delay:
                 pid = self.proc.spawn()
                 if not pid:
                     # Can't fork.  Try again later...
@@ -519,7 +518,7 @@ class Daemonizer:
             self.sendreply("Unknown command %r; 'help' for a list" % args[0])
 
     def cmd_start(self, args):
-        self.mood = 1 # Up
+        self.should_be_up = True
         self.backoff = 0
         self.delay = 0
         self.killing = 0
@@ -530,7 +529,7 @@ class Daemonizer:
             self.sendreply("Application already started")
 
     def cmd_stop(self, args):
-        self.mood = 0 # Down
+        self.should_be_up = False
         self.backoff = 0
         self.delay = 0
         self.killing = 0
@@ -543,7 +542,7 @@ class Daemonizer:
             self.sendreply("Application already stopped")
 
     def cmd_restart(self, args):
-        self.mood = 1 # Up
+        self.should_be_up = True
         self.backoff = 0
         self.delay = 0
         self.killing = 0
@@ -555,21 +554,6 @@ class Daemonizer:
         else:
             self.proc.spawn()
             self.sendreply("Application started")
-
-    def cmd_exit(self, args):
-        self.mood = -1 # Suicidal
-        self.backoff = 0
-        self.delay = 0
-        self.killing = 0
-        if self.proc.pid:
-            self.proc.kill(signal.SIGTERM)
-            self.sendreply("Sent SIGTERM; will exit later")
-            self.killing = 1
-            self.delay = time.time() + self.options.backofflimit
-        else:
-            self.sendreply("Exiting now")
-            self.logger.info("Exiting")
-            sys.exit(0)
 
     def cmd_kill(self, args):
         if args[1:]:
@@ -596,7 +580,7 @@ class Daemonizer:
             status = "running"
         self.sendreply("status=%s\n" % status +
                        "now=%r\n" % time.time() +
-                       "mood=%d\n" % self.mood +
+                       "should_be_up=%d\n" % self.should_be_up +
                        "delay=%r\n" % self.delay +
                        "backoff=%r\n" % self.backoff +
                        "lasttime=%r\n" % self.proc.lasttime +
