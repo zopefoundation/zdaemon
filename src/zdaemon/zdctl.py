@@ -16,7 +16,7 @@
 
 Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
- 
+
 Options:
 -C/--configure URL -- configuration file or URL
 -S/--schema XML Schema -- XML schema for configuration file
@@ -76,9 +76,9 @@ def string_list(arg):
 
 
 class ZDCtlOptions(RunnerOptions):
-    
+
     __doc__ = __doc__
-    
+
     positional_args_allowed = True
 
     def __init__(self):
@@ -102,7 +102,7 @@ class ZDCtlOptions(RunnerOptions):
         self.add("prompt", "runner.prompt", default=(programname + ">"))
 
     def realize(self, *args, **kwds):
-        
+
         RunnerOptions.realize(self, *args, **kwds)
 
         # Maybe the config file requires -i or positional args
