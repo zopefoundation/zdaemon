@@ -398,6 +398,16 @@ exit-codes
         status code in this list makes zdaemon give up.  To disable
         this, change the value to an empty list.
 
+stop-timeout
+        Command-line option: -T or --stop-timeout SECONDS
+
+        This defaults to 500 seconds (5 minutes).
+
+        When a stop command is issued, a SIGTERM signal is sent to the
+        process.  zdaemon waits for stop-timeout seconds for the
+        process to gracefully exit. If the process doesn't exit in
+        that time, a SIGKILL signal is sent.
+
 user
         Command-line option: -u or --user.
 

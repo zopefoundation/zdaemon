@@ -364,13 +364,16 @@ class RunnerOptions(ZDOptions):
     -h/--help -- print usage message and exit
     -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
     -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
-    -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
+    -f/--forever -- run forever (by default, exit when backoff limit
+                    is exceeded)
     -h/--help -- print this usage message and exit
     -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
+    -T/--stop-timeout SECONDS -- How long to wait for a graceful exit.
     -u/--user USER -- run as this user (or numeric uid)
     -m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
     -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
-    -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
+    -z/--directory DIRECTORY -- directory to chdir to when using -d
+                                (default off)
     action [arguments] -- see below
 
     Actions are commands like "start", "stop" and "status".  If -i is
@@ -386,6 +389,8 @@ class RunnerOptions(ZDOptions):
         ZDOptions.__init__(self)
         self.add("backofflimit", "runner.backoff_limit",
                  "b:", "backoff-limit=", int, default=10)
+        self.add("stoptimeut", "runner.stop_timeout",
+                 "T:", "stop-timeout=", int, default=300)
         self.add("daemon", "runner.daemon", "d", "daemon", flag=1, default=1)
         self.add("forever", "runner.forever", "f", "forever",
                  flag=1, default=0)

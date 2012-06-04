@@ -38,13 +38,16 @@ except (ImportError, AttributeError):
     zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
     zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
+def write(name, text):
+    with open(name, 'w') as f:
+        f.write(text)
 
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
     The whole awhile bit that waits for a program to start
     whouldn't be used on non-daemon mode.
 
-    >>> open('conf', 'w').write(
+    >>> write('conf',
     ... '''
     ... <runner>
     ...   program sleep 1
@@ -60,7 +63,7 @@ def dont_hang_when_program_doesnt_start():
     """
     If a program doesn't start, we don't want to wait for ever.
 
-    >>> open('conf', 'w').write(
+    >>> write('conf',
     ... '''
     ... <runner>
     ...   program sleep
@@ -82,7 +85,7 @@ cause a problem when zdaemon reinvokes itself, passing it's own set of
 configuration arguments.  To deal with this, we'll allow duplicate
 arguments that have the same values.
 
-    >>> open('conf', 'w').write(
+    >>> write('conf',
     ... '''
     ... <runner>
     ...   program sleep 10
@@ -98,6 +101,45 @@ arguments that have the same values.
     daemon process stopped
 
 """
+
+def test_stop_timeout():
+    r"""
+
+    >>> write('t.py',
+    ... '''
+    ... import time, signal
+    ... signal.signal(signal.SIGTERM, lambda *a: None)
+    ... while 1: time.sleep(9)
+    ... ''')
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program %s t.py
+    ...   stop-timeout 1
+    ... </runner>
+    ... ''' % sys.executable)
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=21446
+
+    >>> import threading, time
+    >>> thread = threading.Thread(
+    ...     target=system, args=("./zdaemon -Cconf stop",),
+    ...     kwargs=dict(quiet=True))
+    >>> thread.start()
+    >>> time.sleep(.2)
+
+    >>> system("./zdaemon -Cconf status")
+    program running; pid=15372
+
+    >>> thread.join(2)
+
+    >>> system("./zdaemon -Cconf status")
+    daemon manager not running
+
+    """
 
 def setUp(test):
     test.globs['_td'] = td = []
@@ -123,7 +165,7 @@ def tearDown(test):
     for f in test.globs['_td']:
         f()
 
-def system(command, input=''):
+def system(command, input='', quiet=False):
     p = subprocess.Popen(
         command, shell=True,
         stdin=subprocess.PIPE,
@@ -132,7 +174,9 @@ def system(command, input=''):
     if input:
         p.stdin.write(input)
     p.stdin.close()
-    print p.stdout.read(),
+    data = p.stdout.read()
+    if not quiet:
+        print data,
     p.wait()
 
 def checkenv(match):

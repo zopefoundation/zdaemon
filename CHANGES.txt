@@ -2,11 +2,14 @@
  Changelog
 ===========
 
-
-2.0.5 (unreleased)
+3.0.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Added a separate option, stop-timout, to control how long to wait
+  for a graceful shutdown.
+
+  Previously, this was controlled by backoff-limit, which didn't make
+  much sense.
 
 
 2.0.4 (2009-04-20)

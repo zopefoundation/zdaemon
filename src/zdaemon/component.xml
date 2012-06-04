@@ -185,6 +185,17 @@
       </description>
     </key>
 
+    <key name="stop-timeout" datatype="integer" required="no" default="300">
+      <description>
+        When a stop command is issued, a SIGTERM signal is sent to the
+        process.  zdaemon waits for stop-timeout seconds for the
+        process to gracefully exit. If the process doesn't exit in
+        that time, a SIGKILL signal is sent.
+
+        This defaults to 500 seconds (5 minutes).
+      </description>
+    </key>
+
     <key name="user" datatype="string"
          required="no">
       <description>

@@ -538,7 +538,7 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
             self.killing = 1
-            self.delay = time.time() + self.options.backofflimit
+            self.delay = time.time() + self.options.stoptimeut
         else:
             self.sendreply("Application already stopped")
 
@@ -551,7 +551,7 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
             self.killing = 1
-            self.delay = time.time() + self.options.backofflimit
+            self.delay = time.time() + self.options.stoptimeut
         else:
             self.proc.spawn()
             self.sendreply("Application started")
