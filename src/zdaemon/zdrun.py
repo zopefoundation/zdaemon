@@ -25,6 +25,7 @@ import select
 import signal
 import socket
 import sys
+import subprocess
 import threading
 import time
 
@@ -47,6 +48,9 @@ if __name__ == "__main__":
 from zdaemon.zdoptions import RunnerOptions
 
 
+def string_list(arg):
+    return arg.split()
+
 class ZDRunOptions(RunnerOptions):
 
     __doc__ = __doc__
@@ -63,6 +67,7 @@ class ZDRunOptions(RunnerOptions):
         self.add("transcript", "runner.transcript", "t:", "transcript=",
                  default="/dev/null")
         self.add("stoptimeut", "runner.stop_timeout")
+        self.add("starttestprogram", "runner.start_test_program")
 
     def set_schemafile(self, file):
         self.schemafile = file
@@ -110,6 +115,7 @@ class Subprocess:
             options.usage("missing 'program' argument")
         self.options = options
         self.args = args
+        self.testing = set()
         self._set_filename(args[0])
 
     def _set_filename(self, program):
@@ -138,6 +144,16 @@ class Subprocess:
             self.options.usage("no permission to run program %r" % filename)
         self.filename = filename
 
+    def test(self, pid):
+        starttestprogram = self.options.starttestprogram
+        try:
+            while self.pid == pid:
+                if not subprocess.call(starttestprogram):
+                    break
+                time.sleep(1)
+        finally:
+            self.testing.remove(pid)
+
     def spawn(self):
         """Start the subprocess.  It must not be running already.
 
@@ -152,6 +168,12 @@ class Subprocess:
         if pid != 0:
             # Parent
             self.pid = pid
+            if self.options.starttestprogram:
+                self.testing.add(pid)
+                thread = threading.Thread(target=self.test, args=(pid,))
+                thread.setDaemon(True)
+                thread.start()
+
             self.options.logger.info("spawned process pid=%d" % pid)
             return pid
         else:
@@ -549,6 +571,7 @@ class Daemonizer:
                        "backoff=%r\n" % self.backoff +
                        "lasttime=%r\n" % self.proc.lasttime +
                        "application=%r\n" % self.proc.pid +
+                       "testing=%d\n" % bool(self.proc.testing) +
                        "manager=%r\n" % os.getpid() +
                        "backofflimit=%r\n" % self.options.backofflimit +
                        "filename=%r\n" % self.proc.filename +

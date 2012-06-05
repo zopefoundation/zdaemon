@@ -185,6 +185,39 @@
       </description>
     </key>
 
+    <key name="start-test-program" datatype="string-list"
+         required="no">
+      <description>
+        Command-line option: -p or --program (zdctl.py only).
+
+        This option gives the command used to start the subprocess
+        managed by zdrun.py.  This is currently a simple list of
+        whitespace-delimited words. The first word is the program
+        file, subsequent words are its command line arguments.  If the
+        program file contains no slashes, it is searched using $PATH.
+        (XXX There is no way to to include whitespace in the program
+        file or an argument, and under certain circumstances other
+        shell metacharacters are also a problem, e.g. the "foreground"
+        command of zdctl.py.)
+
+        NOTE: zdrun.py doesn't use this option; it uses its positional
+        arguments.  Rather, zdctl.py uses this option to determine the
+        positional argument with which to invoke zdrun.py.  (XXX This
+        could be better.)
+      </description>
+    </key>
+
+    <key name="start-timeout" datatype="integer" required="no"
+         default="300">
+      <description>
+        When a start-test-program is supplied, a process won't be
+        considered to be started until the test program exits normally
+        or until start-timout seconds have passed.
+
+        This defaults to 300 seconds (5 minutes).
+      </description>
+    </key>
+
     <key name="stop-timeout" datatype="integer" required="no" default="300">
       <description>
         When a stop command is issued, a SIGTERM signal is sent to the

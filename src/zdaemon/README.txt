@@ -285,6 +285,18 @@ the output will show up in the new file, not the old:
     >>> open('log.1').read()
     'rec 1\nrec 2\n'
 
+Start test program and timeout
+==============================
+
+Normally, zdaemon considers a process to have started when the process
+itself has been created.  A process may take a while before it is
+truly up and running.  For example, a database server or a web server
+may take time before they're ready to accept requests.
+
+You can optionally supply a test program, via the ``start-test-program``
+configuration option, that is called repeatedly until it returns a 0
+exit status or until a time limit, ``start-timeout``, has been reached.
+
 Reference Documentation
 =======================
 
@@ -398,9 +410,19 @@ exit-codes
         status code in this list makes zdaemon give up.  To disable
         this, change the value to an empty list.
 
-stop-timeout
-        Command-line option: -T or --stop-timeout SECONDS
+start-test-program
+        A command that tests whether the program is up and running.
+        The command should exit with a zero exit statis if the program
+        is running and with a non-zero status otherwise.
 
+start-timeout
+        Command-line option: -T or --start-timeout.
+
+        If the program takes more than ``start-timeout`` seconds to
+        start, then an error is printed and the control script will
+        exit with a non-zero exit status.
+
+stop-timeout
         This defaults to 500 seconds (5 minutes).
 
         When a stop command is issued, a SIGTERM signal is sent to the

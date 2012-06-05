@@ -141,6 +141,108 @@ def test_stop_timeout():
 
     """
 
+def test_start_test_program():
+    """
+    >>> write('t.py',
+    ... '''
+    ... import time
+    ... time.sleep(1)
+    ... open('x', 'w')
+    ... time.sleep(99)
+    ... ''')
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program %s t.py
+    ...   start-test-program cat x
+    ... </runner>
+    ... ''' % sys.executable)
+
+    >>> import os, time
+    >>> start = time.time()
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=21446
+
+    >>> os.path.exists('x')
+    True
+
+    >>> system("./zdaemon -Cconf stop")
+    <BLANKLINE>
+    daemon process stopped
+    """
+
+def test_start_test_program():
+    """
+    >>> write('t.py',
+    ... '''
+    ... import time
+    ... time.sleep(1)
+    ... open('x', 'w')
+    ... time.sleep(99)
+    ... ''')
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program %s t.py
+    ...   start-test-program cat x
+    ... </runner>
+    ... ''' % sys.executable)
+
+    >>> import os
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=21446
+
+    >>> os.path.exists('x')
+    True
+    >>> os.remove('x')
+
+    >>> system("./zdaemon -Cconf restart")
+    . . . 
+    daemon process restarted, pid=19622
+    >>> os.path.exists('x')
+    True
+
+    >>> system("./zdaemon -Cconf stop")
+    <BLANKLINE>
+    daemon process stopped
+    """
+
+def test_start_timeout():
+    """
+    >>> write('t.py',
+    ... '''
+    ... import time
+    ... time.sleep(9)
+    ... ''')
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program %s t.py
+    ...   start-test-program cat x
+    ...   start-timeout 1
+    ... </runner>
+    ... ''' % sys.executable)
+
+    >>> import time
+    >>> start = time.time()
+
+    >>> system("./zdaemon -Cconf start")
+    <BLANKLINE>
+    Program took too long to start
+    Failed: 1
+
+    >>> system("./zdaemon -Cconf stop")
+    <BLANKLINE>
+    daemon process stopped
+    """
+
 def setUp(test):
     test.globs['_td'] = td = []
     here = os.getcwd()
@@ -177,7 +279,9 @@ def system(command, input='', quiet=False):
     data = p.stdout.read()
     if not quiet:
         print data,
-    p.wait()
+    r = p.wait()
+    if r:
+        print 'Failed:', r
 
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]

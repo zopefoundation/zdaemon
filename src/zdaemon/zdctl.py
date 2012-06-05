@@ -27,6 +27,7 @@ Options:
 -l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -S/--schema XML Schema -- XML schema for configuration file
+-T/--start-timeout SECONDS -- Start timeout when a test program is used
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
 -m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
@@ -88,10 +89,14 @@ class ZDCtlOptions(RunnerOptions):
         self.add("interactive", None, "i", "interactive", flag=1)
         self.add("default_to_interactive", "runner.default_to_interactive",
                  default=1)
+        self.add("default_to_interactive", "runner.default_to_interactive",
+                 default=1)
         self.add("program", "runner.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
         self.add("logfile", "runner.logfile", "l:", "logfile=")
+        self.add("start_timeout", "runner.start_timeout",
+                 "T:", "start-timeout=", int, default=300)
         self.add("python", "runner.python")
         self.add("zdrun", "runner.zdrun")
         programname = os.path.basename(sys.argv[0])
@@ -206,6 +211,7 @@ class ZDCmd(cmd.Cmd):
         except socket.error, msg:
             return None
 
+    zd_testing = 0
     def get_status(self):
         self.zd_up = 0
         self.zd_pid = 0
@@ -219,6 +225,12 @@ class ZDCmd(cmd.Cmd):
         self.zd_up = 1
         self.zd_pid = int(m.group(1))
         self.zd_status = resp
+        m = re.search("(?m)^testing=(\d+)$", resp)
+        if m:
+            self.zd_testing = int(m.group(1))
+        else:
+            self.zd_testing = 0
+
         return resp
 
     def awhile(self, cond, msg):
@@ -228,14 +240,14 @@ class ZDCmd(cmd.Cmd):
             if self.get_status():
                 was_running = True
 
-            while not cond():
+            while not cond(n):
                 sys.stdout.write(". ")
                 sys.stdout.flush()
                 time.sleep(1)
                 n += 1
                 if self.get_status():
                     was_running = True
-                elif (was_running or n > 10) and not cond():
+                elif (was_running or n > 10) and not cond(n):
                     print "\ndaemon manager not running"
                     return
 
@@ -254,6 +266,13 @@ class ZDCmd(cmd.Cmd):
 
     def help_EOF(self):
         print "To quit, type ^D or use the quit command."
+
+
+    def _start_cond(self, n):
+        if (n > self.options.start_timeout):
+            print '\nProgram took too long to start'
+            sys.exit(1)
+        return self.zd_pid and not self.zd_testing
 
     def do_start(self, arg):
         self.get_status()
@@ -289,8 +308,9 @@ class ZDCmd(cmd.Cmd):
             print "daemon process already running; pid=%d" % self.zd_pid
             return
         if self.options.daemon:
-            self.awhile(lambda: self.zd_pid,
-                        "daemon process started, pid=%(zd_pid)d")
+            self.awhile(self._start_cond,
+                        "daemon process started, pid=%(zd_pid)d",
+                        )
 
     def _get_override(self, opt, name, svalue=None, flag=0):
         value = getattr(self.options, name)
@@ -331,7 +351,7 @@ class ZDCmd(cmd.Cmd):
             print "daemon process not running"
         else:
             self.send_action("stop")
-            self.awhile(lambda: not self.zd_pid, "daemon process stopped")
+            self.awhile(lambda n: not self.zd_pid, "daemon process stopped")
 
     def do_reopen_transcript(self, arg):
         if not self.zd_up:
@@ -352,7 +372,7 @@ class ZDCmd(cmd.Cmd):
             self.do_start(arg)
         else:
             self.send_action("restart")
-            self.awhile(lambda: self.zd_pid not in (0, pid),
+            self.awhile(lambda n: (self.zd_pid != pid) and self._start_cond(n),
                         "daemon process restarted, pid=%(zd_pid)d")
 
     def help_restart(self):
@@ -384,7 +404,7 @@ class ZDCmd(cmd.Cmd):
         print "              The default signal is SIGTERM."
 
     def do_wait(self, arg):
-        self.awhile(lambda: not self.zd_pid, "daemon process stopped")
+        self.awhile(lambda n: not self.zd_pid, "daemon process stopped")
         self.do_status()
 
     def help_wait(self):
@@ -570,7 +590,7 @@ class ZDCmd(cmd.Cmd):
         elif not self.zd_pid:
             print "daemon process not running; stopping daemon manager"
             self.send_action("stop")
-            self.awhile(lambda: not self.zd_up, "daemon manager stopped")
+            self.awhile(lambda n: not self.zd_up, "daemon manager stopped")
         else:
             print "daemon process and daemon manager still running"
         return 1

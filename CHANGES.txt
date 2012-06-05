@@ -5,6 +5,17 @@
 3.0.0 (unreleased)
 ==================
 
+- Added an option, ``start-test-program`` to supply a test command to
+  test whether the program managed by zdaemon is up and operational,
+  rather than just running.  When starting a program, the start
+  command doesn't return until the test passes. You could, for
+  example, use this to wait until a web server is actually accepting
+  connections.
+
+- Added a ``start-timeout`` option to error if a program takes too long to
+  start. This is especially useful in combination with the
+  ``start-test-program`` option.
+
 - Added a separate option, stop-timout, to control how long to wait
   for a graceful shutdown.
 
