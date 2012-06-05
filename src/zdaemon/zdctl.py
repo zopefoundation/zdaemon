@@ -569,7 +569,7 @@ class ZDCmd(cmd.Cmd):
             print "daemon manager not running"
         elif not self.zd_pid:
             print "daemon process not running; stopping daemon manager"
-            self.send_action("exit")
+            self.send_action("stop")
             self.awhile(lambda: not self.zd_up, "daemon manager stopped")
         else:
             print "daemon process and daemon manager still running"
