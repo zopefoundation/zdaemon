@@ -18,16 +18,15 @@ Usage: python zdctl.py [-C URL] [-S schema.xml] [-h] [-p PROGRAM]
        [zdrun-options] [action [arguments]]
 
 Options:
--C/--configure URL -- configuration file or URL
--S/--schema XML Schema -- XML schema for configuration file
--h/--help -- print usage message and exit
 -b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
+-C/--configure URL -- configuration file or URL
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
 -i/--interactive -- start an interactive shell after executing commands
 -l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
+-S/--schema XML Schema -- XML schema for configuration file
 -s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
 -u/--user USER -- run as this user (or numeric uid)
 -m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
