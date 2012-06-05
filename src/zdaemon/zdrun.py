@@ -99,6 +99,7 @@ class ZDRunOptions(RunnerOptions):
                  handler=self.set_schemafile)
         self.add("transcript", "runner.transcript", "t:", "transcript=",
                  default="/dev/null")
+        self.add("stoptimeut", "runner.stop_timeout")
 
     def set_schemafile(self, file):
         self.schemafile = file

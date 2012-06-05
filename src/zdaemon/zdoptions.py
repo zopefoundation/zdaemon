@@ -389,8 +389,6 @@ class RunnerOptions(ZDOptions):
         ZDOptions.__init__(self)
         self.add("backofflimit", "runner.backoff_limit",
                  "b:", "backoff-limit=", int, default=10)
-        self.add("stoptimeut", "runner.stop_timeout",
-                 "T:", "stop-timeout=", int, default=300)
         self.add("daemon", "runner.daemon", "d", "daemon", flag=1, default=1)
         self.add("forever", "runner.forever", "f", "forever",
                  flag=1, default=0)
