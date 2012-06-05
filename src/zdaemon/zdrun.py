@@ -15,43 +15,6 @@
 """zrdun -- run an application as a daemon.
 
 Usage: python zrdun.py [zrdun-options] program [program-arguments]
-
-Options:
--C/--configure URL -- configuration file or URL
--S/--schema XML Schema -- XML schema for configuration file
--b/--backoff-limit SECONDS -- set backoff limit to SECONDS (default 10)
--d/--daemon -- run as a proper daemon; fork a subprocess, setsid(), etc.
--f/--forever -- run forever (by default, exit when backoff limit is exceeded)
--h/--help -- print this usage message and exit
--s/--socket-name SOCKET -- Unix socket name for client (default "zdsock")
--u/--user USER -- run as this user (or numeric uid)
--m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
--t/--transcript FILE -- transript of output from daemon-mode program
--x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
--z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
-program [program-arguments] -- an arbitrary application to run
-
-This daemon manager has two purposes: it restarts the application when
-it dies, and (when requested to do so with the -d option) it runs the
-application in the background, detached from the foreground tty
-session that started it (if any).
-
-Exit codes: if at any point the application exits with an exit status
-listed by the -x option, it is not restarted.  Any other form of
-termination (either being killed by a signal or exiting with an exit
-status not listed in the -x option) causes it to be restarted.
-
-Backoff limit: when the application exits (nearly) immediately after a
-restart, the daemon manager starts slowing down by delaying between
-restarts.  The delay starts at 1 second and is increased by one on
-each restart up to the backoff limit given by the -b option; it is
-reset when the application runs for more than the backoff limit
-seconds.  By default, when the delay reaches the backoff limit, the
-daemon manager exits (under the assumption that the application has a
-persistent fault).  The -f (forever) option prevents this exit; use it
-when you expect that a temporary external problem (such as a network
-outage or an overfull disk) may prevent the application from starting
-but you want the daemon manager to keep trying.
 """
 
 from stat import ST_MODE
