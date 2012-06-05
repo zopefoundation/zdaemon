@@ -192,7 +192,7 @@
         process to gracefully exit. If the process doesn't exit in
         that time, a SIGKILL signal is sent.
 
-        This defaults to 500 seconds (5 minutes).
+        This defaults to 300 seconds (5 minutes).
       </description>
     </key>
 
