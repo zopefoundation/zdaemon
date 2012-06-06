@@ -29,6 +29,7 @@ try:
         entry_points=entry_points,
         include_package_data = True,
         install_requires=["ZConfig"],
+        extras_require=dict(test=['zope.testing']),
         )
 except ImportError:
     from distutils.core import setup
