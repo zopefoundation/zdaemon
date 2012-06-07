@@ -179,6 +179,7 @@ class ZDCmd(cmd.Cmd):
         if uid != 0 and uid != self.options.uid:
             self.options.usage("only root can use -u USER to change users")
         os.setgid(self.options.gid)
+        os.setgroups(self.options.groups)
         os.setuid(self.options.uid)
 
     def emptyline(self):

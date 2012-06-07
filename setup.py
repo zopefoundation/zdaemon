@@ -29,7 +29,7 @@ try:
         entry_points=entry_points,
         include_package_data = True,
         install_requires=["ZConfig"],
-        extras_require=dict(test=['zope.testing']),
+        extras_require=dict(test=['zope.testing', 'mock']),
         )
 except ImportError:
     from distutils.core import setup
@@ -48,9 +48,9 @@ setup(
     long_description=(
         read('README.txt')
         + '\n' +
-        read('CHANGES.txt')
-        + '\n' +
         read('src/zdaemon/README.txt')
+        + '\n' +
+        read('CHANGES.txt')
         + '\n' +
         '========\n' +
         'Download\n' +

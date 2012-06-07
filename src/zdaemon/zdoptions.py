@@ -405,7 +405,7 @@ class RunnerOptions(ZDOptions):
 
         # Additional checking of user option; set uid and gid
         if self.user is not None:
-            import pwd
+            import pwd, grp
             try:
                 uid = int(self.user)
             except ValueError:
@@ -413,15 +413,16 @@ class RunnerOptions(ZDOptions):
                     pwrec = pwd.getpwnam(self.user)
                 except KeyError:
                     self.usage("username %r not found" % self.user)
-                uid = pwrec[2]
+                uid = pwrec.pw_uid
             else:
                 try:
                     pwrec = pwd.getpwuid(uid)
                 except KeyError:
                     self.usage("uid %r not found" % self.user)
-            gid = pwrec[3]
             self.uid = uid
-            self.gid = gid
+            self.gid = pwrec.pw_gid
+            self.groups = sorted(g.gr_gid for g in grp.getgrall()
+                                 if self.user in g.gr_mem)
 
 
 # ZConfig datatype
