@@ -385,7 +385,7 @@ class TestRunnerDirectory(unittest.TestCase):
     def testDirectoryChown(self):
         path = os.path.join(self.root, 'foodir')
         options = zdctl.ZDCtlOptions()
-        options.realize(['-p', self.cmd])
+        options.realize(['-p', self.cmd, 'status'])
         cmd = zdctl.ZDCmd(options)
         options.uid = 27
         options.gid = 28

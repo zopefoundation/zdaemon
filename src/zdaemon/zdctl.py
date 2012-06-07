@@ -23,7 +23,6 @@ Options:
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
--i/--interactive -- start an interactive shell after executing commands
 -l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -S/--schema XML Schema -- XML schema for configuration file
@@ -35,10 +34,7 @@ Options:
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 action [arguments] -- see below
 
-Actions are commands like "start", "stop" and "status".  If -i is
-specified or no action is specified on the command line, a "shell"
-interpreting actions typed interactively is started (unless the
-configuration option default_to_interactive is set to false).  Use the
+Actions are commands like "start", "stop" and "status".  Use the
 action "help" to find out about available actions.
 """
 
@@ -86,11 +82,6 @@ class ZDCtlOptions(RunnerOptions):
         self.add("schemafile", short="S:", long="schema=",
                  default="schema.xml",
                  handler=self.set_schemafile)
-        self.add("interactive", None, "i", "interactive", flag=1)
-        self.add("default_to_interactive", "runner.default_to_interactive",
-                 default=1)
-        self.add("default_to_interactive", "runner.default_to_interactive",
-                 default=1)
         self.add("program", "runner.program", "p:", "program=",
                  handler=string_list,
                  required="no program specified; use -p or -C")
@@ -110,10 +101,8 @@ class ZDCtlOptions(RunnerOptions):
         RunnerOptions.realize(self, *args, **kwds)
 
         # Maybe the config file requires -i or positional args
-        if not self.args and not self.interactive:
-            if not self.default_to_interactive:
-                self.usage("either -i or an action argument is required")
-            self.interactive = 1
+        if not self.args:
+            self.usage("an action argument is required")
 
         # Where's python?
         if not self.python:
@@ -260,14 +249,6 @@ class ZDCmd(cmd.Cmd):
     def help_help(self):
         print "help          -- Print a list of available actions."
         print "help <action> -- Print help for <action>."
-
-    def do_EOF(self, arg):
-        print
-        return 1
-
-    def help_EOF(self):
-        print "To quit, type ^D or use the quit command."
-
 
     def _start_cond(self, n):
         if (n > self.options.start_timeout):
@@ -444,9 +425,6 @@ class ZDCmd(cmd.Cmd):
         print "zdctl/zdrun options:"
         print "schemafile:  ", repr(self.options.schemafile)
         print "configfile:  ", repr(self.options.configfile)
-        print "interactive: ", repr(self.options.interactive)
-        print "default_to_interactive:",
-        print                  repr(self.options.default_to_interactive)
         print "zdrun:       ", repr(self.options.zdrun)
         print "python:      ", repr(self.options.python)
         print "program:     ", repr(self.options.program)
@@ -487,17 +465,6 @@ class ZDCmd(cmd.Cmd):
         print "show python -- show Python version and details"
         print "show all -- show all of the above"
 
-    def complete_show(self, text, *ignored):
-        options = ["options", "python", "all"]
-        return [x for x in options if x.startswith(text)]
-
-    def do_logreopen(self, arg):
-        self.do_kill(str(signal.SIGUSR2))
-
-    def help_logreopen(self):
-        print "logreopen -- Send a SIGUSR2 signal to the daemon process."
-        print "             This is designed to reopen the log file."
-
     def do_logtail(self, arg):
         if not arg:
             arg = self.options.logfile
@@ -518,46 +485,6 @@ class ZDCmd(cmd.Cmd):
         print "logtail [logfile] -- Run tail -f on the given logfile."
         print "                     A default file may exist."
         print "                     Hit ^C to exit this mode."
-
-    def do_shell(self, arg):
-        if not arg:
-            arg = os.getenv("SHELL") or "/bin/sh"
-        try:
-            os.system(arg)
-        except KeyboardInterrupt:
-            print
-
-    def help_shell(self):
-        print "shell [command] -- Execute a shell command."
-        print "                   Without a command, start an interactive sh."
-        print "An alias for this command is ! [command]"
-
-    def do_reload(self, arg):
-        if arg:
-            args = arg.split()
-            if self.options.configfile:
-                args = ["-C", self.options.configfile] + args
-        else:
-            args = None
-        options = ZDCtlOptions()
-        options.positional_args_allowed = 0
-        try:
-            options.realize(args)
-        except SystemExit:
-            print "Configuration not reloaded"
-        else:
-            self.options = options
-            if self.options.configfile:
-                print "Configuration reloaded from", self.options.configfile
-            else:
-                print "Configuration reloaded without a config file"
-
-    def help_reload(self):
-        print "reload [options] -- Reload the configuration."
-        print "    Without options, this reparses the command line."
-        print "    With options, this substitutes 'options' for the"
-        print "    command line, except that if no -C option is given,"
-        print "    the last configuration file is used."
 
     def do_foreground(self, arg):
         self.get_status()
@@ -583,23 +510,6 @@ class ZDCmd(cmd.Cmd):
 
     def help_fg(self):
         self.help_foreground()
-
-    def do_quit(self, arg):
-        self.get_status()
-        if not self.zd_up:
-            print "daemon manager not running"
-        elif not self.zd_pid:
-            print "daemon process not running; stopping daemon manager"
-            self.send_action("stop")
-            self.awhile(lambda n: not self.zd_up, "daemon manager stopped")
-        else:
-            print "daemon process and daemon manager still running"
-        return 1
-
-    def help_quit(self):
-        print "quit -- Exit the zdctl shell."
-        print "        If the daemon process is not running,"
-        print "        stop the daemon manager."
 
 
 class TailHelper:
@@ -672,16 +582,7 @@ def main(args=None, options=None, cmdclass=ZDCmd):
         options = ZDCtlOptions()
     options.realize(args)
     c = cmdclass(options)
-    if options.args:
-        c.onecmd(" ".join(options.args))
-    if options.interactive:
-        try:
-            import readline
-        except ImportError:
-            pass
-        print "program:", " ".join(options.program)
-        c.do_status()
-        c.cmdloop()
+    c.onecmd(" ".join(options.args))
 
 if __name__ == "__main__":
     main()
