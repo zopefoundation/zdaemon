@@ -2,7 +2,7 @@
  Changelog
 ===========
 
-2.0.5 (2012-06-07)
+2.0.6 (2012-06-07)
 ==================
 
 - Fixed: When the ``user`` option was used to run as a particular
