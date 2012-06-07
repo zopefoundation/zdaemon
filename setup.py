@@ -30,7 +30,7 @@ try:
         include_package_data = True,
         install_requires=["ZConfig"],
         extras_require=dict(
-            test=['zope.testing', 'manuel', 'zc.customdoctests']),
+            test=['zope.testing', 'manuel', 'zc.customdoctests', 'mock']),
         )
 except ImportError:
     from distutils.core import setup
