@@ -12,6 +12,8 @@
 #
 ##############################################################################
 
+version = '0.0.0'
+
 import os
 
 entry_points = """
@@ -39,7 +41,7 @@ except ImportError:
 name = "zdaemon"
 setup(
     name=name,
-    version = '2.0.5dev',
+    version = version,
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description=
