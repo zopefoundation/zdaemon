@@ -1,8 +1,20 @@
-===========
- Change log
-===========
+==========
+Change log
+==========
 
-3.0.0 (unreleased)
+3.0.1 (2012-06-08)
+==================
+
+- Fixed:
+
+  The change in 2.0.6 to set a user's supplemental groups broke common
+  configurations in which the effective user was set via ``su`` or
+  ``sudo -u`` prior to invoking zdaemon.
+
+  Now, zdaemon doesn't set groups or the effective user if the
+  effective user is already set to the configured user.
+
+3.0.0 (2012-06-08)
 ==================
 
 - Added an option, ``start-test-program`` to supply a test command to

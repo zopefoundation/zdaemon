@@ -166,14 +166,42 @@ class ZDCmd(cmd.Cmd):
             os.chown(directory, self.options.uid, self.options.gid)
 
     def set_uid(self):
-        if self.options.uid is None:
+        user = self.options.user
+        if user is None:
             return
-        uid = os.geteuid()
-        if uid != 0 and uid != self.options.uid:
-            self.options.usage("only root can use -u USER to change users")
-        os.setgid(self.options.gid)
-        os.setgroups(self.options.groups)
-        os.setuid(self.options.uid)
+
+        import pwd
+        try:
+            uid = int(user)
+        except ValueError:
+            try:
+                pwrec = pwd.getpwnam(user)
+            except KeyError:
+                self.options.usage("username %r not found" % user)
+            uid = pwrec.pw_uid
+        else:
+            try:
+                pwrec = pwd.getpwuid(uid)
+            except KeyError:
+                self.options.usage("uid %r not found" % user)
+
+        # See if we're already that user:
+        euid = os.geteuid()
+        if euid != 0:
+            if euid != uid:
+                self.options.usage("only root can use -u USER to change users")
+            return
+
+        # OK, we have to set user and groups:
+        os.setgid(pwrec.pw_gid)
+
+        import grp
+        user = pwrec.pw_name
+        os.setgroups(
+            sorted(g.gr_gid for g in grp.getgrall() # sort for tests
+                   if user in g.gr_mem)
+            )
+        os.setuid(uid)
 
     def emptyline(self):
         # We don't want a blank line to repeat the last command.
