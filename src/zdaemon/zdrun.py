@@ -581,20 +581,6 @@ class Daemonizer:
         if self.transcript is not None:
             self.transcript.reopen()
 
-    def cmd_help(self, args):
-        self.sendreply(
-            "Available commands:\n"
-            "  help -- return command help\n"
-            "  status -- report application status (default command)\n"
-            "  kill [signal] -- send a signal to the application\n"
-            "                   (default signal is SIGTERM)\n"
-            "  start -- start the application if not already running\n"
-            "  stop -- stop the application if running\n"
-            "          (the daemon manager keeps running)\n"
-            "  restart -- stop followed by start\n"
-            "  exit -- stop the application and exit\n"
-            )
-
     def sendreply(self, msg):
         try:
             if not msg.endswith("\n"):
