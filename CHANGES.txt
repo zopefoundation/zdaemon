@@ -1,5 +1,5 @@
 ===========
- Changelog
+ Change log
 ===========
 
 3.0.0 (unreleased)
@@ -16,13 +16,13 @@
   start. This is especially useful in combination with the
   ``start-test-program`` option.
 
-- Added a separate option, stop-timout, to control how long to wait
+- Added an option, stop-timeout, to control how long to wait
   for a graceful shutdown.
 
   Previously, this was controlled by backoff-limit, which didn't make
   much sense.
 
-- Several undocunented, untested, and presumeably unused features were removed.
+- Several undocumented, untested, and presumably unused features were removed.
 
 2.0.6 (2012-06-07)
 ==================
@@ -61,7 +61,7 @@
 Bugs Fixed
 ----------
 
-- No longer uses a hardcoded filename (/tmp/demo.zdsock) in unit tests.
+- No longer uses a hard-coded file name (/tmp/demo.zdsock) in unit tests.
   This lets you run the tests on Python 2.4 and 2.5 simultaneously without
   spurious errors.
 
@@ -132,7 +132,7 @@ Bugs Fixed
 - In non-daemon mode, start hung, producing annoying dots
   when the program exited.
 
-- The start command hung producing annoying dots if the deamon failed
+- The start command hung producing annoying dots if the daemon failed
   to start.
 
 - foreground and start had different semantics because one used
@@ -149,10 +149,10 @@ New Features
 - zdctl now invokes itself to run zdrun.  This means that it's
   no-longer necessary to generate a separate zdrun script.  This
   especially when the magic techniques to find and run zdrun using
-  directory sniffing fail to set the path corrrectly.
+  directory sniffing fail to set the path correctly.
 
-- The daemon mode is now enabled by default.  To get non-deamon mode,
-  you have to use a configuration file and set deamon to off
+- The daemon mode is now enabled by default.  To get non-daemon mode,
+  you have to use a configuration file and set daemon to off
   there. The old -d option is kept for backward compatibility, but is
   a no-op.
 
@@ -183,7 +183,7 @@ After 1.1
    has a path so long that the test socket can't be created.
 
  o Changed management of 'donothing.sh'.  This script is now created by
-   the test in the temporarary directory with the necessary
+   the test in the temporarily directory with the necessary
    permissions. This is to avoids possible mangling of permissions
    leading to spurious test failures.  It also avoids management of a
    file in the source tree, which is a bonus.
