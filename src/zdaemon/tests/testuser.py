@@ -96,10 +96,36 @@ def test_user_sets_supplemtary_groups():
 
     """
 
+def test_do_nothing_if_effective_user_is_configured_user():
+    """
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program sleep 9
+    ...   user zope
+    ... </runner>
+    ... ''')
+
+    >>> with mock.patch('os.geteuid') as geteuid:
+    ...     geteuid.return_value = 99
+    ...     zdaemon.zdctl.main(['-C', 'conf', 'status'])
+    ...     os.geteuid.assert_called_with()
+    daemon manager not running
+
+    >>> import pwd, os, grp
+    >>> pwd.getpwnam.assert_called_with('zope')
+    >>> _ = grp.getgrall.assert_not_called()
+    >>> _ = os.setuid.assert_not_called()
+    >>> _ = os.setgid.assert_not_called()
+    >>> _ = os.setgroups.assert_not_called()
+
+    """
+
 def setUp(test):
     setupstack.setUpDirectory(test)
     getpwname = setupstack.context_manager(test, mock.patch('pwd.getpwnam'))
-    getpwname.return_value = O(pw_gid=5, pw_uid=99)
+    getpwname.return_value = O(pw_gid=5, pw_uid=99, pw_name='zope')
     setupstack.context_manager(test, mock.patch('os.geteuid')).return_value = 0
     setupstack.context_manager(test, mock.patch('grp.getgrall'))
     setupstack.context_manager(test, mock.patch('os.setgroups'))
