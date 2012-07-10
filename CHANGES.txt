@@ -2,6 +2,12 @@
 Change log
 ==========
 
+3.0.2 (2012-07-10)
+==================
+
+- Fixed: programs started with zdaemon couldn't, themselves, invoke
+  zdaemon.
+
 3.0.1 (2012-06-08)
 ==================
 
