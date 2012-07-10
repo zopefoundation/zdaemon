@@ -42,6 +42,10 @@ def write(name, text):
     with open(name, 'w') as f:
         f.write(text)
 
+def read(name):
+    with open(name) as f:
+        return f.read()
+
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
     The whole awhile bit that waits for a program to start
@@ -242,6 +246,27 @@ def test_start_timeout():
     <BLANKLINE>
     daemon process stopped
     """
+
+def DAEMON_MANAGER_MODE_leak():
+    """
+    Zdaemon used an environment variable to flag that it's running in
+    daemon-manager mode, as opposed to UI mode.  If this environment
+    variable is allowed to leak to the program, them the program will
+    be unable to invoke zdaemon correctly.
+
+    >>> write('c', '''
+    ... <runner>
+    ...   program env
+    ...   transcript t
+    ... </runner>
+    ... ''')
+
+    >>> system('./zdaemon -b0 -T1 -Cc start', quiet=True)
+    Failed: 1
+    >>> 'DAEMON_MANAGER_MODE' not in read('t')
+    True
+    """
+
 
 def setUp(test):
     test.globs['_td'] = td = []

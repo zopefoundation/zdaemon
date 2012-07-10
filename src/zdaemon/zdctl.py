@@ -603,6 +603,7 @@ def main(args=None, options=None, cmdclass=ZDCmd):
         args = sys.argv[1:]
 
     if os.environ.get('DAEMON_MANAGER_MODE'):
+        del os.environ['DAEMON_MANAGER_MODE']
         import zdaemon.zdrun
         return zdaemon.zdrun.main(args)
 
