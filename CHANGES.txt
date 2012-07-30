@@ -2,6 +2,12 @@
 Change log
 ==========
 
+3.0.4 (2012-07-30)
+==================
+
+- Fixed: The start command exited with a zero exit status even when
+  the program being started failed to start (or exited imediately).
+
 3.0.3 (2012-07-10)
 ==================
 

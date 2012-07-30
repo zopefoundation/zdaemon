@@ -83,7 +83,8 @@ def test_user_sets_supplemtary_groups():
     ...   O(gr_gid=7, gr_mem =['h', ]),
     ... ]
 
-    >>> zdaemon.zdctl.main(['-C', 'conf', 'status'])
+    >>> with mock.patch('sys.exit'):
+    ...     zdaemon.zdctl.main(['-C', 'conf', 'status'])
     daemon manager not running
 
     >>> import pwd, os
@@ -108,6 +109,7 @@ def test_do_nothing_if_effective_user_is_configured_user():
     ... ''')
 
     >>> with mock.patch('os.geteuid') as geteuid:
+    ...   with mock.patch('sys.exit'):
     ...     geteuid.return_value = 99
     ...     zdaemon.zdctl.main(['-C', 'conf', 'status'])
     ...     os.geteuid.assert_called_with()

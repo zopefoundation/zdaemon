@@ -267,7 +267,7 @@ class ZDCmd(cmd.Cmd):
                     was_running = True
                 elif (was_running or n > 10) and not cond(n):
                     print "\ndaemon manager not running"
-                    return
+                    return 1
 
         except KeyboardInterrupt:
             print "^C"
@@ -318,9 +318,8 @@ class ZDCmd(cmd.Cmd):
             print "daemon process already running; pid=%d" % self.zd_pid
             return
         if self.options.daemon:
-            self.awhile(self._start_cond,
-                        "daemon process started, pid=%(zd_pid)d",
-                        )
+            return self.awhile(
+                self._start_cond, "daemon process started, pid=%(zd_pid)d")
 
     def _get_override(self, opt, name, svalue=None, flag=0):
         value = getattr(self.options, name)
@@ -611,7 +610,7 @@ def main(args=None, options=None, cmdclass=ZDCmd):
         options = ZDCtlOptions()
     options.realize(args)
     c = cmdclass(options)
-    c.onecmd(" ".join(options.args))
+    sys.exit(c.onecmd(" ".join(options.args)))
 
 if __name__ == "__main__":
     main()

@@ -78,6 +78,7 @@ def dont_hang_when_program_doesnt_start():
     >>> system("./zdaemon -Cconf start")
     . .
     daemon manager not running
+    Failed: 1
 
     """
 
@@ -267,6 +268,48 @@ def DAEMON_MANAGER_MODE_leak():
     True
     """
 
+def nonzeo_exit_on_program_failure():
+    """
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   backoff-limit 1
+    ...   program nosuch
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start", echo=True) # doctest: +ELLIPSIS
+    ./zdaemon...
+    daemon manager not running
+    Failed: 1
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   backoff-limit 1
+    ...   program cat nosuch
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start", echo=True) # doctest: +ELLIPSIS
+    ./zdaemon...
+    daemon manager not running
+    Failed: 1
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   backoff-limit 1
+    ...   program pwd
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start", echo=True) # doctest: +ELLIPSIS
+    ./zdaemon...
+    daemon manager not running
+    Failed: 1
+
+    """
 
 def setUp(test):
     test.globs['_td'] = td = []
@@ -292,7 +335,9 @@ def tearDown(test):
     for f in test.globs['_td']:
         f()
 
-def system(command, input='', quiet=False):
+def system(command, input='', quiet=False, echo=False):
+    if echo:
+        print command
     p = subprocess.Popen(
         command, shell=True,
         stdin=subprocess.PIPE,
