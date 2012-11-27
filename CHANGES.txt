@@ -2,6 +2,13 @@
 Change log
 ==========
 
+3.0.5 (2012-11-27)
+==================
+
+- Fixed: the status command didn't return a non-zero exit status when
+  the program wasn't running. This made it impossible for other
+  software (e.g. Puppet) to tell if a process was running.
+
 3.0.4 (2012-07-30)
 ==================
 

@@ -72,6 +72,7 @@ We can stop it with the stop command:
 
     sh> ./zdaemon -p 'sleep 100' status
     daemon manager not running
+    Failed: 3
 
 Normally, we control zdaemon using a configuration file.  Let's create
 a typical configuration file::

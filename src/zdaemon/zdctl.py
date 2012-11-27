@@ -420,18 +420,21 @@ class ZDCmd(cmd.Cmd):
         print "wait -- Wait for the daemon process to exit."
 
     def do_status(self, arg=""):
+        status = 0
         if arg not in ["", "-l"]:
             print "status argument must be absent or -l"
-            return
+            return 1
         self.get_status()
         if not self.zd_up:
             print "daemon manager not running"
+            status = 3
         elif not self.zd_pid:
             print "daemon manager running; daemon process not running"
         else:
             print "program running; pid=%d" % self.zd_pid
         if arg == "-l" and self.zd_status:
             print self.zd_status
+        return status
 
     def help_status(self):
         print "status [-l] -- Print status for the daemon process."

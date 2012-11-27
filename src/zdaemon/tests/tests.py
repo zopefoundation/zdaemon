@@ -143,6 +143,7 @@ def test_stop_timeout():
 
     >>> system("./zdaemon -Cconf status")
     daemon manager not running
+    Failed: 3
 
     """
 
