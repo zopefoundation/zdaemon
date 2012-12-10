@@ -424,7 +424,7 @@ start-timeout
         exit with a non-zero exit status.
 
 stop-timeout
-        This defaults to 500 seconds (5 minutes).
+        This defaults to 300 seconds (5 minutes).
 
         When a stop command is issued, a SIGTERM signal is sent to the
         process.  zdaemon waits for stop-timeout seconds for the
