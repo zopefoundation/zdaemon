@@ -11,7 +11,7 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-
+from __future__ import print_function
 import doctest
 import manuel.capture
 import manuel.doctest
@@ -327,7 +327,7 @@ def setUp(test):
         zdaemon = zdaemon_loc,
         ZConfig = zconfig_loc,
         ))
-    os.chmod('zdaemon', 0755)
+    os.chmod('zdaemon', 0o755)
     test.globs.update(dict(
         system = system
         ))
@@ -338,7 +338,7 @@ def tearDown(test):
 
 def system(command, input='', quiet=False, echo=False):
     if echo:
-        print command
+        print(command)
     p = subprocess.Popen(
         command, shell=True,
         stdin=subprocess.PIPE,
@@ -349,10 +349,10 @@ def system(command, input='', quiet=False, echo=False):
     p.stdin.close()
     data = p.stdout.read()
     if not quiet:
-        print data,
+        print(data, end='')
     r = p.wait()
     if r:
-        print 'Failed:', r
+        print('Failed:', r)
 
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]
@@ -387,20 +387,18 @@ def test_suite():
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
                 (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                ])
-        ),
+                ])),
         manuel.testing.TestSuite(
-            manuel.doctest.Manuel(
-                parser=zc.customdoctests.DocTestParser(
-                    ps1='sh>',
-                    transform=lambda s: 'system("%s")\n' % s.rstrip()
-                    ),
-                checker=README_checker,
-                ) +
-            manuel.doctest.Manuel(checker=README_checker) +
-            manuel.capture.Manuel(),
-            '../README.txt',
-            setUp=setUp, tearDown=tearDown,
-            ),
+                manuel.doctest.Manuel(
+                    parser=zc.customdoctests.DocTestParser(
+                        ps1='sh>',
+                        transform=lambda s: 'system("%s")\n' % s.rstrip()
+                        ),
+                    checker=README_checker,
+                    ) +
+                manuel.doctest.Manuel(checker=README_checker) +
+                manuel.capture.Manuel(),
+                '../README.txt',
+                setUp=setUp, tearDown=tearDown),
         ))
 

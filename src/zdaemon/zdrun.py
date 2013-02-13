@@ -135,7 +135,7 @@ class Subprocess:
                 except os.error:
                     continue
                 mode = st[ST_MODE]
-                if mode & 0111:
+                if mode & 0o111:
                     break
             else:
                 self.options.usage("can't find program %r on PATH %s" %
@@ -188,7 +188,7 @@ class Subprocess:
                         pass
                 try:
                     os.execv(self.filename, self.args)
-                except os.error, err:
+                except os.error as err:
                     sys.stderr.write("can't exec %r: %s\n" %
                                      (self.filename, err))
             finally:
@@ -205,7 +205,7 @@ class Subprocess:
             return "no subprocess running"
         try:
             os.kill(self.pid, sig)
-        except os.error, msg:
+        except os.error as msg:
             return str(msg)
         return None
 
@@ -251,7 +251,7 @@ class Daemonizer:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 sock.bind(tempname)
-                os.chmod(tempname, 0700)
+                os.chmod(tempname, 0o700)
                 try:
                     os.link(tempname, sockname)
                     break
@@ -351,7 +351,7 @@ class Daemonizer:
         if self.options.directory:
             try:
                 os.chdir(self.options.directory)
-            except os.error, err:
+            except os.error as err:
                 self.logger.warn("can't chdir into %r: %s"
                                  % (self.options.directory, err))
             else:
@@ -396,8 +396,8 @@ class Daemonizer:
                         self.delay = time.time() + self.options.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
-            except select.error, err:
-                if err[0] != errno.EINTR:
+            except select.error as err:
+                if err.args[0] != errno.EINTR:
                     raise
                 r = w = x = []
             if self.waitstatus:
@@ -405,14 +405,14 @@ class Daemonizer:
             if self.commandsocket and self.commandsocket in r:
                 try:
                     self.dorecv()
-                except socket.error, msg:
+                except socket.error as msg:
                     self.logger.exception("socket.error in dorecv(): %s"
                                           % str(msg))
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
-                except socket.error, msg:
+                except socket.error as msg:
                     self.logger.exception("socket.error in doaccept(): %s"
                                           % str(msg))
                     self.commandsocket = None
@@ -592,7 +592,7 @@ class Daemonizer:
                 while msg:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
-        except socket.error, msg:
+        except socket.error as msg:
             self.logger.warn("Error sending reply: %s" % str(msg))
 
 
@@ -685,7 +685,7 @@ def _init_signames():
 def get_path():
     """Return a list corresponding to $PATH, or a default."""
     path = ["/bin", "/usr/bin", "/usr/local/bin"]
-    if os.environ.has_key("PATH"):
+    if "PATH" in os.environ:
         p = os.environ["PATH"]
         if p:
             path = p.split(os.pathsep)

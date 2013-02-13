@@ -19,13 +19,18 @@ import sys
 import tempfile
 import shutil
 import unittest
-from StringIO import StringIO
 
 import ZConfig
 import zdaemon
 from zdaemon.zdoptions import (
     ZDOptions, RunnerOptions,
     existing_parent_directory, existing_parent_dirpath)
+
+try:
+    from StringIO import StringIO
+except:
+    # Python 3 support.
+    from io import StringIO
 
 class ZDOptionsTestBase(unittest.TestCase):
 
@@ -47,7 +52,7 @@ class ZDOptionsTestBase(unittest.TestCase):
             sys.stderr = StringIO()
             try:
                 options.realize(args)
-            except SystemExit, err:
+            except SystemExit as err:
                 self.assertEqual(err.code, 2)
             else:
                 self.fail("SystemExit expected")
@@ -96,7 +101,7 @@ class TestZDOptions(ZDOptionsTestBase):
                     options.realize([arg],**kw)
                 finally:
                     self.restore_streams()
-            except SystemExit, err:
+            except SystemExit as err:
                 self.assertEqual(err.code, 0)
             else:
                 self.fail("%s didn't call sys.exit()" % repr(arg))
@@ -307,7 +312,7 @@ class TestZDOptionsEnvironment(EnvironmentOptions):
                 options.realize([])
             finally:
                 self.restore_streams()
-        except SystemExit, e:
+        except SystemExit as e:
             self.assertEqual(e.code, 2)
         else:
             self.fail("expected SystemExit")

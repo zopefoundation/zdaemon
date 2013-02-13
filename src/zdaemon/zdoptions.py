@@ -11,9 +11,8 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-
 """Option processing for zdaemon and related code."""
-
+from __future__ import print_function
 import os
 import sys
 import getopt
@@ -78,7 +77,7 @@ class ZDOptions:
             doc = "No help available."
         elif doc.find("%s") > 0:
             doc = doc.replace("%s", self.progname)
-        print doc,
+        print(doc, end='')
         sys.exit(0)
 
     def usage(self, msg):
@@ -98,9 +97,9 @@ class ZDOptions:
             for n, cn in self.names_list[:]:
                 if n == name:
                     self.names_list.remove((n, cn))
-            if self.default_map.has_key(name):
+            if name in self.default_map:
                 del self.default_map[name]
-            if self.required_map.has_key(name):
+            if name in self.required_map:
                 del self.required_map[name]
         if confname:
             for n, cn in self.names_list[:]:
@@ -108,13 +107,13 @@ class ZDOptions:
                     self.names_list.remove((n, cn))
         if short:
             key = "-" + short[0]
-            if self.options_map.has_key(key):
+            if key in self.options_map:
                 del self.options_map[key]
         if long:
             key = "--" + long
             if key[-1] == "=":
                 key = key[:-1]
-            if self.options_map.has_key(key):
+            if key in self.options_map:
                 del self.options_map[key]
 
     def add(self,
@@ -173,7 +172,7 @@ class ZDOptions:
             if rest not in ("", ":"):
                 raise ValueError("short option should be 'x' or 'x:'")
             key = "-" + key
-            if self.options_map.has_key(key):
+            if key in self.options_map:
                 raise ValueError("duplicate short option key '%s'" % key)
             self.options_map[key] = (name, handler)
             self.short_options.append(short)
@@ -185,7 +184,7 @@ class ZDOptions:
             if key[-1] == "=":
                 key = key[:-1]
             key = "--" + key
-            if self.options_map.has_key(key):
+            if key in self.options_map:
                 raise ValueError("duplicate long option key '%s'" % key)
             self.options_map[key] = (name, handler)
             self.long_options.append(long)
@@ -239,7 +238,7 @@ class ZDOptions:
         try:
             self.options, self.args = getopt.getopt(
                 args, "".join(self.short_options), self.long_options)
-        except getopt.error, msg:
+        except getopt.error as msg:
             if raise_getopt_errs:
                 self.usage(msg)
 
@@ -253,7 +252,7 @@ class ZDOptions:
             if handler is not None:
                 try:
                     arg = handler(arg)
-                except ValueError, msg:
+                except ValueError as msg:
                     self.usage("invalid value for %s %r: %s" % (opt, arg, msg))
             if name and arg is not None:
                 if getattr(self, name) is not None:
@@ -269,12 +268,12 @@ class ZDOptions:
             name, handler = self.environ_map[envvar]
             if name and getattr(self, name, None) is not None:
                 continue
-            if os.environ.has_key(envvar):
+            if envvar in os.environ:
                 value = os.environ[envvar]
                 if handler is not None:
                     try:
                         value = handler(value)
-                    except ValueError, msg:
+                    except ValueError as msg:
                         self.usage("invalid environment value for %s %r: %s"
                                    % (envvar, value, msg))
                 if name and value is not None:
@@ -290,7 +289,7 @@ class ZDOptions:
             self.load_schema()
             try:
                 self.load_configfile()
-            except ZConfig.ConfigurationError, msg:
+            except ZConfig.ConfigurationError as msg:
                 self.usage(str(msg))
 
         # Copy config options to attributes of self.  This only fills
@@ -371,7 +370,7 @@ class RunnerOptions(ZDOptions):
                  list_of_ints, default=[0, 2])
         self.add("user", "runner.user", "u:", "user=")
         self.add("umask", "runner.umask", "m:", "umask=", octal_type,
-                 default=022)
+                 default=0o22)
         self.add("directory", "runner.directory", "z:", "directory=",
                  existing_parent_directory)
 
@@ -382,7 +381,7 @@ def list_of_ints(arg):
     if not arg:
         return []
     else:
-        return map(int, arg.split(","))
+        return list(map(int, arg.split(",")))
 
 def octal_type(arg):
     return int(arg, 8)
@@ -416,12 +415,12 @@ def _test():
     # Stupid test program
     z = ZDOptions()
     z.add("program", "zdctl.program", "p:", "program=")
-    print z.names_list
+    print(z.names_list)
     z.realize()
     names = z.names_list[:]
     names.sort()
     for name, confname in names:
-        print "%-20s = %.56r" % (name, getattr(z, name))
+        print("%-20s = %.56r" % (name, getattr(z, name)))
 
 if __name__ == "__main__":
     __file__ = sys.argv[0]

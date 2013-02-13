@@ -50,7 +50,7 @@ def test_user_fails_when_not_root():
     ...     except SystemExit:
     ...         pass
     ...     else:
-    ...         print 'oops'
+    ...         print('oops')
     ... # doctest: +ELLIPSIS
     Error: only root can use -u USER to change users
     For help, use ... -h

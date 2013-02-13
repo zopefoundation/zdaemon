@@ -83,7 +83,8 @@ a typical configuration file::
 
 .. -> text
 
-    >>> open('conf', 'w').write(text)
+    >>> with open('conf', 'w') as file:
+    ...     file.write(text)
 
 Now, we can run with the -C option to read the configuration file:
 
@@ -115,7 +116,8 @@ Here's an updated configuration::
 
 .. -> text
 
-    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+    >>> with open('conf', 'w') as file:
+    ...     file.write(text.replace('/tmp', tmpdir))
 
 Now, when we run zdaemon:
 
@@ -149,7 +151,8 @@ option. We can also provide options on the command line::
 
 .. -> text
 
-    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+    >>> with open('conf', 'w') as file:
+    ...     file.write(text.replace('/tmp', tmpdir))
 
 Then we can pass the program argument on the command line:
 
@@ -184,7 +187,8 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
 
 .. -> text
 
-    >>> open('conf', 'w').write(text.replace('/tmp', tmpdir))
+    >>> with open('conf', 'w') as file:
+    ...     file.write(text.replace('/tmp', tmpdir))
 
 Now, when we run the command, we'll see out environment settings reflected:
 
@@ -280,11 +284,17 @@ and generate some output:
 
 the output will show up in the new file, not the old:
 
-    >>> open('log').read()
+    >>> with open('log') as file:
+    ...     file.read()
     'rec 3\n'
 
-    >>> open('log.1').read()
+    >>> with open('log.1') as file:
+    ...     file.read()
     'rec 1\nrec 2\n'
+
+Close files:
+
+    >>> f.close()
 
 Start test program and timeout
 ==============================

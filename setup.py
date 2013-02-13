@@ -11,10 +11,13 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-
-version = '0.0.0'
-
 import os
+import sys
+
+tests_require=['zope.testing', 'zope.testrunner', 'manuel', 'mock']
+if sys.version_info[0] == 2:
+    tests_require.append('zc.customdoctests')
+
 
 entry_points = """
 [console_scripts]
@@ -24,6 +27,21 @@ zdaemon = zdaemon.zdctl:main
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
+def alltests():
+    import os
+    import sys
+    import unittest
+    # use the zope.testrunner machinery to find all the
+    # test suites we've put under ourselves
+    import zope.testrunner.find
+    import zope.testrunner.options
+    here = os.path.abspath(os.path.dirname(sys.argv[0]))
+    args = sys.argv[:]
+    defaults = ["--test-path", here]
+    options = zope.testrunner.options.get_options(args, defaults)
+    suites = list(zope.testrunner.find.find_suites(options))
+    return unittest.TestSuite(suites)
+
 try:
     from setuptools import setup
     setuptools_options = dict(
@@ -31,17 +49,17 @@ try:
         entry_points=entry_points,
         include_package_data = True,
         install_requires=["ZConfig"],
-        extras_require=dict(
-            test=['zope.testing', 'manuel', 'zc.customdoctests', 'mock']),
+        extras_require=dict(test=tests_require),
+        test_suite='__main__.alltests',
+        tests_require=tests_require
         )
 except ImportError:
     from distutils.core import setup
     setuptools_options = {}
 
-name = "zdaemon"
 setup(
-    name=name,
-    version = version,
+    name="zdaemon",
+    version = "4.0.0dev",
     url="http://www.python.org/pypi/zdaemon",
     license="ZPL 2.1",
     description=
@@ -65,8 +83,15 @@ setup(
        'Intended Audience :: Developers',
        'Intended Audience :: System Administrators',
        'License :: OSI Approved :: Zope Public License',
-       'Topic :: Utilities',
+       'Programming Language :: Python',
+       'Programming Language :: Python :: 2',
+       'Programming Language :: Python :: 2.6',
+       'Programming Language :: Python :: 2.7',
+       #'Programming Language :: Python :: 3',
+       #'Programming Language :: Python :: 3.3',
+       'Programming Language :: Python :: Implementation :: CPython',
        'Operating System :: POSIX',
+       'Topic :: Utilities',
        ],
 
     **setuptools_options)

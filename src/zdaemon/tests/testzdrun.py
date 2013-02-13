@@ -1,4 +1,5 @@
 """Test suite for zdrun.py."""
+from __future__ import print_function
 
 import os
 import sys
@@ -9,7 +10,11 @@ import tempfile
 import unittest
 import socket
 
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except:
+    # Python 3 support.
+    from io import StringIO
 
 import ZConfig
 
@@ -105,7 +110,7 @@ class ZDaemonTests(unittest.TestCase):
     def testCmdclassOverride(self):
         class MyCmd(zdctl.ZDCmd):
             def do_sproing(self, rest):
-                print rest
+                print(rest)
         self._run("-p echo sproing expected", cmdclass=MyCmd)
         self.expect = "expected\n"
 
@@ -146,7 +151,7 @@ class ZDaemonTests(unittest.TestCase):
         options = zdrun.ZDRunOptions()
         try:
             options.realize(["-h"], doc=zdrun.__doc__)
-        except SystemExit, err:
+        except SystemExit as err:
             self.failIf(err.code)
         else:
             self.fail("SystemExit expected")
@@ -305,7 +310,7 @@ class TestRunnerDirectory(unittest.TestCase):
         sys.stdout = self.save_stdout
         sys.stderr = self.save_stderr
         if err:
-            print >>sys.stderr, err,
+            print(err, end='', file=sys.stderr)
         self.assertEqual(self.expect, got)
         super(TestRunnerDirectory, self).tearDown()
 
@@ -425,7 +430,7 @@ def send_action(action, sockname):
             response += data
         sock.close()
         return response
-    except socket.error, msg:
+    except socket.error as msg:
         if str(msg) == 'AF_UNIX path too long':
             # MacOS has apparent small limits on the length of a UNIX
             # domain socket filename, we want to make MacOS users aware

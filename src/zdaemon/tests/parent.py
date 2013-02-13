@@ -18,15 +18,13 @@ def main():
     zctldir = os.path.dirname(dir)
     zdrun = os.path.join(zctldir, 'zdrun.py')
     donothing = os.path.join(tmp, 'donothing.sh')
-    fd = os.open(donothing, os.O_WRONLY|os.O_CREAT, 0700)
+    fd = os.open(donothing, os.O_WRONLY|os.O_CREAT, 0o700)
     os.write(fd, donothing_contents)
     os.close(fd)
     args = [sys.executable, zdrun]
     args += ['-d', '-b', '10', '-s', os.path.join(tmp, 'testsock'),
              '-x', '0,2', '-z', dir, donothing]
     flag = os.P_NOWAIT
-    #cmd = ' '.join([sys.executable] + args)
-    #print cmd
     os.spawnvpe(flag, args[0], args,
                 dict(os.environ, PYTHONPATH=':'.join(sys.path)),
                 )
