@@ -35,7 +35,7 @@ def alltests():
     # test suites we've put under ourselves
     import zope.testrunner.find
     import zope.testrunner.options
-    here = os.path.abspath(os.path.dirname(sys.argv[0]))
+    here = os.path.abspath(os.path.join(os.path.dirname(__file__), 'src'))
     args = sys.argv[:]
     defaults = ["--test-path", here]
     options = zope.testrunner.options.get_options(args, defaults)
