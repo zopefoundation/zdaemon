@@ -225,10 +225,11 @@ class ZDCmd(cmd.Cmd):
                 if not data:
                     break
                 response += data
-            sock.close()
             return response
         except socket.error as msg:
             return None
+        finally:
+            sock.close()
 
     zd_testing = 0
     def get_status(self):
