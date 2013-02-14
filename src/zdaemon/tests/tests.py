@@ -16,11 +16,13 @@ from __future__ import print_function
 import doctest
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
 
 import ZConfig
 import manuel.capture
@@ -337,6 +339,34 @@ def tearDown(test):
     for f in test.globs['_td']:
         f()
 
+
+class Timeout(BaseException):
+    pass
+
+
+@contextmanager
+def timeout(seconds):
+    this_frame = sys._getframe()
+    def raiseTimeout(signal, frame):
+        # the if statement here is meant to prevent an exception in the
+        # finally: clause before clean up can take place
+        if frame is not this_frame:
+            raise Timeout('timed out after %s seconds' % seconds)
+    try:
+        prev_handler = signal.signal(signal.SIGALRM, raiseTimeout)
+    except ValueError:
+        # signal only works in main thread
+        # let's ignore the request for a timeout and hope the test doesn't hang
+        yield
+    else:
+        try:
+            signal.alarm(seconds)
+            yield
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, prev_handler)
+
+
 def system(command, input='', quiet=False, echo=False):
     if echo:
         print(command)
@@ -345,21 +375,21 @@ def system(command, input='', quiet=False, echo=False):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
-    if input:
-        p.stdin.write(input)
-    p.stdin.close()
-    data = p.stdout.read()
+    with timeout(60):
+        data = p.communicate(input)[0]
     if not quiet:
         print(data, end='')
     r = p.wait()
     if r:
         print('Failed:', r)
 
+
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]
              if a.split('=')[0] in ('HOME', 'LD_LIBRARY_PATH')]
     match.sort()
     return '\n'.join(match) + '\n'
+
 
 zdaemon_template = """#!%(python)s
 
