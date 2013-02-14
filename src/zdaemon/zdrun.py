@@ -288,8 +288,7 @@ class Daemonizer:
         except socket.error:
             pass
         else:
-            while data.endswith("\n"):
-                data = data[:-1]
+            data = data.rstrip("\n")
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg + "\n")
