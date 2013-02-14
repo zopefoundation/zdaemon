@@ -12,10 +12,8 @@
 #
 ##############################################################################
 from __future__ import print_function
+
 import doctest
-import manuel.capture
-import manuel.doctest
-import manuel.testing
 import os
 import re
 import shutil
@@ -23,7 +21,11 @@ import subprocess
 import sys
 import tempfile
 import unittest
+
 import ZConfig
+import manuel.capture
+import manuel.doctest
+import manuel.testing
 import zc.customdoctests
 import zdaemon
 from zope.testing import renormalizing
@@ -38,6 +40,7 @@ except (ImportError, AttributeError):
     zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
     zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
+
 def write(name, text):
     with open(name, 'w') as f:
         f.write(text)
@@ -45,6 +48,7 @@ def write(name, text):
 def read(name):
     with open(name) as f:
         return f.read()
+
 
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
@@ -84,11 +88,10 @@ def dont_hang_when_program_doesnt_start():
 
 def allow_duplicate_arguments():
     """
-
-Wrapper scripts will often embed configuration arguments. This could
-cause a problem when zdaemon reinvokes itself, passing it's own set of
-configuration arguments.  To deal with this, we'll allow duplicate
-arguments that have the same values.
+    Wrapper scripts will often embed configuration arguments. This could
+    cause a problem when zdaemon reinvokes itself, passing it's own set of
+    configuration arguments.  To deal with this, we'll allow duplicate
+    arguments that have the same values.
 
     >>> write('conf',
     ... '''
@@ -105,7 +108,7 @@ arguments that have the same values.
     . .
     daemon process stopped
 
-"""
+    """
 
 def test_stop_timeout():
     r"""
