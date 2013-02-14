@@ -423,9 +423,9 @@ def send_action(action, sockname, raise_on_error=False):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         sock.connect(sockname)
-        sock.send(action + "\n")
+        sock.send(action.encode() + b"\n")
         sock.shutdown(1) # We're not writing any more
-        response = ""
+        response = b""
         while 1:
             data = sock.recv(1000)
             if not data:

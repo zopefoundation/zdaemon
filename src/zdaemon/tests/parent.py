@@ -19,7 +19,7 @@ def main():
     zdrun = os.path.join(zctldir, 'zdrun.py')
     donothing = os.path.join(tmp, 'donothing.sh')
     fd = os.open(donothing, os.O_WRONLY|os.O_CREAT, 0o700)
-    os.write(fd, donothing_contents)
+    os.write(fd, donothing_contents.encode())
     os.close(fd)
     args = [sys.executable, zdrun]
     args += ['-d', '-b', '10', '-s', os.path.join(tmp, 'testsock'),

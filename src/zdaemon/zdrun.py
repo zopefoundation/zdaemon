@@ -282,8 +282,8 @@ class Daemonizer:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             s.connect(self.options.sockname)
-            s.send("status\n")
-            data = s.recv(1000)
+            s.send(b"status\n")
+            data = s.recv(1000).decode()
             s.close()
         except socket.error:
             pass
@@ -470,7 +470,7 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandsocket, addr = self.mastersocket.accept()
-        self.commandbuffer = ""
+        self.commandbuffer = b""
 
     def dorecv(self):
         data = self.commandsocket.recv(1000)
@@ -479,7 +479,7 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandbuffer += data
-        if "\n" in self.commandbuffer:
+        if b"\n" in self.commandbuffer:
             self.docommand()
             self.commandsocket.close()
             self.commandsocket = None
@@ -489,18 +489,18 @@ class Daemonizer:
             self.commandsocket = None
 
     def docommand(self):
-        lines = self.commandbuffer.split("\n")
+        lines = self.commandbuffer.split(b"\n")
         args = lines[0].split()
         if not args:
             self.sendreply("Empty command")
             return
-        command = args[0]
+        command = args[0].decode()
         methodname = "cmd_" + command
         method = getattr(self, methodname, None)
         if method:
-            method(args)
+            method([a.decode() for a in args])
         else:
-            self.sendreply("Unknown command %r; 'help' for a list" % args[0])
+            self.sendreply("Unknown command %r; 'help' for a list" % command)
 
     def cmd_start(self, args):
         self.should_be_up = True
@@ -584,6 +584,7 @@ class Daemonizer:
         try:
             if not msg.endswith("\n"):
                 msg = msg + "\n"
+            msg = msg.encode()
             if hasattr(self.commandsocket, "sendall"):
                 self.commandsocket.sendall(msg)
             else:

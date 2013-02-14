@@ -217,15 +217,15 @@ class ZDCmd(cmd.Cmd):
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             sock.connect(self.options.sockname)
-            sock.send(action + "\n")
+            sock.send(action.encode() + b"\n")
             sock.shutdown(1) # We're not writing any more
-            response = ""
+            response = b""
             while 1:
                 data = sock.recv(1000)
                 if not data:
                     break
                 response += data
-            return response
+            return response.decode()
         except socket.error as msg:
             return None
         finally:
