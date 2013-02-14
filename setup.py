@@ -12,11 +12,9 @@
 #
 ##############################################################################
 import os
-import sys
 
-tests_require=['zope.testing', 'zope.testrunner', 'manuel', 'mock']
-if sys.version_info[0] == 2:
-    tests_require.append('zc.customdoctests')
+tests_require = ['zope.testing', 'zope.testrunner', 'manuel', 'mock',
+                 'zc.customdoctests']
 
 
 entry_points = """
