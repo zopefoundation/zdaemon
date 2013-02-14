@@ -222,7 +222,7 @@ class ZDaemonTests(unittest.TestCase):
                      )
                 )
             # Wait for it to start, but no longer than a minute.
-            deadline = time.time() + 6000
+            deadline = time.time() + 60
             is_started = False
             while time.time() < deadline:
                  response = send_action('status\n', zdrun_socket)
