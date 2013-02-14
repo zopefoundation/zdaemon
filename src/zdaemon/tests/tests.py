@@ -378,7 +378,7 @@ def system(command, input='', quiet=False, echo=False):
     with timeout(60):
         data = p.communicate(input)[0]
     if not quiet:
-        print(data, end='')
+        print(data.decode(), end='')
     r = p.wait()
     if r:
         print('Failed:', r)

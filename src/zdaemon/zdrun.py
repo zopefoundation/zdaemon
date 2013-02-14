@@ -191,6 +191,7 @@ class Subprocess:
                 except os.error as err:
                     sys.stderr.write("can't exec %r: %s\n" %
                                      (self.filename, err))
+                    sys.stderr.flush() # just in case
             finally:
                 os._exit(127)
             # Does not return
@@ -261,6 +262,7 @@ class Daemonizer:
                     # Stale socket -- delete, sleep, and try again.
                     msg = "Unlinking stale socket %s; sleep 1" % sockname
                     sys.stderr.write(msg + "\n")
+                    sys.stderr.flush() # just in case
                     self.logger.warn(msg)
                     self.unlink_quietly(sockname)
                     sock.close()
@@ -292,6 +294,7 @@ class Daemonizer:
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg + "\n")
+            sys.stderr.flush() # just in case
             self.logger.critical(msg)
             sys.exit(1)
 
@@ -601,11 +604,11 @@ class Transcript:
     def __init__(self, filename):
         self.read_from, w = os.pipe()
         os.dup2(w, 1)
-        sys.stdout = sys.__stdout__ = os.fdopen(1, "a", 0)
+        sys.stdout = sys.__stdout__ = os.fdopen(1, "w", 1)
         os.dup2(w, 2)
-        sys.stderr = sys.__stderr__ = os.fdopen(2, "a", 0)
+        sys.stderr = sys.__stderr__ = os.fdopen(2, "w", 1)
         self.filename = filename
-        self.file = open(filename, 'a', 0)
+        self.file = open(filename, 'ab', 0)
         self.write = self.file.write
         self.lock = threading.Lock()
         thread = threading.Thread(target=self.copy)
@@ -626,7 +629,7 @@ class Transcript:
     def reopen(self):
         self.lock.acquire()
         self.file.close()
-        self.file = open(self.filename, 'a', 0)
+        self.file = open(self.filename, 'ab', 0)
         self.write = self.file.write
         self.lock.release()
 
