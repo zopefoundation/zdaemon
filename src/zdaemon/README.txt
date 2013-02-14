@@ -84,7 +84,7 @@ a typical configuration file::
 .. -> text
 
     >>> with open('conf', 'w') as file:
-    ...     file.write(text)
+    ...     _ = file.write(text)
 
 Now, we can run with the -C option to read the configuration file:
 
@@ -117,7 +117,7 @@ Here's an updated configuration::
 .. -> text
 
     >>> with open('conf', 'w') as file:
-    ...     file.write(text.replace('/tmp', tmpdir))
+    ...     _ = file.write(text.replace('/tmp', tmpdir))
 
 Now, when we run zdaemon:
 
@@ -152,7 +152,7 @@ option. We can also provide options on the command line::
 .. -> text
 
     >>> with open('conf', 'w') as file:
-    ...     file.write(text.replace('/tmp', tmpdir))
+    ...     _ = file.write(text.replace('/tmp', tmpdir))
 
 Then we can pass the program argument on the command line:
 
@@ -188,7 +188,7 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
 .. -> text
 
     >>> with open('conf', 'w') as file:
-    ...     file.write(text.replace('/tmp', tmpdir))
+    ...     _ = file.write(text.replace('/tmp', tmpdir))
 
 Now, when we run the command, we'll see out environment settings reflected:
 
@@ -219,9 +219,9 @@ long-running applications.
 Let's look at an example. We'll have a long-running process that
 simple tails a data file:
 
-    >>> f = open('data', 'w', 0)
+    >>> f = open('data', 'w', 1)
     >>> import os
-    >>> f.write('rec 1\n'); os.fsync(f.fileno())
+    >>> _ = f.write('rec 1\n'); f.flush(); os.fsync(f.fileno())
 
 Now, here's out zdaemon configuration::
 
@@ -232,7 +232,8 @@ Now, here's out zdaemon configuration::
 
 .. -> text
 
-    >>> open('conf', 'w').write(text)
+    >>> with open('conf', 'w') as file:
+    ...     _ = file.write(text)
 
 Now we'll start:
 
@@ -247,7 +248,8 @@ Now we'll start:
 
 After waiting a bit, if we look at the log file, it contains the tail output:
 
-    >>> open('log').read()
+    >>> with open('log') as file:
+    ...     file.read()
     'rec 1\n'
 
 We can rotate the transcript log by renaming it and telling zdaemon to
@@ -258,7 +260,7 @@ reopen it:
 
 If we generate more output:
 
-    >>> f.write('rec 2\n'); os.fsync(f.fileno())
+    >>> _ = f.write('rec 2\n'); f.flush(); os.fsync(f.fileno())
 
 .. Wait a little bit to make sure tail has a chance to work
 
@@ -267,7 +269,8 @@ If we generate more output:
 The output will appear in the old file, because zdaemon still has it
 open:
 
-    >>> open('log.1').read()
+    >>> with open('log.1') as file:
+    ...     file.read()
     'rec 1\nrec 2\n'
 
 Now, if we tell zdaemon to reopen the file:
@@ -276,7 +279,7 @@ Now, if we tell zdaemon to reopen the file:
 
 and generate some output:
 
-    >>> f.write('rec 3\n'); os.fsync(f.fileno())
+    >>> _ = f.write('rec 3\n'); f.flush(); os.fsync(f.fileno())
 
 .. Wait a little bit to make sure tail has a chance to work
 

@@ -156,7 +156,7 @@ def test_start_test_program():
     ... '''
     ... import time
     ... time.sleep(1)
-    ... open('x', 'w')
+    ... open('x', 'w').close()
     ... time.sleep(99)
     ... ''')
 
@@ -189,7 +189,7 @@ def test_start_test_program():
     ... '''
     ... import time
     ... time.sleep(1)
-    ... open('x', 'w')
+    ... open('x', 'w').close()
     ... time.sleep(99)
     ... ''')
 
@@ -272,7 +272,7 @@ def DAEMON_MANAGER_MODE_leak():
     True
     """
 
-def nonzeo_exit_on_program_failure():
+def nonzero_exit_on_program_failure():
     """
     >>> write('conf',
     ... '''
@@ -325,15 +325,13 @@ def setUp(test):
     workspace = tempfile.mkdtemp()
     td.append(lambda : shutil.rmtree(workspace))
     os.chdir(workspace)
-    open('zdaemon', 'w').write(zdaemon_template % dict(
-        python = sys.executable,
-        zdaemon = zdaemon_loc,
-        ZConfig = zconfig_loc,
-        ))
+    write('zdaemon', zdaemon_template % dict(
+        python=sys.executable,
+        zdaemon=zdaemon_loc,
+        ZConfig=zconfig_loc,
+    ))
     os.chmod('zdaemon', 0o755)
-    test.globs.update(dict(
-        system = system
-        ))
+    test.globs['system'] = system
 
 def tearDown(test):
     for f in test.globs['_td']:
