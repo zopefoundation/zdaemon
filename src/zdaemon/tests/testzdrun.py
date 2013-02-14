@@ -237,8 +237,10 @@ class ZDaemonTests(unittest.TestCase):
             os.kill(zdctlpid, signal.SIGINT)
             time.sleep(0.25)
             # Make sure the child is still responsive.
-            response = send_action('status\n', zdrun_socket)
-            self.assert_(response is not None and '\n' in response)
+            response = send_action('status\n', zdrun_socket,
+                                   raise_on_error=True)
+            self.assertTrue(b'\n' in response,
+                            'no newline in response: ' + repr(response))
             # Kill the process.
             send_action('exit\n', zdrun_socket)
         finally:
@@ -413,7 +415,7 @@ class TestRunnerDirectory(unittest.TestCase):
         self.assertEqual([('chown', path, 27, 28)], calls)
 
 
-def send_action(action, sockname):
+def send_action(action, sockname, raise_on_error=False):
     """Send an action to the zdrun server and return the response.
 
     Return None if the server is not up or any other error happened.
@@ -437,7 +439,11 @@ def send_action(action, sockname):
             # domain socket filename, we want to make MacOS users aware
             # of the actual problem
             raise
+        if raise_on_error:
+            raise
         return None
+    finally:
+        sock.close()
 
 def test_suite():
     suite = unittest.TestSuite()
