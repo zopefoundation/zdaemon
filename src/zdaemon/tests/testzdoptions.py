@@ -204,7 +204,7 @@ class TestBasicFunctionality(TestZDOptions):
         L = []
         options.add("setting", None, "a:", "append=", handler=L.append)
         options.realize(["-a2", "--append", "3"])
-        self.assert_(options.setting is None)
+        self.assertTrue(options.setting is None)
         self.assertEqual(L, ["2", "3"])
 
     def test_handler_with_bad_value(self):
@@ -373,7 +373,7 @@ class TestRunnerDirectory(ZDOptionsTestBase):
         options = self.OptionsClass()
         path = os.path.join(self.root, 'will-be-created')
         options.realize(["-z", path])
-        self.assertEquals(path, options.directory)
+        self.assertEqual(path, options.directory)
         socket = os.path.join(path, 'socket')
         options = self.OptionsClass()
         options.realize(["-s", socket])

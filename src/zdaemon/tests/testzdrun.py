@@ -152,7 +152,7 @@ class ZDaemonTests(unittest.TestCase):
         try:
             options.realize(["-h"], doc=zdrun.__doc__)
         except SystemExit as err:
-            self.failIf(err.code)
+            self.assertEqual(err.code, 0)
         else:
             self.fail("SystemExit expected")
         self.expect = zdrun.__doc__
@@ -231,8 +231,8 @@ class ZDaemonTests(unittest.TestCase):
                  else:
                      is_started = True
                      break
-            self.assert_(is_started,
-                         "spawned process failed to start in a minute")
+            self.assertTrue(is_started,
+                            "spawned process failed to start in a minute")
             # Kill it, and wait a little to ensure it's dead.
             os.kill(zdctlpid, signal.SIGINT)
             time.sleep(0.25)
@@ -282,8 +282,8 @@ In general do not run anything as root unless absolutely necessary.
             for i in range(5):
                 if not os.path.exists(path):
                     time.sleep(0.1)
-            self.assert_(os.path.exists(path))
-            self.assert_(not os.access(path, os.W_OK))
+            self.assertTrue(os.path.exists(path))
+            self.assertTrue(not os.access(path, os.W_OK))
         finally:
             if os.path.exists(path):
                 os.remove(path)
@@ -324,7 +324,7 @@ class TestRunnerDirectory(unittest.TestCase):
     def testCtlRunDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir')
         self.run_ctl(['-z', path, '-p', self.cmd])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlRunDirectoryCreationFromConfigFile(self):
         path = os.path.join(self.root, 'rundir')
@@ -333,7 +333,7 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlRunDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created')
@@ -347,13 +347,13 @@ class TestRunnerDirectory(unittest.TestCase):
     def testCtlSocketDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir', 'sock')
         self.run_ctl(['-s', path, '-p', self.cmd])
-        self.assert_(os.path.exists(os.path.dirname(path)))
+        self.assertTrue(os.path.exists(os.path.dirname(path)))
 
     def testCtlSocketDirectoryCreationRelativePath(self):
         path = os.path.join('rundir', 'sock')
         self.run_ctl(['-s', path, '-p', self.cmd])
-        self.assert_(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
-                                                                 path))))
+        self.assertTrue(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
+                                                                    path))))
 
     def testCtlSocketDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created', 'sock')
@@ -371,7 +371,7 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlSocketDirectoryCreationFromConfigFileRelativePath(self):
         path = 'rel-rundir'
@@ -380,7 +380,7 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(os.path.join(os.getcwd(), path)))
+        self.assertTrue(os.path.exists(os.path.join(os.getcwd(), path)))
 
     def writeConfig(self, config):
         config_file = os.path.join(self.root, 'config')
