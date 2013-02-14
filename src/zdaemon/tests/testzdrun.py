@@ -384,7 +384,8 @@ class TestRunnerDirectory(unittest.TestCase):
 
     def writeConfig(self, config):
         config_file = os.path.join(self.root, 'config')
-        open(config_file, 'w').write(config)
+        with open(config_file, 'w') as f:
+            f.write(config)
         return config_file
 
     def testDirectoryChown(self):
