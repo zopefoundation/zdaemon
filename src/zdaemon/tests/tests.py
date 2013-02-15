@@ -11,19 +11,23 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
+from __future__ import print_function
 
 import doctest
-import manuel.capture
-import manuel.doctest
-import manuel.testing
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
+
 import ZConfig
+import manuel.capture
+import manuel.doctest
+import manuel.testing
 import zc.customdoctests
 import zdaemon
 from zope.testing import renormalizing
@@ -38,6 +42,7 @@ except (ImportError, AttributeError):
     zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
     zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
+
 def write(name, text):
     with open(name, 'w') as f:
         f.write(text)
@@ -45,6 +50,7 @@ def write(name, text):
 def read(name):
     with open(name) as f:
         return f.read()
+
 
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
@@ -84,11 +90,10 @@ def dont_hang_when_program_doesnt_start():
 
 def allow_duplicate_arguments():
     """
-
-Wrapper scripts will often embed configuration arguments. This could
-cause a problem when zdaemon reinvokes itself, passing it's own set of
-configuration arguments.  To deal with this, we'll allow duplicate
-arguments that have the same values.
+    Wrapper scripts will often embed configuration arguments. This could
+    cause a problem when zdaemon reinvokes itself, passing it's own set of
+    configuration arguments.  To deal with this, we'll allow duplicate
+    arguments that have the same values.
 
     >>> write('conf',
     ... '''
@@ -105,7 +110,7 @@ arguments that have the same values.
     . .
     daemon process stopped
 
-"""
+    """
 
 def test_stop_timeout():
     r"""
@@ -153,7 +158,7 @@ def test_start_test_program():
     ... '''
     ... import time
     ... time.sleep(1)
-    ... open('x', 'w')
+    ... open('x', 'w').close()
     ... time.sleep(99)
     ... ''')
 
@@ -186,7 +191,7 @@ def test_start_test_program():
     ... '''
     ... import time
     ... time.sleep(1)
-    ... open('x', 'w')
+    ... open('x', 'w').close()
     ... time.sleep(99)
     ... ''')
 
@@ -269,7 +274,7 @@ def DAEMON_MANAGER_MODE_leak():
     True
     """
 
-def nonzeo_exit_on_program_failure():
+def nonzero_exit_on_program_failure():
     """
     >>> write('conf',
     ... '''
@@ -322,43 +327,69 @@ def setUp(test):
     workspace = tempfile.mkdtemp()
     td.append(lambda : shutil.rmtree(workspace))
     os.chdir(workspace)
-    open('zdaemon', 'w').write(zdaemon_template % dict(
-        python = sys.executable,
-        zdaemon = zdaemon_loc,
-        ZConfig = zconfig_loc,
-        ))
-    os.chmod('zdaemon', 0755)
-    test.globs.update(dict(
-        system = system
-        ))
+    write('zdaemon', zdaemon_template % dict(
+        python=sys.executable,
+        zdaemon=zdaemon_loc,
+        ZConfig=zconfig_loc,
+    ))
+    os.chmod('zdaemon', 0o755)
+    test.globs['system'] = system
 
 def tearDown(test):
     for f in test.globs['_td']:
         f()
 
+
+class Timeout(BaseException):
+    pass
+
+
+@contextmanager
+def timeout(seconds):
+    this_frame = sys._getframe()
+    def raiseTimeout(signal, frame):
+        # the if statement here is meant to prevent an exception in the
+        # finally: clause before clean up can take place
+        if frame is not this_frame:
+            raise Timeout('timed out after %s seconds' % seconds)
+    try:
+        prev_handler = signal.signal(signal.SIGALRM, raiseTimeout)
+    except ValueError:
+        # signal only works in main thread
+        # let's ignore the request for a timeout and hope the test doesn't hang
+        yield
+    else:
+        try:
+            signal.alarm(seconds)
+            yield
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, prev_handler)
+
+
 def system(command, input='', quiet=False, echo=False):
     if echo:
-        print command
+        print(command)
     p = subprocess.Popen(
         command, shell=True,
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT)
-    if input:
-        p.stdin.write(input)
-    p.stdin.close()
-    data = p.stdout.read()
+    with timeout(60):
+        data = p.communicate(input)[0]
     if not quiet:
-        print data,
+        print(data.decode(), end='')
     r = p.wait()
     if r:
-        print 'Failed:', r
+        print('Failed:', r)
+
 
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]
              if a.split('=')[0] in ('HOME', 'LD_LIBRARY_PATH')]
     match.sort()
     return '\n'.join(match) + '\n'
+
 
 zdaemon_template = """#!%(python)s
 
@@ -387,20 +418,18 @@ def test_suite():
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
                 (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                ])
-        ),
+                ])),
         manuel.testing.TestSuite(
-            manuel.doctest.Manuel(
-                parser=zc.customdoctests.DocTestParser(
-                    ps1='sh>',
-                    transform=lambda s: 'system("%s")\n' % s.rstrip()
-                    ),
-                checker=README_checker,
-                ) +
-            manuel.doctest.Manuel(checker=README_checker) +
-            manuel.capture.Manuel(),
-            '../README.txt',
-            setUp=setUp, tearDown=tearDown,
-            ),
+                manuel.doctest.Manuel(
+                    parser=zc.customdoctests.DocTestParser(
+                        ps1='sh>',
+                        transform=lambda s: 'system("%s")\n' % s.rstrip()
+                        ),
+                    checker=README_checker,
+                    ) +
+                manuel.doctest.Manuel(checker=README_checker) +
+                manuel.capture.Manuel(),
+                '../README.txt',
+                setUp=setUp, tearDown=tearDown),
         ))
 

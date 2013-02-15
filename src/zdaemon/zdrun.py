@@ -135,7 +135,7 @@ class Subprocess:
                 except os.error:
                     continue
                 mode = st[ST_MODE]
-                if mode & 0111:
+                if mode & 0o111:
                     break
             else:
                 self.options.usage("can't find program %r on PATH %s" %
@@ -188,9 +188,10 @@ class Subprocess:
                         pass
                 try:
                     os.execv(self.filename, self.args)
-                except os.error, err:
+                except os.error as err:
                     sys.stderr.write("can't exec %r: %s\n" %
                                      (self.filename, err))
+                    sys.stderr.flush() # just in case
             finally:
                 os._exit(127)
             # Does not return
@@ -205,7 +206,7 @@ class Subprocess:
             return "no subprocess running"
         try:
             os.kill(self.pid, sig)
-        except os.error, msg:
+        except os.error as msg:
             return str(msg)
         return None
 
@@ -251,7 +252,7 @@ class Daemonizer:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 sock.bind(tempname)
-                os.chmod(tempname, 0700)
+                os.chmod(tempname, 0o700)
                 try:
                     os.link(tempname, sockname)
                     break
@@ -261,6 +262,7 @@ class Daemonizer:
                     # Stale socket -- delete, sleep, and try again.
                     msg = "Unlinking stale socket %s; sleep 1" % sockname
                     sys.stderr.write(msg + "\n")
+                    sys.stderr.flush() # just in case
                     self.logger.warn(msg)
                     self.unlink_quietly(sockname)
                     sock.close()
@@ -282,17 +284,17 @@ class Daemonizer:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             s.connect(self.options.sockname)
-            s.send("status\n")
-            data = s.recv(1000)
+            s.send(b"status\n")
+            data = s.recv(1000).decode()
             s.close()
         except socket.error:
             pass
         else:
-            while data.endswith("\n"):
-                data = data[:-1]
+            data = data.rstrip("\n")
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg + "\n")
+            sys.stderr.flush() # just in case
             self.logger.critical(msg)
             sys.exit(1)
 
@@ -351,7 +353,7 @@ class Daemonizer:
         if self.options.directory:
             try:
                 os.chdir(self.options.directory)
-            except os.error, err:
+            except os.error as err:
                 self.logger.warn("can't chdir into %r: %s"
                                  % (self.options.directory, err))
             else:
@@ -396,8 +398,8 @@ class Daemonizer:
                         self.delay = time.time() + self.options.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
-            except select.error, err:
-                if err[0] != errno.EINTR:
+            except select.error as err:
+                if err.args[0] != errno.EINTR:
                     raise
                 r = w = x = []
             if self.waitstatus:
@@ -405,14 +407,14 @@ class Daemonizer:
             if self.commandsocket and self.commandsocket in r:
                 try:
                     self.dorecv()
-                except socket.error, msg:
+                except socket.error as msg:
                     self.logger.exception("socket.error in dorecv(): %s"
                                           % str(msg))
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
-                except socket.error, msg:
+                except socket.error as msg:
                     self.logger.exception("socket.error in doaccept(): %s"
                                           % str(msg))
                     self.commandsocket = None
@@ -471,7 +473,7 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandsocket, addr = self.mastersocket.accept()
-        self.commandbuffer = ""
+        self.commandbuffer = b""
 
     def dorecv(self):
         data = self.commandsocket.recv(1000)
@@ -480,7 +482,7 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandbuffer += data
-        if "\n" in self.commandbuffer:
+        if b"\n" in self.commandbuffer:
             self.docommand()
             self.commandsocket.close()
             self.commandsocket = None
@@ -490,18 +492,18 @@ class Daemonizer:
             self.commandsocket = None
 
     def docommand(self):
-        lines = self.commandbuffer.split("\n")
+        lines = self.commandbuffer.split(b"\n")
         args = lines[0].split()
         if not args:
             self.sendreply("Empty command")
             return
-        command = args[0]
+        command = args[0].decode()
         methodname = "cmd_" + command
         method = getattr(self, methodname, None)
         if method:
-            method(args)
+            method([a.decode() for a in args])
         else:
-            self.sendreply("Unknown command %r; 'help' for a list" % args[0])
+            self.sendreply("Unknown command %r; 'help' for a list" % command)
 
     def cmd_start(self, args):
         self.should_be_up = True
@@ -585,6 +587,7 @@ class Daemonizer:
         try:
             if not msg.endswith("\n"):
                 msg = msg + "\n"
+            msg = msg.encode()
             if hasattr(self.commandsocket, "sendall"):
                 self.commandsocket.sendall(msg)
             else:
@@ -592,7 +595,7 @@ class Daemonizer:
                 while msg:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
-        except socket.error, msg:
+        except socket.error as msg:
             self.logger.warn("Error sending reply: %s" % str(msg))
 
 
@@ -601,11 +604,11 @@ class Transcript:
     def __init__(self, filename):
         self.read_from, w = os.pipe()
         os.dup2(w, 1)
-        sys.stdout = sys.__stdout__ = os.fdopen(1, "a", 0)
+        sys.stdout = sys.__stdout__ = os.fdopen(1, "w", 1)
         os.dup2(w, 2)
-        sys.stderr = sys.__stderr__ = os.fdopen(2, "a", 0)
+        sys.stderr = sys.__stderr__ = os.fdopen(2, "w", 1)
         self.filename = filename
-        self.file = open(filename, 'a', 0)
+        self.file = open(filename, 'ab', 0)
         self.write = self.file.write
         self.lock = threading.Lock()
         thread = threading.Thread(target=self.copy)
@@ -626,7 +629,7 @@ class Transcript:
     def reopen(self):
         self.lock.acquire()
         self.file.close()
-        self.file = open(self.filename, 'a', 0)
+        self.file = open(self.filename, 'ab', 0)
         self.write = self.file.write
         self.lock.release()
 
@@ -685,7 +688,7 @@ def _init_signames():
 def get_path():
     """Return a list corresponding to $PATH, or a default."""
     path = ["/bin", "/usr/bin", "/usr/local/bin"]
-    if os.environ.has_key("PATH"):
+    if "PATH" in os.environ:
         p = os.environ["PATH"]
         if p:
             path = p.split(os.pathsep)

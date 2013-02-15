@@ -1,4 +1,5 @@
 """Test suite for zdrun.py."""
+from __future__ import print_function
 
 import os
 import sys
@@ -9,7 +10,11 @@ import tempfile
 import unittest
 import socket
 
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except:
+    # Python 3 support.
+    from io import StringIO
 
 import ZConfig
 
@@ -105,7 +110,7 @@ class ZDaemonTests(unittest.TestCase):
     def testCmdclassOverride(self):
         class MyCmd(zdctl.ZDCmd):
             def do_sproing(self, rest):
-                print rest
+                print(rest)
         self._run("-p echo sproing expected", cmdclass=MyCmd)
         self.expect = "expected\n"
 
@@ -146,8 +151,8 @@ class ZDaemonTests(unittest.TestCase):
         options = zdrun.ZDRunOptions()
         try:
             options.realize(["-h"], doc=zdrun.__doc__)
-        except SystemExit, err:
-            self.failIf(err.code)
+        except SystemExit as err:
+            self.assertEqual(err.code, 0)
         else:
             self.fail("SystemExit expected")
         self.expect = zdrun.__doc__
@@ -217,7 +222,7 @@ class ZDaemonTests(unittest.TestCase):
                      )
                 )
             # Wait for it to start, but no longer than a minute.
-            deadline = time.time() + 6000
+            deadline = time.time() + 60
             is_started = False
             while time.time() < deadline:
                  response = send_action('status\n', zdrun_socket)
@@ -226,14 +231,16 @@ class ZDaemonTests(unittest.TestCase):
                  else:
                      is_started = True
                      break
-            self.assert_(is_started,
-                         "spawned process failed to start in a minute")
+            self.assertTrue(is_started,
+                            "spawned process failed to start in a minute")
             # Kill it, and wait a little to ensure it's dead.
             os.kill(zdctlpid, signal.SIGINT)
             time.sleep(0.25)
             # Make sure the child is still responsive.
-            response = send_action('status\n', zdrun_socket)
-            self.assert_(response is not None and '\n' in response)
+            response = send_action('status\n', zdrun_socket,
+                                   raise_on_error=True)
+            self.assertTrue(b'\n' in response,
+                            'no newline in response: ' + repr(response))
             # Kill the process.
             send_action('exit\n', zdrun_socket)
         finally:
@@ -277,8 +284,8 @@ In general do not run anything as root unless absolutely necessary.
             for i in range(5):
                 if not os.path.exists(path):
                     time.sleep(0.1)
-            self.assert_(os.path.exists(path))
-            self.assert_(not os.access(path, os.W_OK))
+            self.assertTrue(os.path.exists(path))
+            self.assertTrue(not os.access(path, os.W_OK))
         finally:
             if os.path.exists(path):
                 os.remove(path)
@@ -305,7 +312,7 @@ class TestRunnerDirectory(unittest.TestCase):
         sys.stdout = self.save_stdout
         sys.stderr = self.save_stderr
         if err:
-            print >>sys.stderr, err,
+            print(err, end='', file=sys.stderr)
         self.assertEqual(self.expect, got)
         super(TestRunnerDirectory, self).tearDown()
 
@@ -319,7 +326,7 @@ class TestRunnerDirectory(unittest.TestCase):
     def testCtlRunDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir')
         self.run_ctl(['-z', path, '-p', self.cmd])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlRunDirectoryCreationFromConfigFile(self):
         path = os.path.join(self.root, 'rundir')
@@ -328,7 +335,7 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlRunDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created')
@@ -342,13 +349,13 @@ class TestRunnerDirectory(unittest.TestCase):
     def testCtlSocketDirectoryCreation(self):
         path = os.path.join(self.root, 'rundir', 'sock')
         self.run_ctl(['-s', path, '-p', self.cmd])
-        self.assert_(os.path.exists(os.path.dirname(path)))
+        self.assertTrue(os.path.exists(os.path.dirname(path)))
 
     def testCtlSocketDirectoryCreationRelativePath(self):
         path = os.path.join('rundir', 'sock')
         self.run_ctl(['-s', path, '-p', self.cmd])
-        self.assert_(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
-                                                                 path))))
+        self.assertTrue(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
+                                                                    path))))
 
     def testCtlSocketDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created', 'sock')
@@ -366,7 +373,7 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(path))
+        self.assertTrue(os.path.exists(path))
 
     def testCtlSocketDirectoryCreationFromConfigFileRelativePath(self):
         path = 'rel-rundir'
@@ -375,11 +382,12 @@ class TestRunnerDirectory(unittest.TestCase):
         config = self.writeConfig(
             '<runner>\n%s\n</runner>' % '\n'.join(options))
         self.run_ctl(['-C', config])
-        self.assert_(os.path.exists(os.path.join(os.getcwd(), path)))
+        self.assertTrue(os.path.exists(os.path.join(os.getcwd(), path)))
 
     def writeConfig(self, config):
         config_file = os.path.join(self.root, 'config')
-        open(config_file, 'w').write(config)
+        with open(config_file, 'w') as f:
+            f.write(config)
         return config_file
 
     def testDirectoryChown(self):
@@ -407,7 +415,7 @@ class TestRunnerDirectory(unittest.TestCase):
         self.assertEqual([('chown', path, 27, 28)], calls)
 
 
-def send_action(action, sockname):
+def send_action(action, sockname, raise_on_error=False):
     """Send an action to the zdrun server and return the response.
 
     Return None if the server is not up or any other error happened.
@@ -415,9 +423,9 @@ def send_action(action, sockname):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
         sock.connect(sockname)
-        sock.send(action + "\n")
+        sock.send(action.encode() + b"\n")
         sock.shutdown(1) # We're not writing any more
-        response = ""
+        response = b""
         while 1:
             data = sock.recv(1000)
             if not data:
@@ -425,13 +433,17 @@ def send_action(action, sockname):
             response += data
         sock.close()
         return response
-    except socket.error, msg:
+    except socket.error as msg:
         if str(msg) == 'AF_UNIX path too long':
             # MacOS has apparent small limits on the length of a UNIX
             # domain socket filename, we want to make MacOS users aware
             # of the actual problem
             raise
+        if raise_on_error:
+            raise
         return None
+    finally:
+        sock.close()
 
 def test_suite():
     suite = unittest.TestSuite()
