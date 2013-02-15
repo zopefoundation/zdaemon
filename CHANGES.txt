@@ -2,8 +2,8 @@
 Change log
 ==========
 
-4.0.0 (unreleased)
-==================
+4.0.0a1 (2013-02-15)
+====================
 
 - Added tox support and MANIFEST.in for proper releasing.
 
