@@ -5,8 +5,7 @@ Change log
 4.0.0 (unreleased)
 ==================
 
-- Nothing changed yet.
-
+- Note / test support for Python 3.2.
 
 4.0.0a1 (2013-02-15)
 ====================
