@@ -1,5 +1,9 @@
 *.pyc
-*.pyo
-__pycache__
 *.egg-info
-.tox
+__pycache__
+.tox/
+.installed.cfg
+bin/
+develop-eggs/
+eggs/
+parts/
