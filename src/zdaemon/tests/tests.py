@@ -429,7 +429,7 @@ def test_suite():
                     ) +
                 manuel.doctest.Manuel(checker=README_checker) +
                 manuel.capture.Manuel(),
-                '../README.txt',
+                '../README.rst',
                 setUp=setUp, tearDown=tearDown),
         ))
 

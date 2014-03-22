@@ -65,11 +65,11 @@ setup(
     author="Zope Foundation and Contributors",
     author_email="zope-dev@zope.org",
     long_description=(
-        read('README.txt')
+        read('README.rst')
         + '\n' +
-        read('src/zdaemon/README.txt')
+        read('src/zdaemon/README.rst')
         + '\n' +
-        read('CHANGES.txt')
+        read('CHANGES.rst')
         + '\n' +
         '========\n' +
         'Download\n' +
