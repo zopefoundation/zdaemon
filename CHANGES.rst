@@ -2,10 +2,15 @@
 Change log
 ==========
 
+4.0.1 (unreleased)
+==================
+
+- Added support for Python 3.4.
+
 4.0.0 (2013-05-10)
 ==================
 
-- Note / test support for Python 3.2.
+- Added support for Python 3.2.
 
 4.0.0a1 (2013-02-15)
 ====================

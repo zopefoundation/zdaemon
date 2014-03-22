@@ -70,10 +70,6 @@ setup(
         read('src/zdaemon/README.rst')
         + '\n' +
         read('CHANGES.rst')
-        + '\n' +
-        '========\n' +
-        'Download\n' +
-        '========\n'
         ),
     packages=["zdaemon", "zdaemon.tests"],
     package_dir={"": "src"},
@@ -88,6 +84,7 @@ setup(
        'Programming Language :: Python :: 3',
        'Programming Language :: Python :: 3.2',
        'Programming Language :: Python :: 3.3',
+       'Programming Language :: Python :: 3.4',
        'Programming Language :: Python :: Implementation :: CPython',
        'Operating System :: POSIX',
        'Topic :: Utilities',
