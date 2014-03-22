@@ -272,6 +272,10 @@ class Daemonizer:
                 self.unlink_quietly(tempname)
         sock.listen(1)
         sock.setblocking(0)
+        try: # PEP 446, Python >= 3.4
+            sock.set_inheritable(True)
+        except AttributeError:
+            pass
         self.mastersocket = sock
 
     def unlink_quietly(self, filename):
@@ -473,6 +477,10 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandsocket, addr = self.mastersocket.accept()
+        try: # PEP 446, Python >= 3.4
+            self.commandsocket.set_inheritable(True)
+        except AttributeError:
+            pass
         self.commandbuffer = b""
 
     def dorecv(self):
