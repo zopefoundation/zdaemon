@@ -64,8 +64,6 @@ class ZDRunOptions(RunnerOptions):
         self.add("schemafile", short="S:", long="schema=",
                  default="schema.xml",
                  handler=self.set_schemafile)
-        self.add("transcript", "runner.transcript", "t:", "transcript=",
-                 default="/dev/null")
         self.add("stoptimeut", "runner.stop_timeout")
         self.add("starttestprogram", "runner.start_test_program")
 

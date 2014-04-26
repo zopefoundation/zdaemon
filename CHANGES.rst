@@ -7,6 +7,10 @@ Change log
 
 - Added support for Python 3.4.
 
+- Added -t/--transcript command line option.
+
+- zdaemon can now be invoked as a module as in "python -m zdaemon ..."
+
 4.0.0 (2013-05-10)
 ==================
 

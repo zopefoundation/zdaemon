@@ -373,7 +373,8 @@ class RunnerOptions(ZDOptions):
                  default=0o22)
         self.add("directory", "runner.directory", "z:", "directory=",
                  existing_parent_directory)
-
+        self.add("transcript", "runner.transcript", "t:", "transcript=",
+                 default="/dev/null")
 
 # ZConfig datatype
 
