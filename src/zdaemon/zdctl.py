@@ -23,8 +23,8 @@ Options:
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
--t/--transcript -- log file where to redirect stdout and stderr
--l/--logfile -- log file to be read by logtail command
+-t/--transcript FILE -- log file where to redirect stdout and stderr
+-l/--logfile FILE -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -S/--schema XML Schema -- XML schema for configuration file
 -T/--start-timeout SECONDS -- Start timeout when a test program is used
