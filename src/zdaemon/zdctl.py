@@ -24,7 +24,7 @@ Options:
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
 -t/--transcript FILE -- log file where to redirect stdout and stderr
--l/--logfile FILE -- log file to be read by logtail command
+-l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -S/--schema XML Schema -- XML schema for configuration file
 -T/--start-timeout SECONDS -- Start timeout when a test program is used
@@ -476,6 +476,7 @@ class ZDCmd(cmd.Cmd):
         print("umask:       ", oct(umask))
         print("directory:   ", repr(self.options.directory))
         print("logfile:     ", repr(self.options.logfile))
+        print("transcript:  ", repr(self.options.transcript))
 
     def show_python(self):
         print("Python info:")
