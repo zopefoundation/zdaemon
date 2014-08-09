@@ -476,6 +476,8 @@ default-to-interactive
         This is enabled by default.
 
 logfile
+        Command-line option: -l or --logfile.
+
         This option specifies a log file that is the default target of
         the "logtail" zdaemon command.
 
@@ -484,6 +486,8 @@ logfile
         <eventlog> section described below.
 
 transcript
+        Command-line option: -t or --transcript.
+
         The name of a file in which a transcript of all output from
         the command being run will be written to when daemonized.
 

@@ -23,6 +23,7 @@ Options:
 -d/--daemon -- run as a proper daemon; fork a subprocess, close files etc.
 -f/--forever -- run forever (by default, exit when backoff limit is exceeded)
 -h/--help -- print this usage message and exit
+-t/--transcript FILE -- log file where to redirect stdout and stderr
 -l/--logfile -- log file to be read by logtail command
 -p/--program PROGRAM -- the program to run
 -S/--schema XML Schema -- XML schema for configuration file
@@ -301,6 +302,7 @@ class ZDCmd(cmd.Cmd):
             args += self._get_override("-f", "forever", flag=1)
             args += self._get_override("-s", "sockname")
             args += self._get_override("-u", "user")
+            args += self._get_override("-t", "transcript")
             if self.options.umask:
                 args += self._get_override("-m", "umask",
                                            oct(self.options.umask))
@@ -474,6 +476,7 @@ class ZDCmd(cmd.Cmd):
         print("umask:       ", oct(umask))
         print("directory:   ", repr(self.options.directory))
         print("logfile:     ", repr(self.options.logfile))
+        print("transcript:  ", repr(self.options.transcript))
 
     def show_python(self):
         print("Python info:")

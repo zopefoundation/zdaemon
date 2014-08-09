@@ -64,8 +64,6 @@ class ZDRunOptions(RunnerOptions):
         self.add("schemafile", short="S:", long="schema=",
                  default="schema.xml",
                  handler=self.set_schemafile)
-        self.add("transcript", "runner.transcript", "t:", "transcript=",
-                 default="/dev/null")
         self.add("stoptimeut", "runner.stop_timeout")
         self.add("starttestprogram", "runner.start_test_program")
 
@@ -533,7 +531,8 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM")
             self.killing = 1
-            self.delay = time.time() + self.options.stoptimeut
+            if self.options.stoptimeut:
+                self.delay = time.time() + self.options.stoptimeut
         else:
             self.sendreply("Application already stopped")
 
@@ -546,7 +545,8 @@ class Daemonizer:
             self.proc.kill(signal.SIGTERM)
             self.sendreply("Sent SIGTERM; will restart later")
             self.killing = 1
-            self.delay = time.time() + self.options.stoptimeut
+            if self.options.stoptimeut:
+                self.delay = time.time() + self.options.stoptimeut
         else:
             self.proc.spawn()
             self.sendreply("Application started")
