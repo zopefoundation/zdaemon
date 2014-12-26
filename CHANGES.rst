@@ -5,23 +5,26 @@ Change log
 4.0.1 (unreleased)
 ==================
 
-- Added support for Python 3.4.
+- Add support for PyPy.  (PyPy3 is pending release of a fix for:
+  https://bitbucket.org/pypy/pypy/issue/1946)
 
-- Added -t/--transcript command line option.
+- Add support for Python 3.4.
 
-- zdaemon can now be invoked as a module as in "python -m zdaemon ..."
+- Add ``-t/--transcript`` command line option.
+
+- zdaemon can now be invoked as a module as in ``python -m zdaemon ...``
 
 4.0.0 (2013-05-10)
 ==================
 
-- Added support for Python 3.2.
+- Add support for Python 3.2.
 
 4.0.0a1 (2013-02-15)
 ====================
 
-- Added tox support and MANIFEST.in for proper releasing.
+- Add tox support and MANIFEST.in for proper releasing.
 
-- Added Python 3.3 support.
+- Add Python 3.3 support.
 
 - Drop Python 2.4 and 2.5 support.
 
