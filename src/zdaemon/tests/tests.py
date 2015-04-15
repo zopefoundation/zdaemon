@@ -188,6 +188,31 @@ def test_kill():
     """
 
 
+def test_logreopen():
+    """
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program sleep 100
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=1234
+
+    >>> system("./zdaemon -Cconf logreopen")
+    kill(1234, 12)
+    signal SIGUSR2 sent to process 1234
+
+    >>> system("./zdaemon -Cconf stop")
+    . .
+    daemon process stopped
+
+    """
+
+
 def test_start_test_program():
     """
     >>> write('t.py',

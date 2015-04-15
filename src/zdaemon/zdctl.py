@@ -237,6 +237,7 @@ class ZDCmd(cmd.Cmd):
     def get_status(self):
         self.zd_up = 0
         self.zd_pid = 0
+        self.zd_should_be_up = 0
         self.zd_status = None
         resp = self.send_action("status")
         if not resp:
@@ -247,6 +248,11 @@ class ZDCmd(cmd.Cmd):
         self.zd_up = 1
         self.zd_pid = int(m.group(1))
         self.zd_status = resp
+        m = re.search("(?m)^should_be_up=(\d+)$", resp)
+        if m:
+            self.zd_should_be_up = int(m.group(1))
+        else:
+            self.zd_should_be_up = 1
         m = re.search("(?m)^testing=(\d+)$", resp)
         if m:
             self.zd_testing = int(m.group(1))
@@ -356,7 +362,7 @@ class ZDCmd(cmd.Cmd):
         self.get_status()
         if not self.zd_up:
             print("daemon manager not running")
-        elif not self.zd_pid:
+        elif not self.zd_pid and not self.zd_should_be_up:
             print("daemon process not running")
         else:
             self.send_action("stop")
