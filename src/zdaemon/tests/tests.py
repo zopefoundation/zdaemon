@@ -14,10 +14,11 @@
 from __future__ import print_function
 
 import doctest
+import glob
 import os
 import re
-import signal
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -213,6 +214,48 @@ def test_logreopen():
 
     >>> sorted(os.listdir('.'))
     ['conf', 'transcript.log', 'transcript.log.1', 'zdaemon', 'zdsock']
+
+    >>> system("./zdaemon -Cconf stop")
+    . .
+    daemon process stopped
+
+    """
+
+
+def test_log_rotation():
+    """
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program sleep 100
+    ...   transcript transcript.log
+    ... </runner>
+    ... <eventlog>
+    ...   <logfile>
+    ...     path event.log
+    ...   </logfile>
+    ... </eventlog>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=1234
+
+    Pretend we did a logrotate:
+
+    >>> os.rename('transcript.log', 'transcript.log.1')
+    >>> os.rename('event.log', 'event.log.1')
+
+    >>> system("./zdaemon -Cconf reopen_transcript")  # or logreopen
+
+    This reopens both transcript.log and event.log:
+
+    >>> sorted(glob.glob('transcript.log*'))
+    ['transcript.log', 'transcript.log.1']
+
+    >>> sorted(glob.glob('event.log*'))
+    ['event.log', 'event.log.1']
 
     >>> system("./zdaemon -Cconf stop")
     . .

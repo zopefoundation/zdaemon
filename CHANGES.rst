@@ -24,6 +24,9 @@ Change log
 - Make ``logreopen`` also reopen the transcript log:
   https://github.com/zopefoundation/zdaemon/issues/9.
 
+- Reopen event log on ``logreopen`` or ``reopen_transcript``:
+  https://github.com/zopefoundation/zdaemon/issues/8.
+
 - Fix race condition where ``stop`` would be ignored if the daemon
   manager was waiting before respawning a crashed program.
   https://github.com/zopefoundation/zdaemon/issues/13.

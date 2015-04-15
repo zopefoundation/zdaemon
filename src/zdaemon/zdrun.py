@@ -46,6 +46,7 @@ if __name__ == "__main__":
             break
 
 from zdaemon.zdoptions import RunnerOptions
+from ZConfig.components.logger.loghandler import reopenFiles
 
 
 def string_list(arg):
@@ -589,6 +590,7 @@ class Daemonizer:
                        "args=%r\n" % self.proc.args)
 
     def cmd_reopen_transcript(self, args):
+        reopenFiles()
         if self.transcript is not None:
             self.transcript.reopen()
 
