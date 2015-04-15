@@ -145,9 +145,9 @@ class TestZDOptions(ZDOptionsTestBase):
             __doc__ = 'Some help'
         self.help_test_helper(HasHelp,{},'Some help')
 
-    def test_no_help_with_doc_kw(self):
-        # test what happens when the subclass has None for __doc__,
-        # but doc is supplied to realize
+    def test_has_help_with_doc_kw(self):
+        # test what happens when the subclass has something for __doc__,
+        # and doc is also supplied to realize
         class HasHelp(self.OptionsClass):
             __doc__ = 'Some help'
         self.help_test_helper(HasHelp,{'doc':'Example help'},'Example help')
