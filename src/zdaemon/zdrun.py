@@ -175,7 +175,7 @@ class Subprocess:
 
             self.options.logger.info("spawned process pid=%d" % pid)
             return pid
-        else:
+        else:  # pragma: nocover
             # Child
             try:
                 # Close file descriptors except std{in,out,err}.
@@ -347,7 +347,7 @@ class Daemonizer:
         # http://www.hawklord.uklinux.net/system/daemons/d3.htm
 
         pid = os.fork()
-        if pid != 0:
+        if pid != 0:  # pragma: nocover
             # Parent
             self.logger.debug("daemon manager forked; parent exiting")
             os._exit(0)
