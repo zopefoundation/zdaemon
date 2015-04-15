@@ -58,7 +58,7 @@ daemon :)
     . .
     daemon process started, pid=819
 
-This ran the sleep deamon.  We can check whether it ran with the
+This ran the sleep daemon.  We can check whether it ran with the
 status command:
 
     sh> ./zdaemon -p 'sleep 100' status
@@ -338,7 +338,7 @@ socket-name
         Command-line option: -s or --socket-name.
 
         The pathname of the Unix domain socket used for communication
-        between the zdaemon command-line tool and a deamon-management
+        between the zdaemon command-line tool and a daemon-management
         process.  The default is relative to the current directory in
         which zdaemon is started.  You want to specify
         an absolute pathname here.
