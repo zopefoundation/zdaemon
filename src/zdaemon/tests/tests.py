@@ -170,39 +170,6 @@ def test_start_test_program():
     ... </runner>
     ... ''' % sys.executable)
 
-    >>> import os, time
-    >>> start = time.time()
-
-    >>> system("./zdaemon -Cconf start")
-    . .
-    daemon process started, pid=21446
-
-    >>> os.path.exists('x')
-    True
-
-    >>> system("./zdaemon -Cconf stop")
-    <BLANKLINE>
-    daemon process stopped
-    """
-
-def test_start_test_program():
-    """
-    >>> write('t.py',
-    ... '''
-    ... import time
-    ... time.sleep(1)
-    ... open('x', 'w').close()
-    ... time.sleep(99)
-    ... ''')
-
-    >>> write('conf',
-    ... '''
-    ... <runner>
-    ...   program %s t.py
-    ...   start-test-program cat x
-    ... </runner>
-    ... ''' % sys.executable)
-
     >>> import os
 
     >>> system("./zdaemon -Cconf start")
