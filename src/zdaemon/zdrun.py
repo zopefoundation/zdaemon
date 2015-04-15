@@ -635,9 +635,10 @@ class Transcript:
                     self.write(os.read(fd, 8192))
 
     def reopen(self):
+        new_file = open(self.filename, 'ab', 0)
         with self.lock:
             self.file.close()
-            self.file = open(self.filename, 'ab', 0)
+            self.file = new_file
             self.write = self.file.write
 
 
