@@ -114,7 +114,6 @@ class ZDCtlOptions(RunnerOptions):
         self.schemafile = file
 
 
-
 class ZDCmd(cmd.Cmd):
 
     def __init__(self, options):
@@ -200,7 +199,7 @@ class ZDCmd(cmd.Cmd):
         import grp
         user = pwrec.pw_name
         os.setgroups(
-            sorted(g.gr_gid for g in grp.getgrall() # sort for tests
+            sorted(g.gr_gid for g in grp.getgrall()  # sort for tests
                    if user in g.gr_mem)
             )
         os.setuid(uid)
@@ -219,7 +218,7 @@ class ZDCmd(cmd.Cmd):
         try:
             sock.connect(self.options.sockname)
             sock.send(action.encode() + b"\n")
-            sock.shutdown(1) # We're not writing any more
+            sock.shutdown(1)  # We're not writing any more
             response = b""
             while 1:
                 data = sock.recv(1000)
@@ -233,6 +232,7 @@ class ZDCmd(cmd.Cmd):
             sock.close()
 
     zd_testing = 0
+
     def get_status(self):
         self.zd_up = 0
         self.zd_pid = 0
@@ -275,7 +275,6 @@ class ZDCmd(cmd.Cmd):
         except KeyboardInterrupt:
             print("^C")
         print("\n" + msg % self.__dict__)
-
 
     def help_help(self):
         print("help          -- Print a list of available actions.")
@@ -338,7 +337,7 @@ class ZDCmd(cmd.Cmd):
                         v = getattr(v, p, None)
                         if v is None:
                             break
-                    if v == value: # We didn't override anything
+                    if v == value:  # We didn't override anything
                         return []
                     break
         if flag:
@@ -397,7 +396,7 @@ class ZDCmd(cmd.Cmd):
         else:
             try:
                 sig = int(arg)
-            except: # int() can raise any number of exceptions
+            except:  # int() can raise any number of exceptions
                 print("invalid signal number", repr(arg))
                 return
         self.get_status()
@@ -525,7 +524,8 @@ class ZDCmd(cmd.Cmd):
         self.get_status()
         pid = self.zd_pid
         if pid:
-            print("To run the program in the foreground, please stop it first.")
+            print(
+                "To run the program in the foreground, please stop it first.")
             return
 
         program = self.options.program + self.options.args[1:]
@@ -604,6 +604,7 @@ class TailHelper:
 
     def fsize(self):
         return os.fstat(self.f.fileno())[stat.ST_SIZE]
+
 
 def main(args=None, options=None, cmdclass=ZDCmd):
     if args is None:

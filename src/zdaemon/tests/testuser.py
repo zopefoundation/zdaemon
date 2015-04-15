@@ -21,13 +21,16 @@ import os
 import sys
 import zdaemon.zdctl
 
+
 def write(name, text):
     with open(name, 'w') as f:
         f.write(text)
 
+
 class O:
     def __init__(self, **kw):
         self.__dict__.update(kw)
+
 
 def test_user_fails_when_not_root():
     """
@@ -58,6 +61,7 @@ def test_user_fails_when_not_root():
     >>> pwd.getpwnam.assert_called_with('zope')
 
     """
+
 
 def test_user_sets_supplemtary_groups():
     """
@@ -96,6 +100,7 @@ def test_user_sets_supplemtary_groups():
 
     """
 
+
 def test_do_nothing_if_effective_user_is_configured_user():
     """
 
@@ -123,6 +128,7 @@ def test_do_nothing_if_effective_user_is_configured_user():
 
     """
 
+
 def setUp(test):
     setupstack.setUpDirectory(test)
     getpwname = setupstack.context_manager(test, mock.patch('pwd.getpwnam'))
@@ -132,6 +138,7 @@ def setUp(test):
     setupstack.context_manager(test, mock.patch('os.setgroups'))
     setupstack.context_manager(test, mock.patch('os.setuid'))
     setupstack.context_manager(test, mock.patch('os.setgid'))
+
 
 def test_suite():
     return doctest.DocTestSuite(setUp=setUp, tearDown=setupstack.tearDown)

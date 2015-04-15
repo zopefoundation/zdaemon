@@ -47,6 +47,7 @@ def write(name, text):
     with open(name, 'w') as f:
         f.write(text)
 
+
 def read(name):
     with open(name) as f:
         return f.read()
@@ -69,6 +70,7 @@ def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
 
     """
 
+
 def dont_hang_when_program_doesnt_start():
     """
     If a program doesn't start, we don't want to wait for ever.
@@ -87,6 +89,7 @@ def dont_hang_when_program_doesnt_start():
     Failed: 1
 
     """
+
 
 def allow_duplicate_arguments():
     """
@@ -111,6 +114,7 @@ def allow_duplicate_arguments():
     daemon process stopped
 
     """
+
 
 def test_stop_timeout():
     r"""
@@ -152,6 +156,7 @@ def test_stop_timeout():
 
     """
 
+
 def test_start_test_program():
     """
     >>> write('t.py',
@@ -191,6 +196,7 @@ def test_start_test_program():
     daemon process stopped
     """
 
+
 def test_start_timeout():
     """
     >>> write('t.py',
@@ -221,6 +227,7 @@ def test_start_timeout():
     daemon process stopped
     """
 
+
 def DAEMON_MANAGER_MODE_leak():
     """
     Zdaemon used an environment variable to flag that it's running in
@@ -240,6 +247,7 @@ def DAEMON_MANAGER_MODE_leak():
     >>> 'DAEMON_MANAGER_MODE' not in read('t')
     True
     """
+
 
 def nonzero_exit_on_program_failure():
     """
@@ -284,15 +292,16 @@ def nonzero_exit_on_program_failure():
 
     """
 
+
 def setUp(test):
     test.globs['_td'] = td = []
     here = os.getcwd()
-    td.append(lambda : os.chdir(here))
+    td.append(lambda: os.chdir(here))
     tmpdir = tempfile.mkdtemp()
-    td.append(lambda : shutil.rmtree(tmpdir))
+    td.append(lambda: shutil.rmtree(tmpdir))
     test.globs['tmpdir'] = tmpdir
     workspace = tempfile.mkdtemp()
-    td.append(lambda : shutil.rmtree(workspace))
+    td.append(lambda: shutil.rmtree(workspace))
     os.chdir(workspace)
     write('zdaemon', zdaemon_template % dict(
         python=sys.executable,
@@ -301,6 +310,7 @@ def setUp(test):
     ))
     os.chmod('zdaemon', 0o755)
     test.globs['system'] = system
+
 
 def tearDown(test):
     for f in test.globs['_td']:
@@ -314,11 +324,13 @@ class Timeout(BaseException):
 @contextmanager
 def timeout(seconds):
     this_frame = sys._getframe()
+
     def raiseTimeout(signal, frame):
         # the if statement here is meant to prevent an exception in the
         # finally: clause before clean up can take place
         if frame is not this_frame:
             raise Timeout('timed out after %s seconds' % seconds)
+
     try:
         prev_handler = signal.signal(signal.SIGALRM, raiseTimeout)
     except ValueError:
@@ -372,12 +384,13 @@ if __name__ == '__main__':
     zdaemon.zdctl.main()
 """
 
+
 def test_suite():
     README_checker = renormalizing.RENormalizing([
         (re.compile('pid=\d+'), 'pid=NNN'),
         (re.compile('(\. )+\.?'), '<BLANKLINE>'),
         (re.compile('^env\n((?:.*\n)+)$'), checkenv),
-        ])
+    ])
 
     return unittest.TestSuite((
         doctest.DocTestSuite(
@@ -385,17 +398,17 @@ def test_suite():
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
                 (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                ])),
+            ])),
         manuel.testing.TestSuite(
-                manuel.doctest.Manuel(
-                    parser=zc.customdoctests.DocTestParser(
-                        ps1='sh>',
-                        transform=lambda s: 'system("%s")\n' % s.rstrip()
-                        ),
-                    checker=README_checker,
-                    ) +
-                manuel.doctest.Manuel(checker=README_checker) +
-                manuel.capture.Manuel(),
-                '../README.rst',
-                setUp=setUp, tearDown=tearDown),
-        ))
+            manuel.doctest.Manuel(
+                parser=zc.customdoctests.DocTestParser(
+                    ps1='sh>',
+                    transform=lambda s: 'system("%s")\n' % s.rstrip()
+                ),
+                checker=README_checker,
+            ) +
+            manuel.doctest.Manuel(checker=README_checker) +
+            manuel.capture.Manuel(),
+            '../README.rst',
+            setUp=setUp, tearDown=tearDown),
+    ))

@@ -48,7 +48,7 @@ class ZDOptions:
     # section.  This should be the (possibly dotted) name of something
     # accessible from configroot, typically "eventlog".
     logsectionname = None
-    config_logger = None # The configured event logger, if any
+    config_logger = None  # The configured event logger, if any
 
     # Class variable deciding whether positional arguments are allowed.
     # If you want positional arguments, set this to 1 in your subclass.
@@ -215,7 +215,7 @@ class ZDOptions:
         doc      -- usage message (default is __doc__ of the options class)
         """
 
-         # Provide dynamic default method arguments
+        # Provide dynamic default method arguments
         if args is None:
             try:
                 args = sys.argv[1:]
@@ -345,7 +345,7 @@ class ZDOptions:
         parts = sectname.split(".")
         obj = self.configroot
         for p in parts:
-            if obj == None:
+            if obj is None:
                 break
             obj = getattr(obj, p)
         self.config_logger = obj
@@ -376,6 +376,7 @@ class RunnerOptions(ZDOptions):
         self.add("transcript", "runner.transcript", "t:", "transcript=",
                  default="/dev/null")
 
+
 # ZConfig datatype
 
 def list_of_ints(arg):
@@ -383,6 +384,7 @@ def list_of_ints(arg):
         return []
     else:
         return list(map(int, arg.split(",")))
+
 
 def octal_type(arg):
     return int(arg, 8)

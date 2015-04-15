@@ -93,15 +93,15 @@ class ZDaemonTests(unittest.TestCase):
                (self.ppath, self.python, self.zdrun, self.zdsock, args))
         os.system(cmd)
         # When the daemon crashes, the following may help debug it:
-        ##os.system("PYTHONPATH=%s %s %s -s %s %s &" %
-        ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
+        #   os.system("PYTHONPATH=%s %s %s -s %s %s &" %
+        #       (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
     def _run(self, args, cmdclass=None, module=zdctl):
         if isinstance(args, str):
             args = args.split()
         kw = {}
         if cmdclass:
-            kw['cmdclass']=cmdclass
+            kw['cmdclass'] = cmdclass
         try:
             module.main(["-s", self.zdsock] + args, **kw)
         except SystemExit:
@@ -119,7 +119,7 @@ class ZDaemonTests(unittest.TestCase):
         self.expect = ""
 
     def test_help_zdrun(self):
-        self._run("-h",module=zdrun)
+        self._run("-h", module=zdrun)
         self.expect = zdrun.__doc__
 
     def test_help_zdctl(self):
@@ -225,12 +225,12 @@ class ZDaemonTests(unittest.TestCase):
             deadline = time.time() + 60
             is_started = False
             while time.time() < deadline:
-                 response = send_action('status\n', zdrun_socket)
-                 if response is None:
-                     time.sleep(0.05)
-                 else:
-                     is_started = True
-                     break
+                response = send_action('status\n', zdrun_socket)
+                if response is None:
+                    time.sleep(0.05)
+                else:
+                    is_started = True
+                    break
             self.assertTrue(is_started,
                             "spawned process failed to start in a minute")
             # Kill it, and wait a little to ensure it's dead.
@@ -263,7 +263,7 @@ class ZDaemonTests(unittest.TestCase):
 
     def testUmask(self):
         # people have a strange tendency to run the tests as root
-        if os.getuid() == 0 :
+        if os.getuid() == 0:
             self.fail("""
 I am root!
 Do not run the tests as root.
@@ -271,7 +271,7 @@ Testing proper umask handling cannot be done as root.
 Furthermore, it is not a good idea and strongly discouraged to run zope, the
 build system (configure, make) or the tests as root.
 In general do not run anything as root unless absolutely necessary.
-""" )
+""")
 
         path = tempfile.mktemp()
         # With umask 666, we should create a file that we aren't able
@@ -279,7 +279,7 @@ In general do not run anything as root unless absolutely necessary.
         try:
             touch_cmd = "/bin/touch"
             if not os.path.exists(touch_cmd):
-                touch_cmd = "/usr/bin/touch" # Mac OS X
+                touch_cmd = "/usr/bin/touch"  # Mac OS X
             self.rundaemon(["-m", "666", touch_cmd, path])
             for i in range(5):
                 if not os.path.exists(path):
@@ -354,8 +354,8 @@ class TestRunnerDirectory(unittest.TestCase):
     def testCtlSocketDirectoryCreationRelativePath(self):
         path = os.path.join('rundir', 'sock')
         self.run_ctl(['-s', path, '-p', self.cmd])
-        self.assertTrue(os.path.exists(os.path.dirname(os.path.join(os.getcwd(),
-                                                                    path))))
+        self.assertTrue(
+            os.path.exists(os.path.dirname(os.path.join(os.getcwd(), path))))
 
     def testCtlSocketDirectoryCreationOnlyOne(self):
         path = os.path.join(self.root, 'rundir', 'not-created', 'sock')
@@ -401,10 +401,13 @@ class TestRunnerDirectory(unittest.TestCase):
         chown = os.chown
         geteuid = os.geteuid
         calls = []
+
         def my_chown(*args):
             calls.append(('chown',) + args)
+
         def my_geteuid():
             return 0
+
         try:
             os.chown = my_chown
             os.geteuid = my_geteuid
@@ -424,7 +427,7 @@ def send_action(action, sockname, raise_on_error=False):
     try:
         sock.connect(sockname)
         sock.send(action.encode() + b"\n")
-        sock.shutdown(1) # We're not writing any more
+        sock.shutdown(1)  # We're not writing any more
         response = b""
         while 1:
             data = sock.recv(1000)
@@ -444,6 +447,7 @@ def send_action(action, sockname, raise_on_error=False):
         return None
     finally:
         sock.close()
+
 
 def test_suite():
     suite = unittest.TestSuite()

@@ -51,6 +51,7 @@ from zdaemon.zdoptions import RunnerOptions
 def string_list(arg):
     return arg.split()
 
+
 class ZDRunOptions(RunnerOptions):
 
     __doc__ = __doc__
@@ -98,8 +99,8 @@ class Subprocess:
     """A class to manage a subprocess."""
 
     # Initial state; overridden by instance variables
-    pid = 0 # Subprocess pid; 0 when not running
-    lasttime = 0 # Last time the subprocess was started; 0 if never
+    pid = 0  # Subprocess pid; 0 when not running
+    lasttime = 0  # Last time the subprocess was started; 0 if never
 
     def __init__(self, options, args=None):
         """Constructor.
@@ -189,7 +190,7 @@ class Subprocess:
                 except os.error as err:
                     sys.stderr.write("can't exec %r: %s\n" %
                                      (self.filename, err))
-                    sys.stderr.flush() # just in case
+                    sys.stderr.flush()  # just in case
             finally:
                 os._exit(127)
             # Does not return
@@ -260,7 +261,7 @@ class Daemonizer:
                     # Stale socket -- delete, sleep, and try again.
                     msg = "Unlinking stale socket %s; sleep 1" % sockname
                     sys.stderr.write(msg + "\n")
-                    sys.stderr.flush() # just in case
+                    sys.stderr.flush()  # just in case
                     self.logger.warn(msg)
                     self.unlink_quietly(sockname)
                     sock.close()
@@ -270,7 +271,7 @@ class Daemonizer:
                 self.unlink_quietly(tempname)
         sock.listen(1)
         sock.setblocking(0)
-        try: # PEP 446, Python >= 3.4
+        try:  # PEP 446, Python >= 3.4
             sock.set_inheritable(True)
         except AttributeError:
             pass
@@ -296,7 +297,7 @@ class Daemonizer:
             msg = ("Another zrdun is already up using socket %r:\n%s" %
                    (self.options.sockname, data))
             sys.stderr.write(msg + "\n")
-            sys.stderr.flush() # just in case
+            sys.stderr.flush()  # just in case
             self.logger.critical(msg)
             sys.exit(1)
 
@@ -373,9 +374,9 @@ class Daemonizer:
         # after the setsid() call, for obscure SVR4 reasons.
 
     should_be_up = True
-    delay = 0 # If nonzero, delay starting or killing until this time
-    killing = 0 # If true, send SIGKILL when delay expires
-    proc = None # Subprocess instance
+    delay = 0  # If nonzero, delay starting or killing until this time
+    killing = 0  # If true, send SIGKILL when delay expires
+    proc = None  # Subprocess instance
 
     def runforever(self):
         self.logger.info("daemon manager started")
@@ -475,7 +476,7 @@ class Daemonizer:
             self.commandsocket.close()
             self.commandsocket = None
         self.commandsocket, addr = self.mastersocket.accept()
-        try: # PEP 446, Python >= 3.4
+        try:  # PEP 446, Python >= 3.4
             self.commandsocket.set_inheritable(True)
         except AttributeError:
             pass
@@ -641,6 +642,7 @@ class Transcript:
         self.write = self.file.write
         self.lock.release()
 
+
 # Helpers for dealing with signals and exit status
 
 def decode_wait_status(sts):
@@ -671,6 +673,7 @@ def decode_wait_status(sts):
 
 _signames = None
 
+
 def signame(sig):
     """Return a symbolic name for a signal.
 
@@ -681,6 +684,7 @@ def signame(sig):
     if _signames is None:
         _init_signames()
     return _signames.get(sig) or "signal %d" % sig
+
 
 def _init_signames():
     global _signames
@@ -693,6 +697,7 @@ def _init_signames():
             d[v] = k
     _signames = d
 
+
 def get_path():
     """Return a list corresponding to $PATH, or a default."""
     path = ["/bin", "/usr/bin", "/usr/local/bin"]
@@ -702,7 +707,9 @@ def get_path():
             path = p.split(os.pathsep)
     return path
 
+
 # Main program
+
 def main(args=None):
     assert os.name == "posix", "This code makes many Unix-specific assumptions"
 

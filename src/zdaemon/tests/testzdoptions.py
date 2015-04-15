@@ -32,6 +32,7 @@ except:
     # Python 3 support.
     from io import StringIO
 
+
 class ZDOptionsTestBase(unittest.TestCase):
 
     OptionsClass = ZDOptions
@@ -92,13 +93,13 @@ class TestZDOptions(ZDOptionsTestBase):
     # be an empty string.
     # So, we now use the __doc__ of the options class being used.
 
-    def help_test_helper(self,optionsclass,kw,expected):
+    def help_test_helper(self, optionsclass, kw, expected):
         for arg in "-h", "--h", "--help":
             options = optionsclass()
             try:
                 self.save_streams()
                 try:
-                    options.realize([arg],**kw)
+                    options.realize([arg], **kw)
                 finally:
                     self.restore_streams()
             except SystemExit as err:
@@ -111,7 +112,9 @@ class TestZDOptions(ZDOptionsTestBase):
     def test_default_help(self):
         # test what happens if OptionsClass is used directly.
         # Not sure this ever happens :-S
-        self.help_test_helper(self.OptionsClass,{},self.OptionsClass.__doc__ or 'No help available.')
+        self.help_test_helper(
+            self.OptionsClass, {},
+            self.OptionsClass.__doc__ or 'No help available.')
 
     def test_default_subclass_help(self):
         # test what happens when the subclass doesn't do anything
@@ -119,38 +122,40 @@ class TestZDOptions(ZDOptionsTestBase):
         class SubClass(self.OptionsClass):
             pass
         # __doc__ isn't inherited :-(
-        self.help_test_helper(SubClass,{},'No help available.')
+        self.help_test_helper(SubClass, {}, 'No help available.')
 
     def test_default_help_with_doc_kw(self):
         # test what happens when the subclass doesn't do anything
         # with __doc__, but doc is supplied to realize
-        self.help_test_helper(self.OptionsClass,{'doc':'Example help'},'Example help')
+        self.help_test_helper(self.OptionsClass,
+                              {'doc': 'Example help'},
+                              'Example help')
 
     def test_no_help(self):
         # test what happens when the subclass has None for __doc__
         class NoHelp(self.OptionsClass):
             __doc__ = None
-        self.help_test_helper(NoHelp,{},'No help available.')
+        self.help_test_helper(NoHelp, {}, 'No help available.')
 
     def test_no_help_with_doc_kw(self):
         # test what happens when the subclass has None for __doc__,
         # but doc is supplied to realize
         class NoHelp(self.OptionsClass):
             __doc__ = None
-        self.help_test_helper(NoHelp,{'doc':'Example help'},'Example help')
+        self.help_test_helper(NoHelp, {'doc': 'Example help'}, 'Example help')
 
     def test_help(self):
         # test what happens when the subclass has None for __doc__
         class HasHelp(self.OptionsClass):
             __doc__ = 'Some help'
-        self.help_test_helper(HasHelp,{},'Some help')
+        self.help_test_helper(HasHelp, {}, 'Some help')
 
     def test_has_help_with_doc_kw(self):
         # test what happens when the subclass has something for __doc__,
         # and doc is also supplied to realize
         class HasHelp(self.OptionsClass):
             __doc__ = 'Some help'
-        self.help_test_helper(HasHelp,{'doc':'Example help'},'Example help')
+        self.help_test_helper(HasHelp, {'doc': 'Example help'}, 'Example help')
 
     def test_unrecognized(self):
         # Check that we get an error for an unrecognized option
@@ -340,7 +345,6 @@ class TestCommandLineOverrides(EnvironmentOptions):
                              ["-Xopt=1", "-Xopt=2"])
         self.check_exit_code(self.create_with_config("# empty"),
                              ["-Xunknown=foo"])
-
 
 
 class TestRunnerDirectory(ZDOptionsTestBase):
