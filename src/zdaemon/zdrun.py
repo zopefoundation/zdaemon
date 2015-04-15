@@ -599,7 +599,7 @@ class Daemonizer:
             msg = msg.encode()
             if hasattr(self.commandsocket, "sendall"):
                 self.commandsocket.sendall(msg)
-            else:
+            else:  # pragma: nocover
                 # This is quadratic, but msg is rarely more than 100 bytes :-)
                 while msg:
                     sent = self.commandsocket.send(msg)
