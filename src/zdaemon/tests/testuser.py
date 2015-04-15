@@ -19,7 +19,6 @@ import doctest
 import mock
 import os
 import sys
-import unittest
 import zdaemon.zdctl
 
 def write(name, text):
