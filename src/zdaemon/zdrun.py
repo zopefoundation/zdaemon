@@ -630,17 +630,15 @@ class Transcript:
         o = e = []
         while 1:
             ii, oo, ee = select.select(i, o, e)
-            lock.acquire()
-            for fd in ii:
-                self.write(os.read(fd, 8192))
-            lock.release()
+            with lock:
+                for fd in ii:
+                    self.write(os.read(fd, 8192))
 
     def reopen(self):
-        self.lock.acquire()
-        self.file.close()
-        self.file = open(self.filename, 'ab', 0)
-        self.write = self.file.write
-        self.lock.release()
+        with self.lock:
+            self.file.close()
+            self.file = open(self.filename, 'ab', 0)
+            self.write = self.file.write
 
 
 # Helpers for dealing with signals and exit status
