@@ -195,6 +195,7 @@ def test_logreopen():
     ... '''
     ... <runner>
     ...   program sleep 100
+    ...   transcript transcript.log
     ... </runner>
     ... ''')
 
@@ -202,9 +203,16 @@ def test_logreopen():
     . .
     daemon process started, pid=1234
 
+    >>> os.rename('transcript.log', 'transcript.log.1')
+
     >>> system("./zdaemon -Cconf logreopen")
     kill(1234, 12)
     signal SIGUSR2 sent to process 1234
+
+    This also reopens the transcript.log:
+
+    >>> sorted(os.listdir('.'))
+    ['conf', 'transcript.log', 'transcript.log.1', 'zdaemon', 'zdsock']
 
     >>> system("./zdaemon -Cconf stop")
     . .

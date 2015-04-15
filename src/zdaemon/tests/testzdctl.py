@@ -38,6 +38,7 @@ def doctest_ZDCmd_help():
         >>> run("help logreopen")
         logreopen -- Send a SIGUSR2 signal to the daemon process.
                      This is designed to reopen the log file.
+                     Also reopens the transcript log file.
 
         >>> run("help logtail")
         logtail [logfile] -- Run tail -f on the given logfile.
