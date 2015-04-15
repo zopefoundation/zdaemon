@@ -375,8 +375,6 @@ class ZDCmd(cmd.Cmd):
     def do_reopen_transcript(self, arg):
         if not self.zd_up:
             print("daemon manager not running")
-        elif not self.zd_pid:
-            print("daemon process not running")
         else:
             self.send_action("reopen_transcript")
 
