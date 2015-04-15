@@ -625,14 +625,20 @@ class Transcript:
         thread.start()
 
     def copy(self):
-        lock = self.lock
-        i = [self.read_from]
-        o = e = []
-        while 1:
-            ii, oo, ee = select.select(i, o, e)
-            with lock:
-                for fd in ii:
-                    self.write(os.read(fd, 8192))
+        try:
+            lock = self.lock
+            i = [self.read_from]
+            o = e = []
+            while 1:
+                ii, oo, ee = select.select(i, o, e)
+                with lock:
+                    for fd in ii:
+                        self.write(os.read(fd, 8192))
+        finally:
+            # since there's no reader from this pipe we want the other side to
+            # get a SIGPIPE as soon as it tries to write to it, instead of
+            # deadlocking when the pipe buffer becomes full.
+            os.close(self.read_from)
 
     def reopen(self):
         new_file = open(self.filename, 'ab', 0)

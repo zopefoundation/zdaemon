@@ -25,6 +25,9 @@ Change log
   manager was waiting before respawning a crashed program.
   https://github.com/zopefoundation/zdaemon/issues/13.
 
+- Fix delayed deadlock when the transcript file runs into a full disk
+  (https://github.com/zopefoundation/zdaemon/issues/1).
+
 
 4.0.1 (2014-12-26)
 ==================
