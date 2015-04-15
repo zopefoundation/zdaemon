@@ -378,6 +378,13 @@ sys.path[0:0] = [
   %(ZConfig)r,
   ]
 
+try:
+    import coverage
+except ImportError:
+    pass
+else:
+    coverage.process_startup()
+
 import zdaemon.zdctl
 
 if __name__ == '__main__':
