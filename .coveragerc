@@ -1,0 +1,3 @@
+[run]
+source = zdaemon
+omit = */tests/*, */__main__.py
