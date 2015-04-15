@@ -260,6 +260,51 @@ class TestBasicFunctionality(ZDOptionsTestBase):
         self.assertEqual(list_of_ints('42, 43'), [42, 43])
 
 
+class TestOptionConfiguration(ZDOptionsTestBase):
+
+    def test_add_flag_or_handler_not_both(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, short="a", flag=1,
+                          handler=lambda x: None)
+
+    def test_flag_requires_command_line_flag(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, flag=1)
+
+    def test_flag_cannot_accept_arguments(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, short='a:', flag=1)
+        self.assertRaises(ValueError, options.add, long='an-option=', flag=1)
+
+    def test_arguments_must_be_consistent(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, short='a:', long='an-option')
+        self.assertRaises(ValueError, options.add, short='a', long='an-option=')
+
+    def test_short_cmdline_syntax(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, short='-a')
+        self.assertRaises(ValueError, options.add, short='ab')
+        self.assertRaises(ValueError, options.add, short='abc')
+
+    def test_long_cmdline_syntax(self):
+        options = self.OptionsClass()
+        self.assertRaises(ValueError, options.add, long='--an-option')
+        self.assertRaises(ValueError, options.add, long='-an-option')
+
+    def test_duplicate_short_flags(self):
+        options = self.OptionsClass()
+        options.add(short='a')
+        options.add(short='b')
+        self.assertRaises(ValueError, options.add, short='a')
+
+    def test_duplicate_long_flags(self):
+        options = self.OptionsClass()
+        options.add(long='an-option')
+        options.add(long='be-still-my-beating-heart')
+        self.assertRaises(ValueError, options.add, long='an-option')
+
+
 class EnvironmentOptions(ZDOptionsTestBase):
 
     saved_schema = None
