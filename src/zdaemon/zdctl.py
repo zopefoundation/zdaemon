@@ -277,10 +277,6 @@ class ZDCmd(cmd.Cmd):
             print("^C")
         print("\n" + msg % self.__dict__)
 
-    def help_help(self):
-        print("help          -- Print a list of available actions.")
-        print("help <action> -- Print help for <action>.")
-
     def _start_cond(self, n):
         if (n > self.options.start_timeout):
             print('\nProgram took too long to start')
@@ -550,6 +546,10 @@ class ZDCmd(cmd.Cmd):
 
     def help_fg(self):
         self.help_foreground()
+
+    def help_help(self):
+        print("help          -- Print a list of available actions.")
+        print("help <action> -- Print help for <action>.")
 
 
 class TailHelper:
