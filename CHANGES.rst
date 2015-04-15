@@ -8,8 +8,23 @@ Change log
 - Add ``--version`` command line option (fixes
   https://github.com/zopefoundation/zdaemon/issues/4).
 
+- Help message for ``reopen_transcript``
+  (https://github.com/zopefoundation/zdaemon/issues/5).
+
+- Fix test suite leaving stale processes behind (
+  https://github.com/zopefoundation/zdaemon/issues/7).
+
 - ``kill`` now accepts signal names, not just numbers
   (https://github.com/zopefoundation/zdaemon/issues/11).
+
+- Restore ``logreopen`` as an alias for ``kill USR2`` (removed in version
+  3.0.0 due to lack of tests):
+  https://github.com/zopefoundation/zdaemon/issues/10.
+
+- Fix race condition where ``stop`` would be ignored if the daemon
+  manager was waiting before respawning a crashed program.
+  https://github.com/zopefoundation/zdaemon/issues/13.
+
 
 4.0.1 (2014-12-26)
 ==================
