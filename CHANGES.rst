@@ -2,17 +2,11 @@
 Change log
 ==========
 
-4.0.2 (unreleased)
+4.1.0 (unreleased)
 ==================
 
 - Add ``--version`` command line option (fixes
   https://github.com/zopefoundation/zdaemon/issues/4).
-
-- Help message for ``reopen_transcript``
-  (https://github.com/zopefoundation/zdaemon/issues/5).
-
-- Fix test suite leaving stale processes behind (
-  https://github.com/zopefoundation/zdaemon/issues/7).
 
 - ``kill`` now accepts signal names, not just numbers
   (https://github.com/zopefoundation/zdaemon/issues/11).
@@ -27,12 +21,18 @@ Change log
 - Reopen event log on ``logreopen`` or ``reopen_transcript``:
   https://github.com/zopefoundation/zdaemon/issues/8.
 
+- Help message for ``reopen_transcript``
+  (https://github.com/zopefoundation/zdaemon/issues/5).
+
 - Fix race condition where ``stop`` would be ignored if the daemon
   manager was waiting before respawning a crashed program.
   https://github.com/zopefoundation/zdaemon/issues/13.
 
-- Fix delayed deadlock when the transcript file runs into a full disk
-  (https://github.com/zopefoundation/zdaemon/issues/1).
+- Partially fix delayed deadlock when the transcript file runs into a
+  full disk (https://github.com/zopefoundation/zdaemon/issues/1).
+
+- Fix test suite leaving stale processes behind (
+  https://github.com/zopefoundation/zdaemon/issues/7).
 
 
 4.0.1 (2014-12-26)
