@@ -19,6 +19,7 @@ import sys
 import tempfile
 import shutil
 import unittest
+import doctest
 
 import ZConfig
 import zdaemon
@@ -485,7 +486,10 @@ class TestRunnerDirectory(ZDOptionsTestBase):
 
 
 def test_suite():
-    return unittest.defaultTestLoader.loadTestsFromName(__name__)
+    return unittest.TestSuite([
+        doctest.DocTestSuite('zdaemon.zdoptions'),
+        unittest.defaultTestLoader.loadTestsFromName(__name__),
+    ])
 
 
 if __name__ == "__main__":

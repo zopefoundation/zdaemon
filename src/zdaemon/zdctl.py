@@ -67,7 +67,7 @@ if __name__ == "__main__":
             sys.path.insert(0, d)
             break
 
-from zdaemon.zdoptions import RunnerOptions
+from zdaemon.zdoptions import RunnerOptions, name2signal
 
 
 def string_list(arg):
@@ -393,24 +393,24 @@ class ZDCmd(cmd.Cmd):
 
     def do_kill(self, arg):
         if not arg:
-            sig = signal.SIGTERM
-        else:
-            try:
-                sig = int(arg)
-            except:  # int() can raise any number of exceptions
-                print("invalid signal number", repr(arg))
-                return
+            arg = 'SIGTERM'
+        try:
+            signame = name2signal(arg)
+        except ValueError:
+            print("invalid signal", repr(arg))
+            return
         self.get_status()
         if not self.zd_pid:
             print("daemon process not running")
             return
+        sig = getattr(signal, signame)
         print("kill(%d, %d)" % (self.zd_pid, sig))
         try:
             os.kill(self.zd_pid, sig)
         except os.error as msg:
             print("Error:", msg)
         else:
-            print("signal %d sent to process %d" % (sig, self.zd_pid))
+            print("signal %s sent to process %d" % (signame, self.zd_pid))
 
     def help_kill(self):
         print("kill [sig] -- Send signal sig to the daemon process.")

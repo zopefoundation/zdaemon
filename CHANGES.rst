@@ -8,6 +8,9 @@ Change log
 - Add ``--version`` command line option (fixes
   https://github.com/zopefoundation/zdaemon/issues/4).
 
+- ``kill`` now accepts signal names, not just numbers
+  (https://github.com/zopefoundation/zdaemon/issues/11).
+
 4.0.1 (2014-12-26)
 ==================
 

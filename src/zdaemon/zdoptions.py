@@ -16,6 +16,7 @@ from __future__ import print_function
 import os
 import sys
 import getopt
+import signal
 
 import pkg_resources
 import ZConfig
@@ -392,6 +393,97 @@ def list_of_ints(arg):
 
 def octal_type(arg):
     return int(arg, 8)
+
+
+def name2signal(string):
+    """Converts a signal name to canonical form.
+
+    Signal names are recognized without regard for case:
+
+      >>> name2signal('sighup')
+      'SIGHUP'
+      >>> name2signal('SigHup')
+      'SIGHUP'
+      >>> name2signal('SIGHUP')
+      'SIGHUP'
+
+    The leading 'SIG' is not required::
+
+      >>> name2signal('hup')
+      'SIGHUP'
+      >>> name2signal('HUP')
+      'SIGHUP'
+
+    Names that are not known cause an exception to be raised::
+
+      >>> name2signal('woohoo')
+      Traceback (most recent call last):
+      ValueError: could not convert 'woohoo' to signal name
+
+      >>> name2signal('sigwoohoo')
+      Traceback (most recent call last):
+      ValueError: could not convert 'sigwoohoo' to signal name
+
+    Numeric values are accepted to names as well::
+
+      >>> name2signal(str(signal.SIGHUP))
+      'SIGHUP'
+
+    Numeric values that can't be matched to any signal known to Python
+    are treated as errors::
+
+      >>> name2signal('-234')
+      Traceback (most recent call last):
+      ValueError: unsupported signal on this platform: -234
+
+      >>> name2signal(str(signal.NSIG))  #doctest: +ELLIPSIS
+      Traceback (most recent call last):
+      ValueError: unsupported signal on this platform: ...
+
+    Non-signal attributes of the signal module are not mistakenly
+    converted::
+
+      >>> name2signal('_ign')
+      Traceback (most recent call last):
+      ValueError: could not convert '_ign' to signal name
+
+      >>> name2signal('_DFL')
+      Traceback (most recent call last):
+      ValueError: could not convert '_DFL' to signal name
+
+      >>> name2signal('sig_ign')
+      Traceback (most recent call last):
+      ValueError: could not convert 'sig_ign' to signal name
+
+      >>> name2signal('SIG_DFL')
+      Traceback (most recent call last):
+      ValueError: could not convert 'SIG_DFL' to signal name
+
+      >>> name2signal('getsignal')
+      Traceback (most recent call last):
+      ValueError: could not convert 'getsignal' to signal name
+
+    """
+    try:
+        v = int(string)
+    except ValueError:
+        if "_" in string:
+            raise ValueError("could not convert %r to signal name" % string)
+        s = string.upper()
+        if not s.startswith("SIG"):
+            s = "SIG" + s
+        v = getattr(signal, s, None)
+        if isinstance(v, int):
+            return s
+        raise ValueError("could not convert %r to signal name" % string)
+    if v >= signal.NSIG:
+        raise ValueError("unsupported signal on this platform: %s" % string)
+    for name in dir(signal):
+        if "_" in name:
+            continue
+        if getattr(signal, name) == v:
+            return name
+    raise ValueError("unsupported signal on this platform: %s" % string)
 
 
 def existing_parent_directory(arg):

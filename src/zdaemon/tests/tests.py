@@ -157,6 +157,37 @@ def test_stop_timeout():
     """
 
 
+def test_kill():
+    """
+
+    >>> write('conf',
+    ... '''
+    ... <runner>
+    ...   program sleep 100
+    ... </runner>
+    ... ''')
+
+    >>> system("./zdaemon -Cconf start")
+    . .
+    daemon process started, pid=1234
+
+    >>> system("./zdaemon -Cconf kill ded")
+    invalid signal 'ded'
+
+    >>> system("./zdaemon -Cconf kill CONT")
+    kill(1234, 18)
+    signal SIGCONT sent to process 1234
+
+    >>> system("./zdaemon -Cconf stop")
+    . .
+    daemon process stopped
+
+    >>> system("./zdaemon -Cconf kill")
+    daemon process not running
+
+    """
+
+
 def test_start_test_program():
     """
     >>> write('t.py',
@@ -405,6 +436,8 @@ def test_suite():
             checker=renormalizing.RENormalizing([
                 (re.compile('pid=\d+'), 'pid=NNN'),
                 (re.compile('(\. )+\.?'), '<BLANKLINE>'),
+                (re.compile('process \d+'), 'process NNN'),
+                (re.compile('kill\(\d+,'), 'kill(NNN,'),
             ])),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
