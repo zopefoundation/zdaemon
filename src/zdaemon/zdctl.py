@@ -32,6 +32,7 @@ Options:
 -u/--user USER -- run as this user (or numeric uid)
 -m/--umask UMASK -- use this umask for daemon subprocess (default is 022)
 -x/--exit-codes LIST -- list of fatal exit codes (default "0,2")
+--version -- print zdaemon version and exit
 -z/--directory DIRECTORY -- directory to chdir to when using -d (default off)
 action [arguments] -- see below
 

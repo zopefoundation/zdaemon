@@ -5,7 +5,8 @@ Change log
 4.0.2 (unreleased)
 ==================
 
-- TBD
+- Add ``--version`` command line option (fixes
+  https://github.com/zopefoundation/zdaemon/issues/4).
 
 4.0.1 (2014-12-26)
 ==================

@@ -47,14 +47,14 @@ class ZDOptionsTestBase(unittest.TestCase):
         sys.stdout = self.save_stdout
         sys.stderr = self.save_stderr
 
-    def check_exit_code(self, options, args):
+    def check_exit_code(self, options, args, exit_code=2):
         save_sys_stderr = sys.stderr
         try:
             sys.stderr = StringIO()
             try:
                 options.realize(args)
             except SystemExit as err:
-                self.assertEqual(err.code, 2)
+                self.assertEqual(err.code, exit_code)
             else:
                 self.fail("SystemExit expected")
         finally:
@@ -156,6 +156,16 @@ class TestZDOptions(ZDOptionsTestBase):
         class HasHelp(self.OptionsClass):
             __doc__ = 'Some help'
         self.help_test_helper(HasHelp, {'doc': 'Example help'}, 'Example help')
+
+    def test_version(self):
+        options = self.OptionsClass()
+        options.version = '2.4.frog-knows'
+        self.save_streams()
+        try:
+            self.check_exit_code(options, ['--version'], exit_code=0)
+        finally:
+            self.restore_streams()
+        self.assertNotEqual(self.stdout.getvalue(), "2.4.frog-knows")
 
     def test_unrecognized(self):
         # Check that we get an error for an unrecognized option

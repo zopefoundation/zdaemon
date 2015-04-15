@@ -46,7 +46,7 @@ try:
         zip_safe=False,
         entry_points=entry_points,
         include_package_data = True,
-        install_requires=["ZConfig"],
+        install_requires=["ZConfig", "setuptools"],
         extras_require=dict(test=tests_require),
         test_suite='__main__.alltests',
         tests_require=tests_require

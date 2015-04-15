@@ -17,7 +17,9 @@ import os
 import sys
 import getopt
 
+import pkg_resources
 import ZConfig
+
 
 class ZDOptions:
     """a zdaemon script.
@@ -27,6 +29,7 @@ class ZDOptions:
     Options:
     -C/--configure URL -- configuration file or URL
     -h/--help -- print usage message and exit
+    --version -- print zdaemon version and exit
 
     Actions are commands like "start", "stop" and "status".  If -i is
     specified or no action is specified on the command line, a "shell"
@@ -63,9 +66,16 @@ class ZDOptions:
         self.required_map = {}
         self.environ_map = {}
         self.zconfig_options = []
+        self.version = pkg_resources.get_distribution("zdaemon").version
         self.add(None, None, "h", "help", self.help)
+        self.add(None, None, None, "version", self.print_version)
         self.add("configfile", None, "C:", "configure=")
         self.add(None, None, "X:", handler=self.zconfig_options.append)
+
+    def print_version(self, dummy):
+        """Print zdaemon version number to stdout and exit(0)."""
+        print(self.version)
+        sys.exit(0)
 
     def help(self, dummy):
         """Print a long help message (self.doc) to stdout and exit(0).
