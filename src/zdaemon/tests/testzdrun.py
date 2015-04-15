@@ -242,7 +242,7 @@ class ZDaemonTests(unittest.TestCase):
             self.assertTrue(b'\n' in response,
                             'no newline in response: ' + repr(response))
             # Kill the process.
-            send_action('exit\n', zdrun_socket)
+            send_action('stop\n', zdrun_socket)
         finally:
             # Remove the tmp directory.
             # Caution:  this is delicate.  The code here used to do
