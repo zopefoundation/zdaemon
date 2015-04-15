@@ -220,7 +220,7 @@ class ZDaemonTests(unittest.TestCase):
                 dict(os.environ,
                      PYTHONPATH=":".join(sys.path),
                      )
-                )
+            )
             # Wait for it to start, but no longer than a minute.
             deadline = time.time() + 60
             is_started = False

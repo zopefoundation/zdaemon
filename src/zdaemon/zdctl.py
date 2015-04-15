@@ -202,7 +202,7 @@ class ZDCmd(cmd.Cmd):
         os.setgroups(
             sorted(g.gr_gid for g in grp.getgrall()  # sort for tests
                    if user in g.gr_mem)
-            )
+        )
         os.setuid(uid)
 
     def emptyline(self):
