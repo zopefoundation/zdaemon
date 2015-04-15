@@ -295,9 +295,14 @@ the output will show up in the new file, not the old:
     ...     file.read()
     'rec 1\nrec 2\n'
 
-Close files:
+Close files and clean up:
 
     >>> f.close()
+
+    sh> ./zdaemon -Cconf stop
+    . .
+    daemon process stopped
+
 
 Start test program and timeout
 ==============================
