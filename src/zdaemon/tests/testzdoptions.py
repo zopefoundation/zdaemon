@@ -172,7 +172,7 @@ class TestZDOptions(ZDOptionsTestBase):
         self.check_exit_code(self.OptionsClass(), ["-/"])
 
 
-class TestBasicFunctionality(TestZDOptions):
+class TestBasicFunctionality(ZDOptionsTestBase):
 
     def test_no_positional_args(self):
         # Check that we get an error for positional args when they
@@ -440,13 +440,8 @@ class TestRunnerDirectory(ZDOptionsTestBase):
 
 
 def test_suite():
-    suite = unittest.TestSuite()
-    for cls in [TestBasicFunctionality,
-                TestZDOptionsEnvironment,
-                TestCommandLineOverrides,
-                TestRunnerDirectory]:
-        suite.addTest(unittest.makeSuite(cls))
-    return suite
+    return unittest.defaultTestLoader.loadTestsFromName(__name__)
+
 
 if __name__ == "__main__":
     unittest.main(defaultTest='test_suite')
