@@ -255,21 +255,23 @@ class ZDCmd(cmd.Cmd):
 
         return resp
 
-    def awhile(self, cond, msg):
+    def awhile(self, cond, msg, freq=100):
         n = 0
+        limit = 10 * freq
         was_running = False
         try:
             if self.get_status():
                 was_running = True
 
-            while not cond(n):
-                sys.stdout.write(". ")
-                sys.stdout.flush()
-                time.sleep(1)
+            while not cond(n // freq):
+                if n % freq == 0:
+                    sys.stdout.write(". ")
+                    sys.stdout.flush()
+                time.sleep(1.0 / freq)
                 n += 1
                 if self.get_status():
                     was_running = True
-                elif (was_running or n > 10) and not cond(n):
+                elif (was_running or n > limit) and not cond(n // freq):
                     print("\ndaemon manager not running")
                     return 1
 
