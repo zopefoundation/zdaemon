@@ -500,6 +500,13 @@ class ZDCmd(cmd.Cmd):
         print("show python -- show Python version and details")
         print("show all -- show all of the above")
 
+    def do_logreopen(self, arg):
+        self.do_kill('USR2')
+
+    def help_logreopen(self):
+        print("logreopen -- Send a SIGUSR2 signal to the daemon process.")
+        print("             This is designed to reopen the log file.")
+
     def do_logtail(self, arg):
         if not arg:
             arg = self.options.logfile

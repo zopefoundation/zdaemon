@@ -19,8 +19,8 @@ def doctest_ZDCmd_help():
         <BLANKLINE>
         Documented commands (type help <topic>):
         ========================================
-        fg          help  logtail            restart  start   stop
-        foreground  kill  reopen_transcript  show     status  wait
+        fg          help  logreopen  reopen_transcript  show   status  wait
+        foreground  kill  logtail    restart            start  stop
         <BLANKLINE>
 
         >>> run("help fg")
@@ -34,6 +34,10 @@ def doctest_ZDCmd_help():
         >>> run("help kill")
         kill [sig] -- Send signal sig to the daemon process.
                       The default signal is SIGTERM.
+
+        >>> run("help logreopen")
+        logreopen -- Send a SIGUSR2 signal to the daemon process.
+                     This is designed to reopen the log file.
 
         >>> run("help logtail")
         logtail [logfile] -- Run tail -f on the given logfile.
@@ -71,4 +75,4 @@ def doctest_ZDCmd_help():
 
 
 def test_suite():
-    return doctest.DocTestSuite()
+    return doctest.DocTestSuite(optionflags=doctest.NORMALIZE_WHITESPACE)
