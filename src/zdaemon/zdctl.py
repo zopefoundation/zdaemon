@@ -227,7 +227,7 @@ class ZDCmd(cmd.Cmd):
                     break
                 response += data
             return response.decode()
-        except socket.error as msg:
+        except socket.error:
             return None
         finally:
             sock.close()
