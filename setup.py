@@ -58,7 +58,7 @@ except ImportError:
 setup(
     name="zdaemon",
     version='4.0.2.dev0',
-    url="http://www.python.org/pypi/zdaemon",
+    url="https://github.com/zopefoundation/zdaemon",
     license="ZPL 2.1",
     description=
     "Daemon process control library and tools for Unix-based systems",
