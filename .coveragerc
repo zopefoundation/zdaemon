@@ -1,3 +1,9 @@
 [run]
 source = zdaemon
 omit = */tests/*, */__main__.py
+
+[report]
+exclude_lines =
+    pragma: nocover
+    except ImportError:
+    if __name__ == .__main__.:

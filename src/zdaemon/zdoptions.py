@@ -424,7 +424,7 @@ def existing_parent_dirpath(arg):
                      'does not exist.' % arg)
 
 
-def _test():
+def _test():  # pragma: nocover
     # Stupid test program
     z = ZDOptions()
     z.add("program", "zdctl.program", "p:", "program=")

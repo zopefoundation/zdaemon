@@ -23,7 +23,7 @@ import unittest
 import ZConfig
 import zdaemon
 from zdaemon.zdoptions import (
-    ZDOptions, RunnerOptions,
+    ZDOptions, RunnerOptions, list_of_ints,
     existing_parent_directory, existing_parent_dirpath)
 
 try:
@@ -147,8 +147,8 @@ class TestZDOptions(ZDOptionsTestBase):
     def test_help(self):
         # test what happens when the subclass has None for __doc__
         class HasHelp(self.OptionsClass):
-            __doc__ = 'Some help'
-        self.help_test_helper(HasHelp, {}, 'Some help')
+            __doc__ = 'Some help for %s'
+        self.help_test_helper(HasHelp, {'progname': 'me'}, 'Some help for me')
 
     def test_has_help_with_doc_kw(self):
         # test what happens when the subclass has something for __doc__,
@@ -205,6 +205,13 @@ class TestBasicFunctionality(TestZDOptions):
         options.add("setting", None, "b", flag=2)
         self.check_exit_code(options, ["-a", "-b"])
 
+    def test_duplicate_flags(self):
+        # Check that we don't get an error for flags which reinforce the
+        # same option setting.
+        options = self.OptionsClass()
+        options.add("setting", None, "a", flag=1)
+        options.realize(["-a", "-a"])
+
     def test_handler_simple(self):
         # Test that a handler is called; use one that doesn't return None.
         options = self.OptionsClass()
@@ -227,6 +234,17 @@ class TestBasicFunctionality(TestZDOptions):
         options.add("setting", None, "a:", handler=int)
         self.check_exit_code(options, ["-afoo"])
 
+    def test_required_options(self):
+        # Check that we get an error if a required option is not specified
+        options = self.OptionsClass()
+        options.add("setting", None, "a:", handler=int, required=True)
+        self.check_exit_code(options, [])
+
+    def test_overrides_without_config_file(self):
+        # Check that we get an error if we use -X without -C
+        options = self.OptionsClass()
+        self.check_exit_code(options, ["-Xfoo"])
+
     def test_raise_getopt_errors(self):
         options = self.OptionsClass()
         # note that we do not add "a" to the list of options;
@@ -234,6 +252,12 @@ class TestBasicFunctionality(TestZDOptions):
         options.realize(["-afoo"], raise_getopt_errs=False)
         # check_exit_code realizes the options with raise_getopt_errs=True
         self.check_exit_code(options, ['-afoo'])
+
+    def test_list_of_ints(self):
+        self.assertEqual(list_of_ints(''), [])
+        self.assertEqual(list_of_ints('42'), [42])
+        self.assertEqual(list_of_ints('42,43'), [42, 43])
+        self.assertEqual(list_of_ints('42, 43'), [42, 43])
 
 
 class EnvironmentOptions(ZDOptionsTestBase):
