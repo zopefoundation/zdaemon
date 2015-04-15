@@ -139,7 +139,7 @@ class ZDCmd(cmd.Cmd):
                 if getattr(env, 'mapping', None) is not None:
                     for k, v in env.mapping.items():
                         os.environ[k] = v
-                elif type(env) is type({}):
+                elif isinstance(env, dict):
                     for k, v in env.items():
                         os.environ[k] = v
 

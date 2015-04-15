@@ -97,7 +97,7 @@ class ZDaemonTests(unittest.TestCase):
         ##    (self.ppath, self.python, self.zdrun, self.zdsock, args))
 
     def _run(self, args, cmdclass=None, module=zdctl):
-        if type(args) is type(""):
+        if isinstance(args, str):
             args = args.split()
         kw = {}
         if cmdclass:
