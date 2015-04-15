@@ -691,7 +691,7 @@ def _init_signames():
     d = {}
     for k, v in signal.__dict__.items():
         k_startswith = getattr(k, "startswith", None)
-        if k_startswith is None:
+        if k_startswith is None:  # pragma: nocover
             continue
         if k_startswith("SIG") and not k_startswith("SIG_"):
             d[v] = k
