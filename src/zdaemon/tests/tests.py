@@ -181,7 +181,7 @@ def test_start_test_program():
     >>> os.remove('x')
 
     >>> system("./zdaemon -Cconf restart")
-    . . . 
+    . . .
     daemon process restarted, pid=19622
     >>> os.path.exists('x')
     True
@@ -399,4 +399,3 @@ def test_suite():
                 '../README.rst',
                 setUp=setUp, tearDown=tearDown),
         ))
-

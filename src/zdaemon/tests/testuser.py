@@ -135,4 +135,3 @@ def setUp(test):
 
 def test_suite():
     return doctest.DocTestSuite(setUp=setUp, tearDown=setupstack.tearDown)
-
