@@ -2,7 +2,7 @@
 Change log
 ==========
 
-4.1.0 (unreleased)
+4.1.0 (2015-04-16)
 ==================
 
 - Add ``--version`` command line option (fixes
