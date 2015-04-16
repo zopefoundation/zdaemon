@@ -31,8 +31,8 @@ Change log
 - Partially fix delayed deadlock when the transcript file runs into a
   full disk (https://github.com/zopefoundation/zdaemon/issues/1).
 
-- Fix test suite leaving stale processes behind (
-  https://github.com/zopefoundation/zdaemon/issues/7).
+- Fix test suite leaving stale processes behind
+  (https://github.com/zopefoundation/zdaemon/issues/7).
 
 
 4.0.1 (2014-12-26)
