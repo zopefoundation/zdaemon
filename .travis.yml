@@ -10,7 +10,7 @@ python:
 #   https://bitbucket.org/pypy/pypy/issue/1946)
 #   - pypy3
 install:
-    - pip install . --use-mirrors
+    - pip install .
 script:
     - python setup.py test -q
 notifications:
