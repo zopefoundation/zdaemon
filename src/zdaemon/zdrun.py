@@ -380,8 +380,6 @@ class Daemonizer:
     proc = None  # Subprocess instance
 
     def runforever(self):
-        sig_r, sig_w = os.pipe()
-        signal.set_wakeup_fd(sig_w)
         self.logger.info("daemon manager started")
         while self.should_be_up or self.proc.pid:
             if self.should_be_up and not self.proc.pid and not self.delay:
@@ -391,7 +389,7 @@ class Daemonizer:
                     self.delay = time.time() + self.backofflimit
             if self.waitstatus:
                 self.reportstatus()
-            r, w, x = [self.mastersocket, sig_r], [], []
+            r, w, x = [self.mastersocket], [], []
             if self.commandsocket:
                 r.append(self.commandsocket)
             timeout = self.options.backofflimit
@@ -424,8 +422,6 @@ class Daemonizer:
                     self.logger.exception("socket.error in doaccept(): %s"
                                           % str(msg))
                     self.commandsocket = None
-            if sig_r in r:
-                os.read(sig_r, 1)  # don't let the buffer fill up
         self.logger.info("Exiting")
         sys.exit(0)
 
