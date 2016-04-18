@@ -19,6 +19,7 @@ Usage: python zrdun.py [zrdun-options] program [program-arguments]
 
 from stat import ST_MODE
 import errno
+import fcntl
 import logging
 import os
 import select
@@ -381,6 +382,8 @@ class Daemonizer:
 
     def runforever(self):
         sig_r, sig_w = os.pipe()
+        fcntl.fcntl(sig_r, fcntl.F_SETFL, fcntl.fcntl(sig_r, fcntl.F_GETFL) | os.O_NONBLOCK)
+        fcntl.fcntl(sig_w, fcntl.F_SETFL, fcntl.fcntl(sig_w, fcntl.F_GETFL) | os.O_NONBLOCK)
         signal.set_wakeup_fd(sig_w)
         self.logger.info("daemon manager started")
         while self.should_be_up or self.proc.pid:
