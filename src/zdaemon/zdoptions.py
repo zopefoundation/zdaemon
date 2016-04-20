@@ -469,6 +469,8 @@ def name2signal(string):
     except ValueError:
         if "_" in string:
             raise ValueError("could not convert %r to signal name" % string)
+        if string.startswith('Signals.'):  # py35 signals are an enum type
+            string = string[len('Signals.'):]
         s = string.upper()
         if not s.startswith("SIG"):
             s = "SIG" + s
