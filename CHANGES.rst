@@ -2,7 +2,7 @@
 Change log
 ==========
 
-4.2.0 (unreleased)
+4.2.0 (2016-12-07)
 ==================
 
 - Add support for Python 3.5.
