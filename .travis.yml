@@ -17,7 +17,8 @@ install:
     - pip install -U coverage coveralls
     - pip install -U -e .[test]
 script:
-    - coverage run -m zope.testrunner --test-path=src
+    - COVERAGE_HOME=. COVERAGE_PROCESS_START=./.coverage coverage run -m zope.testrunner --test-path=src
+    - coverage combine
 after_success:
     - coveralls
 notifications:
