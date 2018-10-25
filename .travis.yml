@@ -17,7 +17,9 @@ install:
     - pip install -U coverage coveralls
     - pip install -U -e .[test]
 script:
-    - COVERAGE_HOME=. COVERAGE_PROCESS_START=./.coveragerc coverage run -m zope.testrunner --test-path=src
+    - export COVERAGE_HOME=$(pwd)
+    - export COVERAGE_PROCESS_START=$COVERAGE_HOME/.coveragerc
+    - coverage run -m zope.testrunner --test-path=src
     - coverage combine
 after_success:
     - coveralls
