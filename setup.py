@@ -57,7 +57,7 @@ except ImportError:
 
 setup(
     name="zdaemon",
-    version='4.2.1.dev0',
+    version='4.3.0.dev0',
     url="https://github.com/zopefoundation/zdaemon",
     license="ZPL 2.1",
     description=
@@ -81,9 +81,10 @@ setup(
        'Programming Language :: Python :: 2',
        'Programming Language :: Python :: 2.7',
        'Programming Language :: Python :: 3',
-       'Programming Language :: Python :: 3.3',
        'Programming Language :: Python :: 3.4',
        'Programming Language :: Python :: 3.5',
+       'Programming Language :: Python :: 3.6',
+       'Programming Language :: Python :: 3.7',
        'Programming Language :: Python :: Implementation :: CPython',
        'Programming Language :: Python :: Implementation :: PyPy',
        'Operating System :: POSIX',

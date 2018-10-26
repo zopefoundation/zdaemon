@@ -1,6 +1,6 @@
 [run]
 source = $COVERAGE_HOME/src/zdaemon
-omit = */tests/*, */__main__.py
+omit = */__main__.py
 parallel = true
 data_file = $COVERAGE_HOME/.coverage
 
