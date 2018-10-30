@@ -57,7 +57,7 @@ except ImportError:
 
 setup(
     name="zdaemon",
-    version='4.3',
+    version='4.4.dev0',
     url="https://github.com/zopefoundation/zdaemon",
     license="ZPL 2.1",
     description=
