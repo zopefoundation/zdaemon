@@ -2,8 +2,8 @@
 Change log
 ==========
 
-4.3.0 (unreleased)
-==================
+4.3 (2018-10-30)
+================
 
 - Add support for Python 3.6 and 3.7.
 
