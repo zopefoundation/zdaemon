@@ -5,7 +5,9 @@ Change log
 4.4 (unreleased)
 ================
 
-- Nothing changed yet.
+- Add support for Python 3.8.
+
+- Drop support for Python 3.4.
 
 
 4.3 (2018-10-30)
