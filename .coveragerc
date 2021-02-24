@@ -1,11 +1,28 @@
+# Generated from:
+# https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
 [run]
-source = $COVERAGE_HOME/src/zdaemon
-omit = */__main__.py
+source = zdaemon
+plugins = coverage_python_version
+branch = true
 parallel = true
-data_file = $COVERAGE_HOME/.coverage
+
+[paths]
+source =
+    src/
+    .tox/*/lib/python*/site-packages/
+    .tox/pypy*/site-packages/
 
 [report]
+precision = 2
 exclude_lines =
-    pragma: nocover
     except ImportError:
-    if __name__ == .__main__.:
+    if __name__ == '__main__':
+    pragma: no cover
+    pragma: nocover
+    raise AssertionError
+    raise NotImplementedError
+    raise unittest.Skip
+    self.fail\(
+
+[html]
+directory = parts/htmlcov

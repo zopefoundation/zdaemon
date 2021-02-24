@@ -1,11 +1,29 @@
+# Generated from:
+# https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
+*.egg-info/
+*.profraw
 *.pyc
-*.egg-info
-__pycache__
-.tox/
-.installed.cfg
-bin/
-develop-eggs/
-eggs/
-parts/
+*.pyo
 .coverage
 .coverage.*
+.eggs/
+.installed.cfg
+.mr.developer.cfg
+.tox/
+.vscode/
+__pycache__/
+bin/
+build/
+coverage.xml
+develop-eggs/
+develop/
+dist/
+docs/_build
+eggs/
+etc/
+lib/
+lib64
+log/
+parts/
+pyvenv.cfg
+var/
