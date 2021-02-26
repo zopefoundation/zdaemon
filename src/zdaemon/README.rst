@@ -181,7 +181,7 @@ LD_LIBRARY_PATH so that dynamically loaded libraries can be found.
       socket-name /tmp/demo.zdsock
     </runner>
     <environment>
-      LD_LIBRARY_PATH /home/foo/lib
+      LIBRARY_PATH /home/foo/lib
       HOME /home/foo
     </environment>
 
@@ -204,7 +204,7 @@ Now, when we run the command, we'll see out environment settings reflected:
     LANG=en_US.UTF-8
     SHELL=/bin/bash
     EDITOR=emacs
-    LD_LIBRARY_PATH=/home/foo/lib
+    LIBRARY_PATH=/home/foo/lib
 
 Transcript log
 ==============

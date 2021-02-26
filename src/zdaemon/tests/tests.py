@@ -212,14 +212,17 @@ def test_logreopen():
 
     This also reopens the transcript.log:
 
-    >>> sorted(os.listdir('.'))
+    >>> sorted(x
+    ...        for x in os.listdir('.')
+    ...        if x in [
+    ...            'conf', 'transcript.log', 'transcript.log.1', 'zdaemon', 'zdsock'])
     ['conf', 'transcript.log', 'transcript.log.1', 'zdaemon', 'zdsock']
 
     >>> system("./zdaemon -Cconf stop")
     . .
     daemon process stopped
 
-    """
+    """  # noqa: E501 line too long
 
 
 def test_log_rotation():
@@ -472,7 +475,7 @@ def system(command, input='', quiet=False, echo=False):
 
 def checkenv(match):
     match = [a for a in match.group(1).split('\n')[:-1]
-             if a.split('=')[0] in ('HOME', 'LD_LIBRARY_PATH')]
+             if a.split('=')[0] in ('HOME', 'LIBRARY_PATH')]
     match.sort()
     return '\n'.join(match) + '\n'
 
@@ -513,7 +516,7 @@ def test_suite():
                 (re.compile('pid=\d+'), 'pid=NNN'),
                 (re.compile('(\. )+\.?'), '<BLANKLINE>'),
                 (re.compile('process \d+'), 'process NNN'),
-                (re.compile('kill\(\d+,'), 'kill(NNN,'),
+                (re.compile('kill\(\d+, \d+\)'), 'kill(NNN, MM)'),
             ])),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
