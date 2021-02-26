@@ -11,3 +11,5 @@ recursive-include src *.py
 recursive-include src *.rst
 recursive-include src *.txt
 recursive-include src *.zcml
+recursive-include src *.conf
+recursive-include src *.xml

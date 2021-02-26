@@ -29,8 +29,8 @@ from zdaemon.zdoptions import (
 
 try:
     from StringIO import StringIO
-except:
-    # Python 3 support.
+except ImportError:
+    # PY3 support.
     from io import StringIO
 
 
@@ -279,8 +279,10 @@ class TestOptionConfiguration(ZDOptionsTestBase):
 
     def test_arguments_must_be_consistent(self):
         options = self.OptionsClass()
-        self.assertRaises(ValueError, options.add, short='a:', long='an-option')
-        self.assertRaises(ValueError, options.add, short='a', long='an-option=')
+        with self.assertRaises(ValueError):
+            options.add(short='a:', long='an-option')
+        with self.assertRaises(ValueError):
+            options.add(short='a', long='an-option=')
 
     def test_short_cmdline_syntax(self):
         options = self.OptionsClass()

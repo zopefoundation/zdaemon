@@ -27,7 +27,7 @@ def write(name, text):
         f.write(text)
 
 
-class O:
+class Obj:
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
@@ -76,14 +76,14 @@ def test_user_sets_supplemtary_groups():
 
     >>> import grp
     >>> grp.getgrall.return_value = [
-    ...   O(gr_gid=8, gr_mem =['g', 'zope', ]),
-    ...   O(gr_gid=1, gr_mem =['a', 'x', ]),
-    ...   O(gr_gid=2, gr_mem =['b', 'x', 'zope']),
-    ...   O(gr_gid=5, gr_mem =['c', 'x', ]),
-    ...   O(gr_gid=4, gr_mem =['d', 'x', ]),
-    ...   O(gr_gid=3, gr_mem =['e', 'x', 'zope', ]),
-    ...   O(gr_gid=6, gr_mem =['f', ]),
-    ...   O(gr_gid=7, gr_mem =['h', ]),
+    ...   Obj(gr_gid=8, gr_mem =['g', 'zope', ]),
+    ...   Obj(gr_gid=1, gr_mem =['a', 'x', ]),
+    ...   Obj(gr_gid=2, gr_mem =['b', 'x', 'zope']),
+    ...   Obj(gr_gid=5, gr_mem =['c', 'x', ]),
+    ...   Obj(gr_gid=4, gr_mem =['d', 'x', ]),
+    ...   Obj(gr_gid=3, gr_mem =['e', 'x', 'zope', ]),
+    ...   Obj(gr_gid=6, gr_mem =['f', ]),
+    ...   Obj(gr_gid=7, gr_mem =['h', ]),
     ... ]
 
     >>> with mock.patch('sys.exit'):
@@ -132,7 +132,7 @@ def test_do_nothing_if_effective_user_is_configured_user():
 def setUp(test):
     setupstack.setUpDirectory(test)
     getpwname = setupstack.context_manager(test, mock.patch('pwd.getpwnam'))
-    getpwname.return_value = O(pw_gid=5, pw_uid=99, pw_name='zope')
+    getpwname.return_value = Obj(pw_gid=5, pw_uid=99, pw_name='zope')
     setupstack.context_manager(test, mock.patch('os.geteuid')).return_value = 0
     setupstack.context_manager(test, mock.patch('grp.getgrall'))
     setupstack.context_manager(test, mock.patch('os.setgroups'))

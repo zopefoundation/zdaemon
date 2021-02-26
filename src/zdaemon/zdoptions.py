@@ -169,7 +169,9 @@ class ZDOptions:
                 raise ValueError("flag= requires a command line flag")
             if long and long.endswith("="):
                 raise ValueError("flag= requires a command line flag")
-            handler = lambda arg, flag=flag: flag
+
+            def handler(arg, flag=flag):
+                return flag
 
         if short and long:
             if short.endswith(":") != long.endswith("="):
@@ -518,11 +520,11 @@ def _test():  # pragma: nocover
     z.add("program", "zdctl.program", "p:", "program=")
     print(z.names_list)
     z.realize()
-    names = z.names_list[:]
-    names.sort()
+    names = sorted(z.names_list[:])
     for name, confname in names:
         print("%-20s = %.56r" % (name, getattr(z, name)))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     __file__ = sys.argv[0]
     _test()

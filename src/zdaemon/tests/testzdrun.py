@@ -12,8 +12,8 @@ import socket
 
 try:
     from StringIO import StringIO
-except:
-    # Python 3 support.
+except ImportError:
+    # PY3 support.
     from io import StringIO
 
 import ZConfig
@@ -429,7 +429,7 @@ def send_action(action, sockname, raise_on_error=False):
         sock.send(action.encode() + b"\n")
         sock.shutdown(1)  # We're not writing any more
         response = b""
-        while 1:
+        while True:
             data = sock.recv(1000)
             if not data:
                 break
@@ -455,7 +455,3 @@ def test_suite():
         suite.addTest(unittest.makeSuite(ZDaemonTests))
         suite.addTest(unittest.makeSuite(TestRunnerDirectory))
     return suite
-
-if __name__ == '__main__':
-    __file__ = sys.argv[0]
-    unittest.main(defaultTest='test_suite')

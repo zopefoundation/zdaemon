@@ -6,6 +6,7 @@ plugins = coverage_python_version
 branch = true
 parallel = true
 data_file = $COVERAGE_HOME/.coverage
+omit = */__main__.py
 
 [paths]
 source =

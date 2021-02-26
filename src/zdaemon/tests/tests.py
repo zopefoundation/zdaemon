@@ -474,9 +474,8 @@ def system(command, input='', quiet=False, echo=False):
 
 
 def checkenv(match):
-    match = [a for a in match.group(1).split('\n')[:-1]
-             if a.split('=')[0] in ('HOME', 'LIBRARY_PATH')]
-    match.sort()
+    match = sorted([a for a in match.group(1).split('\n')[:-1]
+                    if a.split('=')[0] in ('HOME', 'LIBRARY_PATH')])
     return '\n'.join(match) + '\n'
 
 
@@ -504,8 +503,8 @@ if __name__ == '__main__':
 
 def test_suite():
     README_checker = renormalizing.RENormalizing([
-        (re.compile('pid=\d+'), 'pid=NNN'),
-        (re.compile('(\. )+\.?'), '<BLANKLINE>'),
+        (re.compile(r'pid=\d+'), 'pid=NNN'),
+        (re.compile(r'(\. )+\.?'), '<BLANKLINE>'),
         (re.compile('^env\n((?:.*\n)+)$'), checkenv),
     ])
 
@@ -513,10 +512,10 @@ def test_suite():
         doctest.DocTestSuite(
             setUp=setUp, tearDown=tearDown,
             checker=renormalizing.RENormalizing([
-                (re.compile('pid=\d+'), 'pid=NNN'),
-                (re.compile('(\. )+\.?'), '<BLANKLINE>'),
-                (re.compile('process \d+'), 'process NNN'),
-                (re.compile('kill\(\d+, \d+\)'), 'kill(NNN, MM)'),
+                (re.compile(r'pid=\d+'), 'pid=NNN'),
+                (re.compile(r'(\. )+\.?'), '<BLANKLINE>'),
+                (re.compile(r'process \d+'), 'process NNN'),
+                (re.compile(r'kill\(\d+, \d+\)'), 'kill(NNN, MM)'),
             ])),
         manuel.testing.TestSuite(
             manuel.doctest.Manuel(
