@@ -2,7 +2,7 @@
 # https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
 [meta]
 template = "buildout-recipe"
-commit-id = "519ffffe1b360ede58b32a375b5f8b26059d8016"
+commit-id = "55c1ce0eadf36bf4395e939b9cc2f387b251623f"
 
 [python]
 with-appveyor = false
@@ -12,4 +12,15 @@ with-docs = false
 with-sphinx-doctests = false
 
 [coverage]
-fail-under = 0
+fail-under = 79
+
+[coverage-run]
+additional-config = [
+    "data_file = $COVERAGE_HOME/.coverage",
+    ]
+
+[tox]
+coverage-setenv = [
+    "COVERAGE_PROCESS_START={toxinidir}/.coveragerc",
+    "COVERAGE_HOME={toxinidir}",
+    ]

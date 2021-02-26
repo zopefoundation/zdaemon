@@ -5,6 +5,7 @@ source = zdaemon
 plugins = coverage_python_version
 branch = true
 parallel = true
+data_file = $COVERAGE_HOME/.coverage
 
 [paths]
 source =
