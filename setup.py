@@ -13,8 +13,13 @@
 ##############################################################################
 import os
 
-tests_require = ['zope.testing', 'zope.testrunner', 'manuel', 'mock',
-                 'zc.customdoctests']
+tests_require = [
+    'manuel',
+    'mock',
+    'zc.customdoctests',
+    'zope.testing',
+    'zope.testrunner',
+]
 
 
 entry_points = """
@@ -27,22 +32,6 @@ def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
 
-def alltests():
-    import os
-    import sys
-    import unittest
-    # use the zope.testrunner machinery to find all the
-    # test suites we've put under ourselves
-    import zope.testrunner.find
-    import zope.testrunner.options
-    here = os.path.abspath(os.path.join(os.path.dirname(__file__), 'src'))
-    args = sys.argv[:]
-    defaults = ["--test-path", here]
-    options = zope.testrunner.options.get_options(args, defaults)
-    suites = list(zope.testrunner.find.find_suites(options))
-    return unittest.TestSuite(suites)
-
-
 try:
     from setuptools import setup
     setuptools_options = dict(
@@ -51,8 +40,6 @@ try:
         include_package_data=True,
         install_requires=["ZConfig", "setuptools"],
         extras_require=dict(test=tests_require),
-        test_suite='__main__.alltests',
-        tests_require=tests_require
     )
 except ImportError:
     from distutils.core import setup
