@@ -9,6 +9,8 @@ Change log
 
 - Drop support for Python 3.4.
 
+- Drop support for ``python setup.py test`` to run the tests. (#23)
+
 
 4.3 (2018-10-30)
 ================
