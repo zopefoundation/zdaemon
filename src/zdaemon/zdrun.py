@@ -249,7 +249,7 @@ class Daemonizer:
         sockname = self.options.sockname
         tempname = "%s.%d" % (sockname, os.getpid())
         self.unlink_quietly(tempname)
-        while 1:
+        while True:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
                 sock.bind(tempname)
@@ -382,8 +382,12 @@ class Daemonizer:
 
     def runforever(self):
         sig_r, sig_w = os.pipe()
-        fcntl.fcntl(sig_r, fcntl.F_SETFL, fcntl.fcntl(sig_r, fcntl.F_GETFL) | os.O_NONBLOCK)
-        fcntl.fcntl(sig_w, fcntl.F_SETFL, fcntl.fcntl(sig_w, fcntl.F_GETFL) | os.O_NONBLOCK)
+        fcntl.fcntl(
+            sig_r, fcntl.F_SETFL, fcntl.fcntl(
+                sig_r, fcntl.F_GETFL) | os.O_NONBLOCK)
+        fcntl.fcntl(
+            sig_w, fcntl.F_SETFL, fcntl.fcntl(
+                sig_w, fcntl.F_GETFL) | os.O_NONBLOCK)
         signal.set_wakeup_fd(sig_w)
         self.logger.info("daemon manager started")
         while self.should_be_up or self.proc.pid:
@@ -564,7 +568,7 @@ class Daemonizer:
         if args[1:]:
             try:
                 sig = int(args[1])
-            except:
+            except BaseException:
                 self.sendreply("Bad signal %r" % args[1])
                 return
         else:
@@ -638,7 +642,7 @@ class Transcript:
             lock = self.lock
             i = [self.read_from]
             o = e = []
-            while 1:
+            while True:
                 ii, oo, ee = select.select(i, o, e)
                 with lock:
                     for fd in ii:
@@ -685,6 +689,7 @@ def decode_wait_status(sts):
         msg = "unknown termination cause 0x%04x" % sts
         return -1, msg
 
+
 _signames = None
 
 
@@ -730,5 +735,6 @@ def main(args=None):
     d = Daemonizer()
     d.main(args)
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()

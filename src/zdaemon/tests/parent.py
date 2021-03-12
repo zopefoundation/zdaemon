@@ -29,7 +29,7 @@ def main():
     os.spawnvpe(flag, args[0], args,
                 dict(os.environ, PYTHONPATH=':'.join(sys.path)),
                 )
-    while 1:
+    while True:
         # wait to be signaled
         time.sleep(1)
 
@@ -53,6 +53,7 @@ def shutup():
         os.set_inheritable(sys.stderr.fileno(), True)
     except AttributeError:
         pass
+
 
 if __name__ == '__main__':
     main()

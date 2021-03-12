@@ -221,7 +221,7 @@ class ZDCmd(cmd.Cmd):
             sock.send(action.encode() + b"\n")
             sock.shutdown(1)  # We're not writing any more
             response = b""
-            while 1:
+            while True:
                 data = sock.recv(1000)
                 if not data:
                     break
@@ -242,18 +242,18 @@ class ZDCmd(cmd.Cmd):
         resp = self.send_action("status")
         if not resp:
             return resp
-        m = re.search("(?m)^application=(\d+)$", resp)
+        m = re.search(r"(?m)^application=(\d+)$", resp)
         if not m:
             return resp
         self.zd_up = 1
         self.zd_pid = int(m.group(1))
         self.zd_status = resp
-        m = re.search("(?m)^should_be_up=(\d+)$", resp)
+        m = re.search(r"(?m)^should_be_up=(\d+)$", resp)
         if m:
             self.zd_should_be_up = int(m.group(1))
         else:
             self.zd_should_be_up = 1
-        m = re.search("(?m)^testing=(\d+)$", resp)
+        m = re.search(r"(?m)^testing=(\d+)$", resp)
         if m:
             self.zd_testing = int(m.group(1))
         else:
@@ -577,7 +577,7 @@ class TailHelper:
         for line in lines:
             sys.stdout.write(line)
             sys.stdout.flush()
-        while 1:
+        while True:
             newsz = self.fsize()
             bytes_added = newsz - sz
             if bytes_added < 0:
@@ -600,7 +600,7 @@ class TailHelper:
         bytes = []
         num_bytes = 0
 
-        while 1:
+        while True:
             if pos == 0:
                 break
             self.f.seek(pos)
@@ -639,5 +639,6 @@ def main(args=None, options=None, cmdclass=ZDCmd):
     c = cmdclass(options)
     sys.exit(c.onecmd(" ".join(options.args)))
 
-if __name__ == "__main__":
+
+if __name__ == '__main__':
     main()
