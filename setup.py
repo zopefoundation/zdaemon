@@ -11,7 +11,9 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
+from setuptools import setup
 import os
+
 
 tests_require = [
     'manuel',
@@ -31,19 +33,6 @@ zdaemon = zdaemon.zdctl:main
 def read(*rnames):
     return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
 
-
-try:
-    from setuptools import setup
-    setuptools_options = dict(
-        zip_safe=False,
-        entry_points=entry_points,
-        include_package_data=True,
-        install_requires=["ZConfig", "setuptools"],
-        extras_require=dict(test=tests_require),
-    )
-except ImportError:
-    from distutils.core import setup
-    setuptools_options = {}
 
 setup(
     name="zdaemon",
@@ -82,4 +71,12 @@ setup(
         'Operating System :: POSIX',
         'Topic :: Utilities',
     ],
-    **setuptools_options)
+    zip_safe=False,
+    entry_points=entry_points,
+    include_package_data=True,
+    install_requires=[
+        "ZConfig",
+        "setuptools"
+    ],
+    extras_require=dict(test=tests_require),
+)
