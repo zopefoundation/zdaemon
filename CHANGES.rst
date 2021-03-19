@@ -11,6 +11,8 @@ Change log
 
 - Drop support for ``python setup.py test`` to run the tests. (#23)
 
+- Drop support for installing this package without having ``setuptools``.
+
 
 4.3 (2018-10-30)
 ================
