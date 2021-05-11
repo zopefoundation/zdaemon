@@ -2,7 +2,7 @@
 # https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
 [meta]
 template = "buildout-recipe"
-commit-id = "9536fe3d377f6b7ac9decad648118168d978eea3"
+commit-id = "d4e8550e4a37df10866d376fceac4e91689df8c5"
 
 [python]
 with-appveyor = false
@@ -25,9 +25,11 @@ coverage-setenv = [
     "COVERAGE_PROCESS_START={toxinidir}/.coveragerc",
     "COVERAGE_HOME={toxinidir}/",
     ]
+use-flake8 = true
 
 [manifest]
 additional-rules = [
     "recursive-include src *.conf",
+    "recursive-include src *.rst",
     "recursive-include src *.xml",
     ]
