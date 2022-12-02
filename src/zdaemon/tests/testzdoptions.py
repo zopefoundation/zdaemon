@@ -14,18 +14,22 @@
 
 """Test suite for zdaemon.zdoptions."""
 
+import doctest
 import os
+import shutil
 import sys
 import tempfile
-import shutil
 import unittest
-import doctest
 
 import ZConfig
+
 import zdaemon
-from zdaemon.zdoptions import (
-    ZDOptions, RunnerOptions, list_of_ints,
-    existing_parent_directory, existing_parent_dirpath)
+from zdaemon.zdoptions import RunnerOptions
+from zdaemon.zdoptions import ZDOptions
+from zdaemon.zdoptions import existing_parent_directory
+from zdaemon.zdoptions import existing_parent_dirpath
+from zdaemon.zdoptions import list_of_ints
+
 
 try:
     from StringIO import StringIO

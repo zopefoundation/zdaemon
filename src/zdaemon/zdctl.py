@@ -41,20 +41,24 @@ action "help" to find out about available actions.
 """
 from __future__ import print_function
 
+import cmd
 import os
 import os.path
 import re
-import cmd
-import sys
-import time
 import signal
 import socket
 import stat
+import sys
+import time
+
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
     # (but only when the script is run from inside the zdaemon package)
-    from os.path import dirname, basename, abspath, normpath
+    from os.path import abspath
+    from os.path import basename
+    from os.path import dirname
+    from os.path import normpath
     scriptdir = dirname(normpath(abspath(sys.argv[0])))
     if basename(scriptdir).lower() == "zdaemon":
         sys.path.append(dirname(scriptdir))
@@ -67,7 +71,8 @@ if __name__ == "__main__":
             sys.path.insert(0, d)
             break
 
-from zdaemon.zdoptions import RunnerOptions, name2signal
+from zdaemon.zdoptions import RunnerOptions
+from zdaemon.zdoptions import name2signal
 
 
 def string_list(arg):

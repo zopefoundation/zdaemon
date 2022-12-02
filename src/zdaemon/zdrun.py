@@ -17,7 +17,6 @@
 Usage: python zrdun.py [zrdun-options] program [program-arguments]
 """
 
-from stat import ST_MODE
 import errno
 import fcntl
 import logging
@@ -25,15 +24,20 @@ import os
 import select
 import signal
 import socket
-import sys
 import subprocess
+import sys
 import threading
 import time
+from stat import ST_MODE
+
 
 if __name__ == "__main__":
     # Add the parent of the script directory to the module search path
     # (but only when the script is run from inside the zdaemon package)
-    from os.path import dirname, basename, abspath, normpath
+    from os.path import abspath
+    from os.path import basename
+    from os.path import dirname
+    from os.path import normpath
     scriptdir = dirname(normpath(abspath(sys.argv[0])))
     if basename(scriptdir).lower() == "zdaemon":
         sys.path.append(dirname(scriptdir))
@@ -46,8 +50,9 @@ if __name__ == "__main__":
             sys.path.insert(0, d)
             break
 
-from zdaemon.zdoptions import RunnerOptions
 from ZConfig.components.logger.loghandler import reopenFiles
+
+from zdaemon.zdoptions import RunnerOptions
 
 
 def string_list(arg):

@@ -2,13 +2,14 @@
 from __future__ import print_function
 
 import os
-import sys
-import time
 import shutil
 import signal
-import tempfile
-import unittest
 import socket
+import sys
+import tempfile
+import time
+import unittest
+
 
 try:
     from StringIO import StringIO
@@ -18,7 +19,8 @@ except ImportError:
 
 import ZConfig
 
-from zdaemon import zdrun, zdctl
+from zdaemon import zdctl
+from zdaemon import zdrun
 
 
 class ConfiguredOptions:
