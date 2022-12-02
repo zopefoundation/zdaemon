@@ -13,12 +13,14 @@
 ##############################################################################
 """Option processing for zdaemon and related code."""
 from __future__ import print_function
-import os
-import sys
+
 import getopt
+import os
 import signal
+import sys
 
 import pkg_resources
+
 import ZConfig
 
 

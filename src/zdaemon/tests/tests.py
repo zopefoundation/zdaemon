@@ -25,13 +25,15 @@ import tempfile
 import unittest
 from contextlib import contextmanager
 
-import ZConfig
 import manuel.capture
 import manuel.doctest
 import manuel.testing
 import zc.customdoctests
-import zdaemon
+import ZConfig
 from zope.testing import renormalizing
+
+import zdaemon
+
 
 try:
     import pkg_resources

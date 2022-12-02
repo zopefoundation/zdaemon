@@ -14,11 +14,13 @@
 
 # Test user and groups options
 
-from zope.testing import setupstack
 import doctest
-import mock
 import os
 import sys
+
+import mock
+from zope.testing import setupstack
+
 import zdaemon.zdctl
 
 
