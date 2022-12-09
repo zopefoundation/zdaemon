@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - ubuntu
+        - ["ubuntu", "ubuntu-20.04"]
         config:
         # [Python version, tox env]
         - ["3.9",   "lint"]
@@ -33,7 +33,7 @@ jobs:
         - ["pypy-3.7", "pypy3"]
         - ["3.9",   "coverage"]
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os[1] }}
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     name: ${{ matrix.config[1] }}
     steps:
