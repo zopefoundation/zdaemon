@@ -2,7 +2,6 @@
 # https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
 [run]
 source = zdaemon
-plugins = coverage_python_version
 branch = true
 parallel = true
 data_file = $COVERAGE_HOME.coverage
