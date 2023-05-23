@@ -42,7 +42,7 @@ setup(
     license="ZPL 2.1",
     description="Daemon process control library and tools for Unix-based systems",  # noqa: E501 line too long
     author="Zope Foundation and Contributors",
-    author_email="zope-dev@zope.org",
+    author_email="zope-dev@zope.dev",
     long_description=(
         read('README.rst') +
         '\n' +
@@ -59,11 +59,7 @@ setup(
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: Zope Public License',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
@@ -77,6 +73,7 @@ setup(
     zip_safe=False,
     entry_points=entry_points,
     include_package_data=True,
+    python_requires='>=3.7',
     install_requires=[
         "ZConfig",
         "setuptools"

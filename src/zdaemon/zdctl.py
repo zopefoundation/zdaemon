@@ -39,7 +39,6 @@ action [arguments] -- see below
 Actions are commands like "start", "stop" and "status".  Use the
 action "help" to find out about available actions.
 """
-from __future__ import print_function
 
 import cmd
 import os
@@ -232,7 +231,7 @@ class ZDCmd(cmd.Cmd):
                     break
                 response += data
             return response.decode()
-        except socket.error:
+        except OSError:
             return None
         finally:
             sock.close()
@@ -529,7 +528,7 @@ class ZDCmd(cmd.Cmd):
             helper.tailf()
         except KeyboardInterrupt:
             print()
-        except IOError as msg:
+        except OSError as msg:
             print(msg)
         except OSError as msg:
             print(msg)
@@ -575,7 +574,7 @@ class TailHelper:
     MAX_BUFFSIZE = 1024
 
     def __init__(self, fname):
-        self.f = open(fname, 'r')
+        self.f = open(fname)
 
     def tailf(self):
         sz, lines = self.tail(10)

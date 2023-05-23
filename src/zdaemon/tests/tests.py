@@ -11,7 +11,6 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-from __future__ import print_function
 
 import doctest
 import glob

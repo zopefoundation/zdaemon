@@ -12,7 +12,6 @@
 #
 ##############################################################################
 """Option processing for zdaemon and related code."""
-from __future__ import print_function
 
 import getopt
 import os
@@ -177,8 +176,8 @@ class ZDOptions:
 
         if short and long:
             if short.endswith(":") != long.endswith("="):
-                raise ValueError("inconsistent short/long options: %r %r" % (
-                    short, long))
+                raise ValueError(
+                    f"inconsistent short/long options: {short!r} {long!r}")
 
         if short:
             if short[0] == "-":
@@ -262,7 +261,7 @@ class ZDOptions:
                 try:
                     arg = handler(arg)
                 except ValueError as msg:
-                    self.usage("invalid value for %s %r: %s" % (opt, arg, msg))
+                    self.usage(f"invalid value for {opt} {arg!r}: {msg}")
             if name and arg is not None:
                 if getattr(self, name) is not None:
                     if getattr(self, name) == arg:

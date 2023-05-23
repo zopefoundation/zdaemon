@@ -297,7 +297,7 @@ class Daemonizer:
             s.send(b"status\n")
             data = s.recv(1000).decode()
             s.close()
-        except socket.error:
+        except OSError:
             pass
         else:
             data = data.rstrip("\n")
@@ -416,7 +416,7 @@ class Daemonizer:
                         self.delay = time.time() + self.options.backofflimit
             try:
                 r, w, x = select.select(r, w, x, timeout)
-            except select.error as err:
+            except OSError as err:
                 if err.args[0] != errno.EINTR:
                     raise
                 r = w = x = []
@@ -425,14 +425,14 @@ class Daemonizer:
             if self.commandsocket and self.commandsocket in r:
                 try:
                     self.dorecv()
-                except socket.error as msg:
+                except OSError as msg:
                     self.logger.exception("socket.error in dorecv(): %s"
                                           % str(msg))
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
-                except socket.error as msg:
+                except OSError as msg:
                     self.logger.exception("socket.error in doaccept(): %s"
                                           % str(msg))
                     self.commandsocket = None
@@ -622,7 +622,7 @@ class Daemonizer:
                 while msg:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
-        except socket.error as msg:
+        except OSError as msg:
             self.logger.warn("Error sending reply: %s" % str(msg))
 
 

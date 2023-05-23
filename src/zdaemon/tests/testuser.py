@@ -17,8 +17,8 @@
 import doctest
 import os
 import sys
+from unittest import mock
 
-import mock
 from zope.testing import setupstack
 
 import zdaemon.zdctl
