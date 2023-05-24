@@ -1,5 +1,4 @@
 """Test suite for zdrun.py."""
-from __future__ import print_function
 
 import os
 import shutil
@@ -9,13 +8,7 @@ import sys
 import tempfile
 import time
 import unittest
-
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    # PY3 support.
-    from io import StringIO
+from io import StringIO
 
 import ZConfig
 
@@ -296,7 +289,7 @@ In general do not run anything as root unless absolutely necessary.
 class TestRunnerDirectory(unittest.TestCase):
 
     def setUp(self):
-        super(TestRunnerDirectory, self).setUp()
+        super().setUp()
         self.root = tempfile.mkdtemp()
         self.save_stdout = sys.stdout
         self.save_stderr = sys.stdout
@@ -316,7 +309,7 @@ class TestRunnerDirectory(unittest.TestCase):
         if err:
             print(err, end='', file=sys.stderr)
         self.assertEqual(self.expect, got)
-        super(TestRunnerDirectory, self).tearDown()
+        super().tearDown()
 
     def run_ctl(self, opts):
         options = zdctl.ZDCtlOptions()
@@ -438,7 +431,7 @@ def send_action(action, sockname, raise_on_error=False):
             response += data
         sock.close()
         return response
-    except socket.error as msg:
+    except OSError as msg:
         if str(msg) == 'AF_UNIX path too long':
             # MacOS has apparent small limits on the length of a UNIX
             # domain socket filename, we want to make MacOS users aware
@@ -454,6 +447,8 @@ def send_action(action, sockname, raise_on_error=False):
 def test_suite():
     suite = unittest.TestSuite()
     if os.name == "posix":
-        suite.addTest(unittest.makeSuite(ZDaemonTests))
-        suite.addTest(unittest.makeSuite(TestRunnerDirectory))
+        loadTestsFromTestCase = (
+            unittest.defaultTestLoader.loadTestsFromTestCase)
+        suite.addTest(loadTestsFromTestCase(ZDaemonTests))
+        suite.addTest(loadTestsFromTestCase(TestRunnerDirectory))
     return suite

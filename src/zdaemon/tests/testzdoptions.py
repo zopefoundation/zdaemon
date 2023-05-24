@@ -20,6 +20,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from io import StringIO
 
 import ZConfig
 
@@ -29,13 +30,6 @@ from zdaemon.zdoptions import ZDOptions
 from zdaemon.zdoptions import existing_parent_directory
 from zdaemon.zdoptions import existing_parent_dirpath
 from zdaemon.zdoptions import list_of_ints
-
-
-try:
-    from StringIO import StringIO
-except ImportError:
-    # PY3 support.
-    from io import StringIO
 
 
 class ZDOptionsTestBase(unittest.TestCase):
@@ -438,13 +432,13 @@ class TestRunnerDirectory(ZDOptionsTestBase):
     OptionsClass = RunnerOptions
 
     def setUp(self):
-        super(TestRunnerDirectory, self).setUp()
+        super().setUp()
         # Create temporary directory to work in
         self.root = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.root)
-        super(TestRunnerDirectory, self).tearDown()
+        super().tearDown()
 
     def test_not_existing_directory(self):
         options = self.OptionsClass()
