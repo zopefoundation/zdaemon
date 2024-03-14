@@ -83,7 +83,7 @@ class ZDRunOptions(RunnerOptions):
         if self.args:
             self.program = self.args
         if not self.program:
-            self.usage("no program specified (use -C or positional args)")
+            self.usage("no program specified (use  positional args)")
         if self.sockname:
             # Convert socket name to absolute path
             self.sockname = os.path.abspath(self.sockname)
@@ -109,7 +109,7 @@ class Subprocess:
     pid = 0  # Subprocess pid; 0 when not running
     lasttime = 0  # Last time the subprocess was started; 0 if never
 
-    def __init__(self, options, args=None):
+    def __init__(self, options, args=None, child_exits=None):
         """Constructor.
 
         Arguments are a ZDRunOptions instance and a list of program
@@ -122,6 +122,7 @@ class Subprocess:
         self.options = options
         self.args = args
         self.testing = set()
+        self.child_exits = child_exits
         self._set_filename(args[0])
 
     def _set_filename(self, program):
@@ -152,10 +153,29 @@ class Subprocess:
 
     def test(self, pid):
         starttestprogram = self.options.starttestprogram
+        logger = self.options.logger
         try:
             while self.pid == pid:
-                if not subprocess.call(starttestprogram):
-                    break
+                try:
+                    with subprocess.Popen(starttestprogram) as p:
+                        # uncomment the following line to force
+                        # (for testing purposes) a race between
+                        # the ``wait`` below and the ``SIGCHLD`` handler
+                        #import time; time.sleep(0.01)
+                        sts = p.wait()
+                        # ``sts`` is usually the return status.
+                        # However, the true return status may have been
+                        # captured by the ``SIGCHLD`` handler.
+                        # In this case, ``str == 0`` and the
+                        # true return status can be found via ``child_exits``.
+                        if not sts and not self.child_exits.fetch(p.pid):
+                            logger.debug("start test succeeded")
+                            break
+                        logger.debug("start test failed")
+                except Exception:  # pragma: nocover
+                    logger.critical("start test raised",
+                                    exc_info=True)
+                    break  # likely a permanent error
                 time.sleep(1)
         finally:
             self.testing.remove(pid)
@@ -234,13 +254,17 @@ class Daemonizer:
         self.run()
 
     def run(self):
-        self.proc = Subprocess(self.options)
+        self.child_exits = _ChildExits()
+        self.proc = Subprocess(self.options, child_exits=self.child_exits)
         self.opensocket()
         try:
             self.setsignals()
             if self.options.daemon:
                 self.daemonize()
-            self.runforever()
+            try:
+                self.runforever()
+            except Exception:  # pragma: nocover
+                self.logger.critical("runforever raised", exc_info=True)
         finally:
             try:
                 os.unlink(self.options.sockname)
@@ -326,7 +350,16 @@ class Daemonizer:
         except os.error:
             return
         if pid:
-            self.waitstatus = pid, sts
+            if pid == self.proc.pid:
+                self.logger.debug("controlled process %s exited", pid)
+                self.waitstatus = pid, sts
+            else:  # pragma: nocover
+                # this indicates a race between this ``SIGCHLD`` handler
+                # and a ``wait``.
+                # Record in ``child_exits`` to allow the ``wait`` caller
+                # to get the correct exit status
+                self.logger.debug("unknown process %s exited", pid)
+                self.child_exits[pid] = sts
 
     transcript = None
 
@@ -447,7 +480,7 @@ class Daemonizer:
         es, msg = decode_wait_status(sts)
         msg = "pid %d: " % pid + msg
         if pid != self.proc.pid:
-            msg = "unknown " + msg
+            msg = "unknown(!=%s) " % self.proc.pid + msg
             self.logger.warn(msg)
         else:
             killing = self.killing
@@ -730,6 +763,17 @@ def get_path():
         if p:
             path = p.split(os.pathsep)
     return path
+
+
+class _ChildExits(dict):
+    """map ``pid`` to exit status or ``None``."""
+    def fetch(self, pid):
+        """fetch and reset status for *pid*."""
+        st = self.get(pid)
+        if st is not None:
+            # there is only a negligable race risk
+            del self[pid]
+        return st
 
 
 # Main program
