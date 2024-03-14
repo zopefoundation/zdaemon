@@ -55,6 +55,28 @@ def read(name):
         return f.read()
 
 
+def test_ChildExits():
+    """
+    ``_ChildExits`` is used to record the exit status for a
+    foreign process when it was captured by the ``SIGCHLD``handler
+    due to a race condition.
+
+    >>> from zdaemon.zdrun import _ChildExits
+    >>> exits = _ChildExits()
+
+    Initially, we have no exit status for a process.
+    >>> exits.fetch(5)
+
+    After we have recorded exit information, ``fetch`` will
+    retrieve and reset it.
+    >>> exits[5] = 0
+    >>> exits.fetch(5)
+    0
+    >>> exits.fetch(5)
+
+    """
+
+
 def make_sure_non_daemon_mode_doesnt_hang_when_program_exits():
     """
     The whole awhile bit that waits for a program to start
@@ -273,7 +295,7 @@ def test_start_test_program():
     >>> write('t.py',
     ... '''
     ... import time
-    ... time.sleep(1)
+    ... time.sleep(2)
     ... open('x', 'w').close()
     ... time.sleep(99)
     ... ''')
@@ -283,7 +305,15 @@ def test_start_test_program():
     ... <runner>
     ...   program %s t.py
     ...   start-test-program cat x
+    ...   daemon on
     ... </runner>
+    ... <eventlog>
+    ...   level debug
+    ...   <logfile>
+    ...      path log
+    ...      level debug
+    ...   </logfile>
+    ... </eventlog>
     ... ''' % sys.executable)
 
     >>> import os
@@ -296,11 +326,26 @@ def test_start_test_program():
     True
     >>> os.remove('x')
 
+    >>> with open("log") as f:
+    ...   logged = f.read()
+    >>> nfailed = logged.count("start test failed")
+    >>> nfailed > 0
+    True
+    >>> logged.count("start test succeeded")
+    1
+
     >>> system("./zdaemon -Cconf restart")
     . . .
     daemon process restarted, pid=19622
     >>> os.path.exists('x')
     True
+
+    >>> with open("log") as f:
+    ...   logged = f.read()
+    >>> nfailed < logged.count("start test failed")
+    True
+    >>> logged.count("start test succeeded")
+    2
 
     >>> system("./zdaemon -Cconf stop")
     <BLANKLINE>

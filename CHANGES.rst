@@ -5,7 +5,9 @@ Change log
 5.1 (unreleased)
 ================
 
-- Nothing changed yet.
+- Fix ``SIGCHLD``/``wait`` raise condition associated with the
+  ``start-test-program`` option.
+  For details see `#33 <https://github.com/zopefoundation/zdaemon/pull/33>`_.
 
 
 5.0 (2023-05-24)
