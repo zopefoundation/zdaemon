@@ -161,7 +161,7 @@ class Subprocess:
                         # uncomment the following line to force
                         # (for testing purposes) a race between
                         # the ``wait`` below and the ``SIGCHLD`` handler
-                        #import time; time.sleep(0.01)
+                        # import time; time.sleep(0.01)
                         sts = p.wait()
                         # ``sts`` is usually the return status.
                         # However, the true return status may have been
