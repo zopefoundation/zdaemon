@@ -5,6 +5,8 @@ Change log
 5.1 (unreleased)
 ================
 
+- Add support for Python 3.12.
+
 - Fix ``SIGCHLD``/``wait`` raise condition associated with the
   ``start-test-program`` option.
   For details see `#33 <https://github.com/zopefoundation/zdaemon/pull/33>`_.
