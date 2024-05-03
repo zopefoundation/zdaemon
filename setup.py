@@ -60,6 +60,7 @@ setup(
         'License :: OSI Approved :: Zope Public License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
@@ -73,7 +74,7 @@ setup(
     zip_safe=False,
     entry_points=entry_points,
     include_package_data=True,
-    python_requires='>=3.8',
+    python_requires='>=3.7',
     install_requires=[
         "ZConfig",
         "setuptools"
