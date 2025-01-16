@@ -131,7 +131,7 @@ class Subprocess:
             filename = program
             try:
                 st = os.stat(filename)
-            except os.error:
+            except OSError:
                 self.options.usage("can't stat program %r" % program)
         else:
             path = get_path()
@@ -139,7 +139,7 @@ class Subprocess:
                 filename = os.path.join(dir, program)
                 try:
                     st = os.stat(filename)
-                except os.error:
+                except OSError:
                     continue
                 mode = st[ST_MODE]
                 if mode & 0o111:
@@ -189,7 +189,7 @@ class Subprocess:
         self.lasttime = time.time()
         try:
             pid = os.fork()
-        except os.error:
+        except OSError:
             return 0
         if pid != 0:
             # Parent
@@ -210,11 +210,11 @@ class Subprocess:
                 for i in range(3, 100):
                     try:
                         os.close(i)
-                    except os.error:
+                    except OSError:
                         pass
                 try:
                     os.execv(self.filename, self.args)
-                except os.error as err:
+                except OSError as err:
                     sys.stderr.write("can't exec %r: %s\n" %
                                      (self.filename, err))
                     sys.stderr.flush()  # just in case
@@ -232,7 +232,7 @@ class Subprocess:
             return "no subprocess running"
         try:
             os.kill(self.pid, sig)
-        except os.error as msg:
+        except OSError as msg:
             return str(msg)
         return None
 
@@ -268,7 +268,7 @@ class Daemonizer:
         finally:
             try:
                 os.unlink(self.options.sockname)
-            except os.error:
+            except OSError:
                 pass
 
     mastersocket = None
@@ -286,7 +286,7 @@ class Daemonizer:
                 try:
                     os.link(tempname, sockname)
                     break
-                except os.error:
+                except OSError:
                     # Lock contention, or stale socket.
                     self.checkopen()
                     # Stale socket -- delete, sleep, and try again.
@@ -311,7 +311,7 @@ class Daemonizer:
     def unlink_quietly(self, filename):
         try:
             os.unlink(filename)
-        except os.error:
+        except OSError:
             pass
 
     def checkopen(self):
@@ -347,7 +347,7 @@ class Daemonizer:
     def sigchild(self, sig, frame):
         try:
             pid, sts = os.waitpid(-1, os.WNOHANG)
-        except os.error:
+        except OSError:
             return
         if pid:
             if pid == self.proc.pid:
@@ -396,7 +396,7 @@ class Daemonizer:
         if self.options.directory:
             try:
                 os.chdir(self.options.directory)
-            except os.error as err:
+            except OSError as err:
                 self.logger.warn("can't chdir into %r: %s"
                                  % (self.options.directory, err))
             else:
@@ -767,6 +767,7 @@ def get_path():
 
 class _ChildExits(dict):
     """map ``pid`` to exit status or ``None``."""
+
     def fetch(self, pid):
         """fetch and reset status for *pid*."""
         st = self.get(pid)

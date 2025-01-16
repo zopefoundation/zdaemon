@@ -225,7 +225,7 @@ class TestBasicFunctionality(ZDOptionsTestBase):
         L = []
         options.add("setting", None, "a:", "append=", handler=L.append)
         options.realize(["-a2", "--append", "3"])
-        self.assertTrue(options.setting is None)
+        self.assertIsNone(options.setting)
         self.assertEqual(L, ["2", "3"])
 
     def test_handler_with_bad_value(self):

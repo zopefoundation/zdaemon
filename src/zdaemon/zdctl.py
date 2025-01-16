@@ -415,7 +415,7 @@ class ZDCmd(cmd.Cmd):
         print("kill(%d, %d)" % (self.zd_pid, sig))
         try:
             os.kill(self.zd_pid, sig)
-        except os.error as msg:
+        except OSError as msg:
             print("Error:", msg)
         else:
             print("signal %s sent to process %d" % (signame, self.zd_pid))
