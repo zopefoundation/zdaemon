@@ -11,7 +11,9 @@ branch = true
 source = ["zdaemon"]
 parallel = true
 data_file = "$COVERAGE_HOME.coverage"
-omit = "['*/__main__.py']"
+omit = [
+    "*/__main__.py",
+]
 
 [tool.coverage.report]
 fail_under = 79
