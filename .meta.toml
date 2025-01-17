@@ -18,12 +18,12 @@ fail-under = 79
 [coverage-run]
 additional-config = [
     "data_file = $COVERAGE_HOME.coverage",
-    "omit = */__main__.py",
+    "omit = ['*/__main__.py']",
     ]
 
 [tox]
 coverage-setenv = [
-    "COVERAGE_PROCESS_START={toxinidir}/.coveragerc",
+    "COVERAGE_PROCESS_START={toxinidir}/pyproject.toml",
     "COVERAGE_HOME={toxinidir}/",
     ]
 use-flake8 = true
