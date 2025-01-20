@@ -40,7 +40,7 @@ try:
         pkg_resources.Requirement.parse('zdaemon')).location
     zconfig_loc = pkg_resources.working_set.find(
         pkg_resources.Requirement.parse('ZConfig')).location
-except (ImportError, AttributeError):
+except (ModuleNotFoundError, AttributeError):
     zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
     zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
@@ -535,7 +535,7 @@ sys.path[0:0] = [
 
 try:
     import coverage
-except ImportError:
+except ModuleNotFoundError:
     pass
 else:
     coverage.process_startup()

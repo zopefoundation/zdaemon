@@ -70,7 +70,7 @@ class ZDaemonTests(unittest.TestCase):
             signal.signal(sig, signal.SIG_DFL)
         try:
             os.unlink(self.zdsock)
-        except os.error:
+        except OSError:
             pass
         output = self.new_stdout.getvalue()
         self.assertEqual(self.expect, output)
@@ -234,8 +234,11 @@ class ZDaemonTests(unittest.TestCase):
             # Make sure the child is still responsive.
             response = send_action('status\n', zdrun_socket,
                                    raise_on_error=True)
-            self.assertTrue(b'\n' in response,
-                            'no newline in response: ' + repr(response))
+            self.assertIn(
+                b'\n',
+                response,
+                'no newline in response: ' + repr(response)
+            )
             # Kill the process.
             send_action('stop\n', zdrun_socket)
         finally:
@@ -252,7 +255,7 @@ class ZDaemonTests(unittest.TestCase):
             for fname in os.listdir(tmp):
                 try:
                     os.unlink(os.path.join(tmp, fname))
-                except os.error:
+                except OSError:
                     pass
             os.rmdir(tmp)
 
