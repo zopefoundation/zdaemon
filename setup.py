@@ -1,6 +1,6 @@
 ##############################################################################
 #
-# Copyright (c) 2006-2009 Zope Foundation and Contributors.
+# Copyright (c) 2006-2025 Zope Foundation and Contributors.
 # All Rights Reserved.
 #
 # This software is subject to the provisions of the Zope Public License,
@@ -18,7 +18,6 @@ from setuptools import setup
 
 tests_require = [
     'manuel',
-    'mock',
     'zc.customdoctests',
     'zope.testing',
     'zope.testrunner',
