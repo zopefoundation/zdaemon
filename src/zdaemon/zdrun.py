@@ -293,7 +293,7 @@ class Daemonizer:
                     msg = "Unlinking stale socket %s; sleep 1" % sockname
                     sys.stderr.write(msg + "\n")
                     sys.stderr.flush()  # just in case
-                    self.logger.warn(msg)
+                    self.logger.warning(msg)
                     self.unlink_quietly(sockname)
                     sock.close()
                     time.sleep(1)
@@ -397,8 +397,8 @@ class Daemonizer:
             try:
                 os.chdir(self.options.directory)
             except OSError as err:
-                self.logger.warn("can't chdir into %r: %s"
-                                 % (self.options.directory, err))
+                self.logger.warning("can't chdir into %r: %s"
+                                    % (self.options.directory, err))
             else:
                 self.logger.info("set current directory: %r"
                                  % self.options.directory)
@@ -481,7 +481,7 @@ class Daemonizer:
         msg = "pid %d: " % pid + msg
         if pid != self.proc.pid:
             msg = "unknown(!=%s) " % self.proc.pid + msg
-            self.logger.warn(msg)
+            self.logger.warning(msg)
         else:
             killing = self.killing
             if killing:
@@ -656,7 +656,7 @@ class Daemonizer:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
         except OSError as msg:
-            self.logger.warn("Error sending reply: %s" % str(msg))
+            self.logger.warning("Error sending reply: %s" % str(msg))
 
 
 class Transcript:

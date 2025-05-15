@@ -9,6 +9,10 @@ Change log
 
 - Drop support for Python 3.7, 3.8.
 
+- Fix a deprecation warning by using `logger.warning` rather than `logger.warn`
+  (fixes `#40 <https://github.com/zopefoundation/zdaemon/pull/40>`_).
+
+
 5.1 (2024-05-03)
 ================
 
