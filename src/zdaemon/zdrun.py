@@ -200,7 +200,7 @@ class Subprocess:
                 thread.setDaemon(True)
                 thread.start()
 
-            self.options.logger.info("spawned process pid=%d" % pid)
+            self.options.logger.info("spawned process pid=%d", pid)
             return pid
         else:  # pragma: nocover
             # Child
@@ -339,7 +339,7 @@ class Daemonizer:
         signal.signal(signal.SIGCHLD, self.sigchild)
 
     def sigexit(self, sig, frame):
-        self.logger.critical("daemon manager killed by %s" % signame(sig))
+        self.logger.critical("daemon manager killed by %s", signame(sig))
         sys.exit(1)
 
     waitstatus = None
@@ -397,11 +397,16 @@ class Daemonizer:
             try:
                 os.chdir(self.options.directory)
             except OSError as err:
-                self.logger.warning("can't chdir into %r: %s"
-                                    % (self.options.directory, err))
+                self.logger.warning(
+                    "can't chdir into %r: %s",
+                    self.options.directory,
+                    err,
+                )
             else:
-                self.logger.info("set current directory: %r"
-                                 % self.options.directory)
+                self.logger.info(
+                    "set current directory: %r",
+                    self.options.directory,
+                )
         os.close(0)
         sys.stdin = sys.__stdin__ = open("/dev/null")
         self.transcript = Transcript(self.options.transcript)
@@ -459,15 +464,17 @@ class Daemonizer:
                 try:
                     self.dorecv()
                 except OSError as msg:
-                    self.logger.exception("socket.error in dorecv(): %s"
-                                          % str(msg))
+                    self.logger.exception(
+                        "socket.error in dorecv(): %s", str(msg)
+                    )
                     self.commandsocket = None
             if self.mastersocket in r:
                 try:
                     self.doaccept()
                 except OSError as msg:
-                    self.logger.exception("socket.error in doaccept(): %s"
-                                          % str(msg))
+                    self.logger.exception(
+                        "socket.error in doaccept(): %s", str(msg)
+                    )
                     self.commandsocket = None
             if sig_r in r:
                 os.read(sig_r, 1)  # don't let the buffer fill up
@@ -512,7 +519,7 @@ class Daemonizer:
                 else:
                     self.logger.critical("restarting too frequently; quit")
                     sys.exit(1)
-            self.logger.info("sleep %s to avoid rapid restarts" % self.backoff)
+            self.logger.info("sleep %s to avoid rapid restarts", self.backoff)
             self.delay = now + self.backoff
         else:
             # Reset the backoff timer
@@ -656,7 +663,7 @@ class Daemonizer:
                     sent = self.commandsocket.send(msg)
                     msg = msg[sent:]
         except OSError as msg:
-            self.logger.warning("Error sending reply: %s" % str(msg))
+            self.logger.warning("Error sending reply: %s", str(msg))
 
 
 class Transcript:
