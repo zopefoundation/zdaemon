@@ -12,7 +12,7 @@ Change log
 - Fix a deprecation warning by using `logger.warning` rather than `logger.warn`
   (fixes `#40 <https://github.com/zopefoundation/zdaemon/pull/40>`_).
 
-- Fix logging to compute the message lazily
+- Fix logging to compute the message lazily.
 
 
 5.1 (2024-05-03)
