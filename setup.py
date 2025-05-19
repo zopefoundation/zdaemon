@@ -36,7 +36,7 @@ def read(*rnames):
 
 setup(
     name="zdaemon",
-    version='5.2',
+    version='5.3.dev0',
     url="https://github.com/zopefoundation/zdaemon",
     license="ZPL 2.1",
     description="Daemon process control library and tools for Unix-based systems",  # noqa: E501 line too long
