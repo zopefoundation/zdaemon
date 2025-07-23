@@ -8,7 +8,6 @@ Change log
 - Replace ``pkg_resources`` with ``importlib.metadata`` to access package
   metadata.
 
-
 5.2 (2025-05-19)
 ================
 
