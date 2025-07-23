@@ -75,7 +75,6 @@ setup(
     python_requires='>=3.9',
     install_requires=[
         "ZConfig",
-        "setuptools"
     ],
     extras_require=dict(test=tests_require),
 )

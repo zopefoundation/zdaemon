@@ -14,11 +14,10 @@
 """Option processing for zdaemon and related code."""
 
 import getopt
+import importlib.metadata
 import os
 import signal
 import sys
-
-import pkg_resources
 
 import ZConfig
 
@@ -68,7 +67,7 @@ class ZDOptions:
         self.required_map = {}
         self.environ_map = {}
         self.zconfig_options = []
-        self.version = pkg_resources.get_distribution("zdaemon").version
+        self.version = importlib.metadata.version("zdaemon")
         self.add(None, None, "h", "help", self.help)
         self.add(None, None, None, "version", self.print_version)
         self.add("configfile", None, "C:", "configure=")

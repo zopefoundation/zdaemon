@@ -14,6 +14,7 @@
 
 import doctest
 import glob
+import importlib.util
 import os
 import re
 import shutil
@@ -34,14 +35,18 @@ from zope.testing import renormalizing
 import zdaemon
 
 
-try:
-    import pkg_resources
-    zdaemon_loc = pkg_resources.working_set.find(
-        pkg_resources.Requirement.parse('zdaemon')).location
-    zconfig_loc = pkg_resources.working_set.find(
-        pkg_resources.Requirement.parse('ZConfig')).location
-except (ModuleNotFoundError, AttributeError):
+zdaemon_spec = importlib.util.find_spec('zdaemon')
+zdaemon_loc = zdaemon_spec.origin if zdaemon_spec else None
+if zdaemon_loc:
+    zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon_loc))
+else:
     zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
+
+zconfig_spec = importlib.util.find_spec('ZConfig')
+zconfig_loc = zconfig_spec.origin if zconfig_spec else None
+if zconfig_loc:
+    zconfig_loc = os.path.dirname(os.path.dirname(zconfig_loc))
+else:
     zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
 
 
