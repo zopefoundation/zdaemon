@@ -5,7 +5,8 @@ Change log
 5.3 (unreleased)
 ================
 
-- Nothing changed yet.
+- Replace ``pkg_resources`` with ``importlib.metadata`` to access package
+  metadata.
 
 
 5.2 (2025-05-19)

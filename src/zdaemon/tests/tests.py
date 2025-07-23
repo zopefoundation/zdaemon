@@ -14,6 +14,7 @@
 
 import doctest
 import glob
+import importlib.util
 import os
 import re
 import shutil
@@ -34,15 +35,15 @@ from zope.testing import renormalizing
 import zdaemon
 
 
-try:
-    import pkg_resources
-    zdaemon_loc = pkg_resources.working_set.find(
-        pkg_resources.Requirement.parse('zdaemon')).location
-    zconfig_loc = pkg_resources.working_set.find(
-        pkg_resources.Requirement.parse('ZConfig')).location
-except (ModuleNotFoundError, AttributeError):
-    zdaemon_loc = os.path.dirname(os.path.dirname(zdaemon.__file__))
-    zconfig_loc = os.path.dirname(os.path.dirname(ZConfig.__file__))
+_zdaemon_spec = importlib.util.find_spec('zdaemon')
+_zdaemon_origin = _zdaemon_spec.origin if _zdaemon_spec else zdaemon.__file__
+_zdaemon_package_dir = os.path.dirname(_zdaemon_origin)
+zdaemon_loc = os.path.dirname(_zdaemon_package_dir)
+
+_zconfig_spec = importlib.util.find_spec('ZConfig')
+_zconfig_origin = _zconfig_spec.origin if _zconfig_spec else ZConfig.__file__
+_zconfig_package_dir = os.path.dirname(_zconfig_origin)
+zconfig_loc = os.path.dirname(_zconfig_package_dir)
 
 
 def write(name, text):
