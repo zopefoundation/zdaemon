@@ -38,20 +38,20 @@ import zdaemon
 zdaemon_spec = importlib.util.find_spec('zdaemon')
 zdaemon_loc = zdaemon_spec.origin if zdaemon_spec else None
 if zdaemon_loc:
-    package_dir = os.path.dirname(zdaemon_loc)
-    zdaemon_loc = os.path.dirname(package_dir)
+    zdaemon_package_dir = os.path.dirname(zdaemon_loc)
+    zdaemon_loc = os.path.dirname(zdaemon_package_dir)
 else:
-    package_dir = os.path.dirname(zdaemon.__file__)
-    zdaemon_loc = os.path.dirname(package_dir)
+    zdaemon_package_dir = os.path.dirname(zdaemon.__file__)
+    zdaemon_loc = os.path.dirname(zdaemon_package_dir)
 
 zconfig_spec = importlib.util.find_spec('ZConfig')
 zconfig_loc = zconfig_spec.origin if zconfig_spec else None
 if zconfig_loc:
-    package_dir = os.path.dirname(zconfig_loc)
-    zconfig_loc = os.path.dirname(package_dir)
+    zconfig_package_dir = os.path.dirname(zconfig_loc)
+    zconfig_loc = os.path.dirname(zconfig_package_dir)
 else:
-    package_dir = os.path.dirname(ZConfig.__file__)
-    zconfig_loc = os.path.dirname(package_dir)
+    zconfig_package_dir = os.path.dirname(ZConfig.__file__)
+    zconfig_loc = os.path.dirname(zconfig_package_dir)
 
 
 def write(name, text):
