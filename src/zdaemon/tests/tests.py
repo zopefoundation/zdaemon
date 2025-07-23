@@ -35,23 +35,15 @@ from zope.testing import renormalizing
 import zdaemon
 
 
-zdaemon_spec = importlib.util.find_spec('zdaemon')
-zdaemon_loc = zdaemon_spec.origin if zdaemon_spec else None
-if zdaemon_loc:
-    zdaemon_package_dir = os.path.dirname(zdaemon_loc)
-    zdaemon_loc = os.path.dirname(zdaemon_package_dir)
-else:
-    zdaemon_package_dir = os.path.dirname(zdaemon.__file__)
-    zdaemon_loc = os.path.dirname(zdaemon_package_dir)
+_zdaemon_spec = importlib.util.find_spec('zdaemon')
+_zdaemon_origin = _zdaemon_spec.origin if _zdaemon_spec else zdaemon.__file__
+_zdaemon_package_dir = os.path.dirname(_zdaemon_origin)
+zdaemon_loc = os.path.dirname(_zdaemon_package_dir)
 
-zconfig_spec = importlib.util.find_spec('ZConfig')
-zconfig_loc = zconfig_spec.origin if zconfig_spec else None
-if zconfig_loc:
-    zconfig_package_dir = os.path.dirname(zconfig_loc)
-    zconfig_loc = os.path.dirname(zconfig_package_dir)
-else:
-    zconfig_package_dir = os.path.dirname(ZConfig.__file__)
-    zconfig_loc = os.path.dirname(zconfig_package_dir)
+_zconfig_spec = importlib.util.find_spec('ZConfig')
+_zconfig_origin = _zconfig_spec.origin if _zconfig_spec else ZConfig.__file__
+_zconfig_package_dir = os.path.dirname(_zconfig_origin)
+zconfig_loc = os.path.dirname(_zconfig_package_dir)
 
 
 def write(name, text):
