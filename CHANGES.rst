@@ -2,8 +2,8 @@
 Change log
 ==========
 
-5.2.2 (unreleased)
-==================
+5.3 (unreleased)
+================
 
 - Nothing changed yet.
 
