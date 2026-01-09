@@ -5,7 +5,7 @@ Change log
 5.3 (unreleased)
 ================
 
-- Nothing changed yet.
+- Drop support for Python 3.9.
 
 
 5.2.1 (2025-07-23)
