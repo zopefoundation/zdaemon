@@ -1,7 +1,7 @@
 <!--
-Generated from:
-https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
---> 
+Generated with zope.meta (https://zopemeta.readthedocs.io/) from:
+https://github.com/zopefoundation/meta/tree/master/src/zope/meta/buildout-recipe
+-->
 # Contributing to zopefoundation projects
 
 The projects under the zopefoundation GitHub organization are open source and
