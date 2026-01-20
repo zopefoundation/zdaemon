@@ -1,5 +1,5 @@
-# Generated from:
-# https://github.com/zopefoundation/meta/tree/master/config/buildout-recipe
+# Generated with zope.meta (https://zopemeta.readthedocs.io/) from:
+# https://github.com/zopefoundation/meta/tree/master/src/zope/meta/buildout-recipe
 name: tests
 
 on:
@@ -12,6 +12,9 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      pull-requests: write
     strategy:
       # We want to see all failures:
       fail-fast: false
@@ -21,46 +24,40 @@ jobs:
         config:
         # [Python version, tox env]
         - ["3.11", "release-check"]
-        - ["3.9", "py39"]
         - ["3.10", "py310"]
         - ["3.11", "py311"]
         - ["3.12", "py312"]
         - ["3.13", "py313"]
-        - ["pypy-3.10", "pypy3"]
+        - ["3.14", "py314"]
+        - ["pypy-3.11", "pypy3"]
         - ["3.11", "coverage"]
 
     runs-on: ${{ matrix.os[1] }}
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name
     name: ${{ matrix.config[1] }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
+    - name: Install uv + caching
+      # astral/setup-uv@7.1.5
+      uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a
+      with:
+        enable-cache: true
+        cache-dependency-glob: |
+          setup.*
+          tox.ini
         python-version: ${{ matrix.config[0] }}
-        allow-prereleases: true
-    - name: Pip cache
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ matrix.config[0] }}-${{ hashFiles('setup.*', 'tox.ini') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-${{ matrix.config[0] }}-
-          ${{ runner.os }}-pip-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install tox
+        github-token: ${{ secrets.GITHUB_TOKEN }}
     - name: Test
       if: ${{ !startsWith(runner.os, 'Mac') }}
-      run: tox -e ${{ matrix.config[1] }}
+      run: uvx --with tox-uv tox -e ${{ matrix.config[1] }}
     - name: Test (macOS)
       if: ${{ startsWith(runner.os, 'Mac') }}
-      run: tox -e ${{ matrix.config[1] }}-universal2
+      run: uvx --with tox-uv tox -e ${{ matrix.config[1] }}-universal2
     - name: Coverage
       if: matrix.config[1] == 'coverage'
       run: |
-        pip install coveralls
-        coveralls --service=github
+        uvx coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -2,10 +2,12 @@
 Change log
 ==========
 
-5.2.2 (unreleased)
-==================
+5.3 (unreleased)
+================
 
-- Nothing changed yet.
+- Add support for Python 3.14.
+
+- Drop support for Python 3.9.
 
 
 5.2.1 (2025-07-23)
